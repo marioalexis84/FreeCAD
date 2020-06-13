@@ -32,15 +32,16 @@ from PySide.QtCore import QT_TRANSLATE_NOOP
 
 import FreeCAD as App
 import FreeCADGui as Gui
-from FreeCAD import Units as U
+import Draft
 import Draft_rc
 import DraftVecUtils
 import draftguitools.gui_base_original as gui_base_original
 import draftguitools.gui_base as gui_base
 import draftguitools.gui_tool_utils as gui_tool_utils
 import draftguitools.gui_trackers as trackers
-import draftobjects.arc_3points as arc3
 import draftutils.utils as utils
+
+from FreeCAD import Units as U
 from draftutils.messages import _msg, _err
 from draftutils.translate import translate, _tr
 
@@ -67,7 +68,7 @@ class Arc(gui_base_original.Creator):
 
     def Activated(self):
         """Execute when the command is called."""
-        super().Activated(name=_tr(self.featureName))
+        super(Arc, self).Activated(name=_tr(self.featureName))
         if self.ui:
             self.step = 0
             self.center = None
@@ -94,7 +95,7 @@ class Arc(gui_base_original.Creator):
         closed: bool, optional
             Close the line if `True`.
         """
-        super().finish(self)
+        super(Arc, self).finish()
         if self.ui:
             self.linetrack.finalize()
             self.arctrack.finalize()
@@ -298,7 +299,7 @@ class Arc(gui_base_original.Creator):
         if self.closedCircle:
             try:
                 # The command to run is built as a series of text strings
-                # to be commited through the `draftutils.todo.ToDo` class.
+                # to be committed through the `draftutils.todo.ToDo` class.
                 if utils.getParam("UsePartPrimitives", False):
                     # Insert a Part::Primitive object
                     _base = DraftVecUtils.toString(self.center)
@@ -336,7 +337,7 @@ class Arc(gui_base_original.Creator):
             except Exception:
                 _err("Draft: error delaying commit")
         else:
-            # Not a closed circle, therfore a circular arc
+            # Not a closed circle, therefore a circular arc
             sta = math.degrees(self.firstangle)
             end = math.degrees(self.firstangle + self.angle)
             if end < sta:
@@ -477,7 +478,7 @@ class Arc_3Points(gui_base.GuiCommandSimplest):
     """GuiCommand for the Draft_Arc_3Points tool."""
 
     def __init__(self):
-        super().__init__(name=_tr("Arc by 3 points"))
+        super(Arc_3Points, self).__init__(name=_tr("Arc by 3 points"))
 
     def GetResources(self):
         """Set icon, menu and tooltip."""
@@ -493,7 +494,7 @@ class Arc_3Points(gui_base.GuiCommandSimplest):
 
     def Activated(self):
         """Execute when the command is called."""
-        super().Activated()
+        super(Arc_3Points, self).Activated()
 
         # Reset the values
         self.points = []
@@ -553,13 +554,13 @@ class Arc_3Points(gui_base.GuiCommandSimplest):
             # proceed with creating the final object.
             # Draw a simple `Part::Feature` if the parameter is `True`.
             if utils.get_param("UsePartPrimitives", False):
-                arc3.make_arc_3points([self.points[0],
-                                       self.points[1],
-                                       self.points[2]], primitive=True)
+                Draft.make_arc_3points([self.points[0],
+                                        self.points[1],
+                                        self.points[2]], primitive=True)
             else:
-                arc3.make_arc_3points([self.points[0],
-                                       self.points[1],
-                                       self.points[2]], primitive=False)
+                Draft.make_arc_3points([self.points[0],
+                                        self.points[1],
+                                        self.points[2]], primitive=False)
             self.tracker.off()
             self.doc.recompute()
 

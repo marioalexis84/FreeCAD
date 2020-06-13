@@ -29,7 +29,8 @@ __url__ = "http://www.freecadweb.org"
 ## \addtogroup FEM
 #  @{
 
-import io
+# import io
+import codecs
 import os
 import six
 import sys
@@ -154,7 +155,8 @@ class FemInputWriterCcx(writerbase.FemInputWriter):
                         self.file_name,
                         self.fluid_inout_nodes_file
                     )
-                    inpfileMain = io.open(self.file_name, "a", encoding="utf-8")
+                    # inpfileMain = io.open(self.file_name, "a", encoding="utf-8")
+                    inpfileMain = codecs.open(self.file_name, "a", encoding="utf-8")
 
         # constraints independent from steps
         self.write_constraints_planerotation(inpfileMain)
@@ -187,23 +189,35 @@ class FemInputWriterCcx(writerbase.FemInputWriter):
     # mesh
     def write_mesh(self, inpfile_split=None):
         # write mesh to file
+        element_param = 1  # highest element order only
+        group_param = False  # do not write mesh group data
         if inpfile_split is True:
             write_name = "femesh"
             file_name_splitt = self.mesh_name + "_" + write_name + ".inp"
             split_mesh_file_path = join(self.dir_name, file_name_splitt)
-            self.femmesh.writeABAQUS(split_mesh_file_path, 1, False)
+
+            self.femmesh.writeABAQUS(
+                split_mesh_file_path,
+                element_param,
+                group_param
+            )
 
             # Check to see if fluid sections are in analysis and use D network element type
             if self.fluidsection_objects:
                 meshtools.write_D_network_element_to_inputfile(split_mesh_file_path)
 
-            inpfile = io.open(self.file_name, "w", encoding="utf-8")
+            # inpfile = io.open(self.file_name, "w", encoding="utf-8")
+            inpfile = codecs.open(self.file_name, "w", encoding="utf-8")
             inpfile.write("***********************************************************\n")
             inpfile.write("** {}\n".format(write_name))
             inpfile.write("*INCLUDE,INPUT={}\n".format(file_name_splitt))
 
         else:
-            self.femmesh.writeABAQUS(self.file_name, 1, False)
+            self.femmesh.writeABAQUS(
+                self.file_name,
+                element_param,
+                group_param
+            )
 
             # Check to see if fluid sections are in analysis and use D network element type
             if self.fluidsection_objects:
@@ -211,7 +225,8 @@ class FemInputWriterCcx(writerbase.FemInputWriter):
                 meshtools.write_D_network_element_to_inputfile(self.file_name)
 
             # reopen file with "append" to add all the rest
-            inpfile = io.open(self.file_name, "a", encoding="utf-8")
+            # inpfile = io.open(self.file_name, "a", encoding="utf-8")
+            inpfile = codecs.open(self.file_name, "a", encoding="utf-8")
             inpfile.write("\n\n")
 
         return inpfile
@@ -645,15 +660,30 @@ class FemInputWriterCcx(writerbase.FemInputWriter):
         f.write("** written by {} function\n".format(sys._getframe().f_code.co_name))
         for trans_object in self.transform_objects:
             trans_obj = trans_object["Object"]
-            f.write("** " + trans_obj.Label + "\n")
+            trans_name = ""
+            trans_type = ""
             if trans_obj.TransformType == "Rectangular":
-                f.write("*TRANSFORM, NSET=Rect" + trans_obj.Name + ", TYPE=R\n")
+                trans_name = "Rect"
+                trans_type = "R"
                 coords = geomtools.get_rectangular_coords(trans_obj)
-                f.write(coords + "\n")
             elif trans_obj.TransformType == "Cylindrical":
-                f.write("*TRANSFORM, NSET=Cylin" + trans_obj.Name + ", TYPE=C\n")
+                trans_name = "Cylin"
+                trans_type = "C"
                 coords = geomtools.get_cylindrical_coords(trans_obj)
-                f.write(coords + "\n")
+            f.write("** {}\n".format(trans_obj.Label))
+            f.write("*TRANSFORM, NSET={}{}, TYPE={}\n".format(
+                trans_name,
+                trans_obj.Name,
+                trans_type,
+            ))
+            f.write("{:f},{:f},{:f},{:f},{:f},{:f}\n".format(
+                coords[0],
+                coords[1],
+                coords[2],
+                coords[3],
+                coords[4],
+                coords[5],
+            ))
 
     # ********************************************************************************************
     # constraints temperature
@@ -1718,11 +1748,6 @@ class FemInputWriterCcx(writerbase.FemInputWriter):
                             material,
                             section_type
                         )
-                        section_nor = "{}, {}, {}\n".format(
-                            normal[0],
-                            normal[1],
-                            normal[2]
-                        )
                     elif beamsec_obj.SectionType == "Circular":
                         radius = 0.5 * beamsec_obj.CircDiameter.getValueAs("mm")
                         section_type = ", SECTION=CIRC"
@@ -1731,11 +1756,6 @@ class FemInputWriterCcx(writerbase.FemInputWriter):
                             elsetdef,
                             material,
                             section_type
-                        )
-                        section_nor = "{}, {}, {}\n".format(
-                            normal[0],
-                            normal[1],
-                            normal[2]
                         )
                     elif beamsec_obj.SectionType == "Pipe":
                         radius = 0.5 * beamsec_obj.PipeDiameter.getValueAs("mm")
@@ -1747,11 +1767,13 @@ class FemInputWriterCcx(writerbase.FemInputWriter):
                             material,
                             section_type
                         )
-                        section_nor = "{}, {}, {}\n".format(
-                            normal[0],
-                            normal[1],
-                            normal[2]
-                        )
+                    # see forum topic for output formatting of rotation
+                    # https://forum.freecadweb.org/viewtopic.php?f=18&t=46133&p=405142#p405142
+                    section_nor = "{:f}, {:f}, {:f}\n".format(
+                        normal[0],
+                        normal[1],
+                        normal[2]
+                    )
                     f.write(section_def)
                     f.write(section_geo)
                     f.write(section_nor)
@@ -1792,6 +1814,7 @@ class FemInputWriterCcx(writerbase.FemInputWriter):
                     material = "MATERIAL=" + ccx_elset["mat_obj_name"]
                     section_def = "*SOLID SECTION, " + elsetdef + material + "\n"
                     f.write(section_def)
+
 
 # ************************************************************************************************
 # Helpers

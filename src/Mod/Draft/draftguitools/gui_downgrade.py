@@ -64,7 +64,7 @@ class Downgrade(gui_base_original.Modifier):
 
     def Activated(self):
         """Execute when the command is called."""
-        super().Activated(name=_tr("Downgrade"))
+        super(Downgrade, self).Activated(name=_tr("Downgrade"))
         if self.ui:
             if not Gui.Selection.getSelection():
                 self.ui.selectUi()
@@ -87,7 +87,7 @@ class Downgrade(gui_base_original.Modifier):
             _cmd += 'FreeCADGui.Selection.getSelection(), '
             _cmd += 'delete=True'
             _cmd += ')'
-            _cmd_list = ['d = ' + _cmd,
+            _cmd_list = ['_objs_ = ' + _cmd,
                          'FreeCAD.ActiveDocument.recompute()']
             self.commit(translate("draft", "Downgrade"),
                         _cmd_list)

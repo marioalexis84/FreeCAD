@@ -50,7 +50,7 @@ class Move(gui_base_original.Modifier):
     """Gui Command for the Move tool."""
 
     def __init__(self):
-        super().__init__()
+        super(Move, self).__init__()
 
     def GetResources(self):
         """Set icon, menu and tooltip."""
@@ -68,9 +68,9 @@ class Move(gui_base_original.Modifier):
     def Activated(self):
         """Execute when the command is called."""
         self.name = translate("draft", "Move")
-        super().Activated(self.name,
-                          is_subtool=isinstance(App.activeDraftCommand,
-                                                SubelementHighlight))
+        super(Move, self).Activated(self.name,
+                                    is_subtool=isinstance(App.activeDraftCommand,
+                                                          SubelementHighlight))
         if not self.ui:
             return
         self.ghosts = []
@@ -111,7 +111,7 @@ class Move(gui_base_original.Modifier):
         if cont and self.ui:
             if self.ui.continueMode:
                 todo.ToDo.delayAfter(self.Activated, [])
-        super().finish()
+        super(Move, self).finish()
 
     def action(self, arg):
         """Handle the 3D scene events.
@@ -134,7 +134,7 @@ class Move(gui_base_original.Modifier):
             self.handle_mouse_click_event(arg)
 
     def handle_mouse_move_event(self, arg):
-        """Hande the mouse when moving."""
+        """Handle the mouse when moving."""
         for ghost in self.ghosts:
             ghost.off()
         self.point, ctrlPoint, info = gui_tool_utils.getPoint(self, arg)
@@ -150,7 +150,7 @@ class Move(gui_base_original.Modifier):
         gui_tool_utils.redraw3DView()
 
     def handle_mouse_click_event(self, arg):
-        """Hande the mouse when the first button is clicked."""
+        """Handle the mouse when the first button is clicked."""
         if not self.ghosts:
             self.set_ghosts()
         if not self.point:

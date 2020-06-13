@@ -71,7 +71,7 @@
 # include <QTextStream>
 # include <QKeyEvent>
 
-# include <boost/bind.hpp>
+# include <boost/bind/bind.hpp>
 # include <boost/scoped_ptr.hpp>
 #endif
 
@@ -94,6 +94,7 @@
 #include <Gui/CommandT.h>
 #include <Gui/Control.h>
 #include <Gui/Selection.h>
+#include <Gui/Tools.h>
 #include <Gui/Utilities.h>
 #include <Gui/MainWindow.h>
 #include <Gui/MenuManager.h>
@@ -138,6 +139,7 @@ FC_LOG_LEVEL_INIT("Sketch",true,true)
 
 using namespace SketcherGui;
 using namespace Sketcher;
+namespace bp = boost::placeholders;
 
 SbColor ViewProviderSketch::VertexColor                 (1.0f,0.149f,0.0f);   // #FF2600 -> (255, 38,  0)
 SbColor ViewProviderSketch::CurveColor                  (1.0f,1.0f,1.0f);     // #FFFFFF -> (255,255,255)
@@ -291,6 +293,7 @@ ViewProviderSketch::ViewProviderSketch()
     listener(0)
 {
     ADD_PROPERTY_TYPE(Autoconstraints,(true),"Auto Constraints",(App::PropertyType)(App::Prop_None),"Create auto constraints");
+    ADD_PROPERTY_TYPE(AvoidRedundant,(true),"Auto Constraints",(App::PropertyType)(App::Prop_None),"Avoid redundant autoconstraint");
     ADD_PROPERTY_TYPE(TempoVis,(Py::None()),"Visibility automation",(App::PropertyType)(App::Prop_None),"Object that handles hiding and showing other objects when entering/leaving sketch.");
     ADD_PROPERTY_TYPE(HideDependent,(true),"Visibility automation",(App::PropertyType)(App::Prop_None),"If true, all objects that depend on the sketch are hidden when opening editing.");
     ADD_PROPERTY_TYPE(ShowLinks,(true),"Visibility automation",(App::PropertyType)(App::Prop_None),"If true, all objects used in links to external geometry are shown when opening sketch.");
@@ -306,7 +309,11 @@ ViewProviderSketch::ViewProviderSketch()
         this->RestoreCamera.setValue(hGrp->GetBool("RestoreCamera", true));
 
         // well it is not visibility automation but a good place nevertheless
+        this->ShowGrid.setValue(hGrp->GetBool("ShowGrid", false));
+        this->GridSize.setValue(Base::Quantity::parse(QString::fromLatin1(hGrp->GetGroup("GridSize")->GetASCII("Hist0", "10.0").c_str())).getValue());
+        this->GridSnap.setValue(hGrp->GetBool("GridSnap", false));
         this->Autoconstraints.setValue(hGrp->GetBool("AutoConstraints", true));
+        this->AvoidRedundant.setValue(hGrp->GetBool("AvoidRedundantAutoconstraints", true));
     }
 
     sPixmap = "Sketcher_Sketch";
@@ -500,7 +507,7 @@ bool ViewProviderSketch::keyPressed(bool pressed, int key)
 
 void ViewProviderSketch::snapToGrid(double &x, double &y)
 {
-    if (GridSnap.getValue() != false) {
+    if (GridSnap.getValue() && ShowGrid.getValue()) {
         // Snap Tolerance in pixels
         const double snapTol = GridSize.getValue() / 5;
 
@@ -1175,7 +1182,7 @@ bool ViewProviderSketch::mouseMove(const SbVec2s &cursorPos, Gui::View3DInventor
         case STATUS_SKETCH_DragConstraint:
             if (edit->DragConstraintSet.empty() == false) {
                 auto idset = edit->DragConstraintSet;
-                for(int id : idset) 
+                for(int id : idset)
                     moveConstraint(id, Base::Vector2d(x,y));
             }
             return true;
@@ -2599,7 +2606,7 @@ void ViewProviderSketch::updateColor(void)
   //int32_t *index = edit->CurveSet->numVertices.startEditing();
     SbVec3f *pverts = edit->PointsCoordinate->point.startEditing();
 
-    ParameterGrp::handle hGrpp = App::GetApplication().GetParameterGroupByPath("User parameter:BaseApp/Preferences/Mod/Sketcher");
+    ParameterGrp::handle hGrpp = App::GetApplication().GetParameterGroupByPath("User parameter:BaseApp/Preferences/Mod/Sketcher/General");
 
     // 1->Normal Geometry, 2->Construction, 3->External
     int topid = hGrpp->GetInt("TopRenderGeometryId",1);
@@ -2771,11 +2778,16 @@ void ViewProviderSketch::updateColor(void)
             } else if (hasMaterial) {
                 m->diffuseColor = SelectColor;
             } else if (type == Sketcher::Coincident) {
-                int index;
-                index = getSketchObject()->getSolvedSketch().getPointId(constraint->First, constraint->FirstPos) + 1;
-                if (index >= 0 && index < PtNum) pcolor[index] = SelectColor;
-                index = getSketchObject()->getSolvedSketch().getPointId(constraint->Second, constraint->SecondPos) + 1;
-                if (index >= 0 && index < PtNum) pcolor[index] = SelectColor;
+                auto selectpoint = [this, pcolor, PtNum](int geoid, Sketcher::PointPos pos){
+                    if(geoid >= 0) {
+                        int index = getSketchObject()->getSolvedSketch().getPointId(geoid, pos) + 1;
+                        if (index >= 0 && index < PtNum)
+                            pcolor[index] = SelectColor;
+                    }
+                };
+
+                selectpoint(constraint->First, constraint->FirstPos);
+                selectpoint(constraint->Second, constraint->SecondPos);
             } else if (type == Sketcher::InternalAlignment) {
                 switch(constraint->AlignmentType) {
                     case EllipseMajorDiameter:
@@ -3460,7 +3472,7 @@ QImage ViewProviderSketch::renderConstrIcon(const QString &type,
                 boundingBoxes->push_back(labelBB);
             }
 
-            cursorOffset += qfm.width(labelStr);
+            cursorOffset += Gui::QtTools::horizontalAdvance(qfm, labelStr);
         }
     }
 
@@ -4274,15 +4286,7 @@ void ViewProviderSketch::draw(bool temp /*=false*/, bool rebuildinformationlayer
 
     float dMagF = exp(ceil(log(std::abs(dMg))));
 
-    MinX = -dMagF;
-    MaxX = dMagF;
-    MinY = -dMagF;
-    MaxY = dMagF;
-
-    if (ShowGrid.getValue())
-        createGrid();
-    else
-        Gui::coinRemoveAllChildren(GridRoot);
+    updateGridExtent(-dMagF, dMagF, -dMagF, dMagF);
 
     edit->RootCrossCoordinate->point.set1Value(0,SbVec3f(-dMagF, 0.0f, zCross));
     edit->RootCrossCoordinate->point.set1Value(1,SbVec3f(dMagF, 0.0f, zCross));
@@ -4322,10 +4326,10 @@ Restart:
             SoSeparator *sep = static_cast<SoSeparator *>(edit->constrGroup->getChild(i));
             const Constraint *Constr = *it;
 
-            if(Constr->First < -extGeoCount || Constr->First >= intGeoCount 
-                    || (Constr->Second!=Constraint::GeoUndef 
+            if(Constr->First < -extGeoCount || Constr->First >= intGeoCount
+                    || (Constr->Second!=Constraint::GeoUndef
                         && (Constr->Second < -extGeoCount || Constr->Second >= intGeoCount))
-                    || (Constr->Third!=Constraint::GeoUndef 
+                    || (Constr->Third!=Constraint::GeoUndef
                         && (Constr->Third < -extGeoCount || Constr->Third >= intGeoCount)))
             {
                 // Constraint can refer to non-existent geometry during undo/redo
@@ -5589,8 +5593,6 @@ void ViewProviderSketch::setupContextMenu(QMenu *menu, QObject *receiver, const 
 
 bool ViewProviderSketch::setEdit(int ModNum)
 {
-    Q_UNUSED(ModNum);
-
     // When double-clicking on the item for this sketch the
     // object unsets and sets its edit mode without closing
     // the task panel
@@ -5634,7 +5636,7 @@ bool ViewProviderSketch::setEdit(int ModNum)
     // clear the selection (convenience)
     Gui::Selection().clearSelection();
     Gui::Selection().rmvPreselect();
-    
+
     this->attachSelection();
 
     // create the container for the additional edit data
@@ -5691,9 +5693,9 @@ bool ViewProviderSketch::setEdit(int ModNum)
         Base::Console().Warning("ViewProviderSketch::setEdit: could not import Show module. Visibility automation will not work.\n");
     }
 
-
-    ShowGrid.setValue(true);
     TightGrid.setValue(false);
+
+    ViewProvider2DObject::setEdit(ModNum); // notify to handle grid according to edit mode property
 
     float transparency;
 
@@ -5775,9 +5777,9 @@ bool ViewProviderSketch::setEdit(int ModNum)
     draw(false,true);
 
     connectUndoDocument = getDocument()
-        ->signalUndoDocument.connect(boost::bind(&ViewProviderSketch::slotUndoDocument, this, _1));
+        ->signalUndoDocument.connect(boost::bind(&ViewProviderSketch::slotUndoDocument, this, bp::_1));
     connectRedoDocument = getDocument()
-        ->signalRedoDocument.connect(boost::bind(&ViewProviderSketch::slotRedoDocument, this, _1));
+        ->signalRedoDocument.connect(boost::bind(&ViewProviderSketch::slotRedoDocument, this, bp::_1));
 
     // Enable solver initial solution update while dragging.
     ParameterGrp::handle hGrp2 = App::GetApplication().GetParameterGroupByPath("User parameter:BaseApp/Preferences/Mod/Sketcher");
@@ -6008,6 +6010,9 @@ void ViewProviderSketch::createEditInventorNodes(void)
 
     // stuff for the edit coordinates ++++++++++++++++++++++++++++++++++++++
     SoSeparator *Coordsep = new SoSeparator();
+    SoPickStyle* ps = new SoPickStyle();
+    ps->style.setValue(SoPickStyle::UNPICKABLE);
+    Coordsep->addChild(ps);
     Coordsep->setName("CoordSeparator");
     // no caching for fluctuand data structures
     Coordsep->renderCaching = SoSeparator::OFF;
@@ -6070,7 +6075,6 @@ void ViewProviderSketch::createEditInventorNodes(void)
 void ViewProviderSketch::unsetEdit(int ModNum)
 {
     Q_UNUSED(ModNum);
-    ShowGrid.setValue(false);
     TightGrid.setValue(true);
 
     if(listener) {
@@ -6127,6 +6131,8 @@ void ViewProviderSketch::unsetEdit(int ModNum)
         Base::Console().Error("ViewProviderSketch::unsetEdit: visibility automation failed with an error: \n");
         e.ReportException();
     }
+
+    ViewProvider2DObject::unsetEdit(ModNum); // notify grid that edit mode is being left
 }
 
 void ViewProviderSketch::setEditViewer(Gui::View3DInventorViewer* viewer, int ModNum)
@@ -6225,8 +6231,7 @@ void ViewProviderSketch::setPositionText(const Base::Vector2d &Pos)
 {
     SbString text;
     text.sprintf(" (%.1f,%.1f)", Pos.x, Pos.y);
-    edit->textX->string = text;
-    edit->textPos->translation = SbVec3f(Pos.x,Pos.y,zText);
+    setPositionText(Pos,text);
 }
 
 void ViewProviderSketch::resetPositionText(void)

@@ -139,7 +139,14 @@ structuralifcobjects = (
 # ********** get the prefs, available in import and export ****************
 def getPreferences():
 
-    """retrieves IFC preferences"""
+    """retrieves IFC preferences.
+    
+    MERGE_MODE_ARCH: 
+        0 = parametric arch objects
+        1 = non-parametric arch objects
+        2 = Part shapes
+        3 = One compound per storey
+    """
 
     p = FreeCAD.ParamGet("User parameter:BaseApp/Preferences/Mod/Arch")
 
@@ -172,6 +179,14 @@ def getPreferences():
         preferences['SKIP'].append("IfcOpeningElement")
 
     return preferences
+
+
+# ************************************************************************************************
+# ********** backwards compatibility ****************
+
+def export(exportList,filename,colors=None,preferences=None):
+    import exportIFC
+    exportIFC.export(exportList,filename,colors,preferences)
 
 
 # ************************************************************************************************
@@ -274,6 +289,7 @@ def insert(filename,docname,skip=[],only=[],root=None,preferences=None):
     subtractions = importIFCHelper.buildRelSubtractions(ifcfile)
     mattable = importIFCHelper.buildRelMattable(ifcfile)
     colors = importIFCHelper.buildRelProductColors(ifcfile, prodrepr)
+    colordict = {} # { objname:color tuple } for non-GUI use
     if preferences['DEBUG']: print("done.")
 
     # only import a list of IDs and their children, if defined
@@ -342,7 +358,7 @@ def insert(filename,docname,skip=[],only=[],root=None,preferences=None):
         if psets and FreeCAD.ParamGet("User parameter:BaseApp/Preferences/Mod/Arch").GetBool("IfcImportFreeCADProperties",False):
             if "FreeCADPropertySet" in [ifcfile[pset].Name for pset in psets.keys()]:
                 if preferences['DEBUG']: print(" restoring from parametric definition...",end="")
-                obj = createFromProperties(psets,ifcfile)
+                obj,parametrics = importIFCHelper.createFromProperties(psets,ifcfile,parametrics)
                 if obj:
                     objects[pid] = obj
                     if preferences['DEBUG']: print("done")
@@ -379,6 +395,9 @@ def insert(filename,docname,skip=[],only=[],root=None,preferences=None):
             if preferences['DEBUG']: print(" skipped.")
             continue
         if pid in skip:  # user given id skip list
+            if preferences['DEBUG']: print(" skipped.")
+            continue
+        if ptype in skip:  # user given type skip list
             if preferences['DEBUG']: print(" skipped.")
             continue
         if ptype in preferences['SKIP']:  # preferences-set type skip list
@@ -482,24 +501,29 @@ def insert(filename,docname,skip=[],only=[],root=None,preferences=None):
                     else:
                         if preferences['GET_EXTRUSIONS'] and (preferences['MERGE_MODE_ARCH'] != 1):
 
+                            # get IFC profile
+                            profileid = None
+                            sortmethod = None
+                            if product.Representation:
+                                if product.Representation.Representations:
+                                    if product.Representation.Representations[0].is_a("IfcShapeRepresentation"):
+                                        if product.Representation.Representations[0].Items:
+                                            if product.Representation.Representations[0].Items[0].is_a("IfcExtrudedAreaSolid"):
+                                                profileid = product.Representation.Representations[0].Items[0].SweptArea.id()
+                                                sortmethod = importIFCHelper.getProfileCenterPoint(product.Representation.Representations[0].Items[0])
+
                             # recompose extrusions from a shape
-                            if ptype in ["IfcWall","IfcWallStandardCase","IfcSpace"]:
-                                sortmethod = "z"
-                            else:
-                                sortmethod = "area"
+                            if not sortmethod:
+                                if ptype in ["IfcWall","IfcWallStandardCase","IfcSpace"]:
+                                    sortmethod = "z"
+                                else:
+                                    sortmethod = "area"
                             ex = Arch.getExtrusionData(shape,sortmethod)  # is this an extrusion?
                             if ex:
 
                                 # check for extrusion profile
                                 baseface = None
-                                profileid = None
                                 addplacement = None
-                                if product.Representation:
-                                    if product.Representation.Representations:
-                                        if product.Representation.Representations[0].is_a("IfcShapeRepresentation"):
-                                            if product.Representation.Representations[0].Items:
-                                                if product.Representation.Representations[0].Items[0].is_a("IfcExtrudedAreaSolid"):
-                                                    profileid = product.Representation.Representations[0].Items[0].SweptArea.id()
                                 if profileid and (profileid in profiles):
 
                                     # reuse existing profile if existing
@@ -523,23 +547,34 @@ def insert(filename,docname,skip=[],only=[],root=None,preferences=None):
                                     print("extrusion ",end="")
                                     import DraftGeomUtils
                                     if DraftGeomUtils.hasCurves(ex[0]) or len(ex[0].Wires) != 1:
-                                        # curves or holes? We just make a Part face
-                                        baseface = FreeCAD.ActiveDocument.addObject("Part::Feature",name+"_footprint")
-                                        # bug/feature in ifcopenshell? Some faces of a shell may have non-null placement
-                                        # workaround to remove the bad placement: exporting/reimporting as step
-                                        if not ex[0].Placement.isNull():
-                                            import tempfile
-                                            fd, tf = tempfile.mkstemp(suffix=".stp")
-                                            ex[0].exportStep(tf)
-                                            f = Part.read(tf)
-                                            os.close(fd)
-                                            os.remove(tf)
+                                        # is this a circle?
+                                        if (len(ex[0].Edges) == 1) and isinstance(ex[0].Edges[0].Curve,Part.Circle):
+                                            baseface = Draft.makeCircle(ex[0].Edges[0])
                                         else:
-                                            f = ex[0]
-                                        baseface.Shape = f
+                                            # curves or holes? We just make a Part face
+                                            baseface = FreeCAD.ActiveDocument.addObject("Part::Feature",name+"_footprint")
+                                            # bug/feature in ifcopenshell? Some faces of a shell may have non-null placement
+                                            # workaround to remove the bad placement: exporting/reimporting as step
+                                            if not ex[0].Placement.isNull():
+                                                import tempfile
+                                                fd, tf = tempfile.mkstemp(suffix=".stp")
+                                                ex[0].exportStep(tf)
+                                                f = Part.read(tf)
+                                                os.close(fd)
+                                                os.remove(tf)
+                                            else:
+                                                f = ex[0]
+                                            baseface.Shape = f
                                     else:
-                                        # no hole and no curves, we make a Draft Wire instead
-                                        baseface = Draft.makeWire([v.Point for v in ex[0].Wires[0].OrderedVertexes],closed=True)
+                                        # no curve and no hole, we can make a draft object
+                                        verts = [v.Point for v in ex[0].Wires[0].OrderedVertexes]
+                                        # TODO verts are different if shape is made of RectangleProfileDef or not
+                                        # is this a rectangle?
+                                        if importIFCHelper.isRectangle(verts):
+                                            baseface = Draft.makeRectangle(verts,face=True)
+                                        else:
+                                            # no hole and no curves, we make a Draft Wire instead
+                                            baseface = Draft.makeWire(verts,closed=True)
                                     if profileid:
                                         # store for possible shared use
                                         profiles[profileid] = baseface
@@ -815,12 +850,15 @@ def insert(filename,docname,skip=[],only=[],root=None,preferences=None):
 
             # color
 
-            if FreeCAD.GuiUp and (pid in colors) and colors[pid]:
-                # if preferences['DEBUG']: print("    setting color: ",int(colors[pid][0]*255),"/",int(colors[pid][1]*255),"/",int(colors[pid][2]*255))
-                if hasattr(obj.ViewObject,"ShapeColor"):
-                    obj.ViewObject.ShapeColor = tuple(colors[pid][0:3])
-                if hasattr(obj.ViewObject,"Transparency"):
-                    obj.ViewObject.Transparency = colors[pid][3]
+            if (pid in colors) and colors[pid]:
+                colordict[obj.Name] = colors[pid]
+                if FreeCAD.GuiUp:
+                    # if preferences['DEBUG']: print("    setting color: ",int(colors[pid][0]*255),"/",int(colors[pid][1]*255),"/",int(colors[pid][2]*255))
+                    if hasattr(obj.ViewObject,"ShapeColor"):
+                        obj.ViewObject.ShapeColor = tuple(colors[pid][0:3])
+                    if hasattr(obj.ViewObject,"Transparency"):
+                        obj.ViewObject.Transparency = colors[pid][3]
+                    
 
             # if preferences['DEBUG'] is on, recompute after each shape
             if preferences['DEBUG']: FreeCAD.ActiveDocument.recompute()
@@ -1245,6 +1283,13 @@ def insert(filename,docname,skip=[],only=[],root=None,preferences=None):
             if not obj.InList:
                 rootgroup.addObject(obj)
 
+    # Save colordict in non-GUI mode
+    if colordict and not FreeCAD.GuiUp:
+        import json
+        d = doc.Meta
+        d["colordict"] = json.dumps(colordict)
+        doc.Meta = d
+
     FreeCAD.ActiveDocument.recompute()
 
     if ZOOMOUT and FreeCAD.GuiUp:
@@ -1252,92 +1297,3 @@ def insert(filename,docname,skip=[],only=[],root=None,preferences=None):
         FreeCADGui.SendMsgToActiveView("ViewFit")
     print("Finished importing.")
     return doc
-
-
-# ************************************************************************************************
-# ********** helper ****************
-def createFromProperties(propsets,ifcfile):
-
-    "creates a FreeCAD parametric object from a set of properties"
-
-    obj = None
-    sets = []
-    global parametrics
-    appset = None
-    guiset = None
-    for pset in propsets.keys():
-        if ifcfile[pset].Name == "FreeCADPropertySet":
-            appset = {}
-            for pid in propsets[pset]:
-                p = ifcfile[pid]
-                appset[p.Name] = p.NominalValue.wrappedValue
-        elif ifcfile[pset].Name == "FreeCADGuiPropertySet":
-            guiset = {}
-            for pid in propsets[pset]:
-                p = ifcfile[pid]
-                guiset[p.Name] = p.NominalValue.wrappedValue
-    if appset:
-        oname = None
-        otype = None
-        if "FreeCADType" in appset.keys():
-            if "FreeCADName" in appset.keys():
-                obj = FreeCAD.ActiveDocument.addObject(appset["FreeCADType"],appset["FreeCADName"])
-                if "FreeCADAppObject" in appset:
-                    mod,cla = appset["FreeCADAppObject"].split(".")
-                    if "'" in mod:
-                        mod = mod.split("'")[-1]
-                    if "'" in cla:
-                        cla = cla.split("'")[0]
-                    import importlib
-                    mod = importlib.import_module(mod)
-                    getattr(mod,cla)(obj)
-                sets.append(("App",appset))
-                if FreeCAD.GuiUp:
-                    if guiset:
-                        if "FreeCADGuiObject" in guiset:
-                            mod,cla = guiset["FreeCADGuiObject"].split(".")
-                            if "'" in mod:
-                                mod = mod.split("'")[-1]
-                            if "'" in cla:
-                                cla = cla.split("'")[0]
-                            import importlib
-                            mod = importlib.import_module(mod)
-                            getattr(mod,cla)(obj.ViewObject)
-                        sets.append(("Gui",guiset))
-    if obj and sets:
-        for realm,pset in sets:
-            if realm == "App":
-                target = obj
-            else:
-                target = obj.ViewObject
-            for key,val in pset.items():
-                if key.startswith("FreeCAD_") or key.startswith("FreeCADGui_"):
-                    name = key.split("_")[1]
-                    if name in target.PropertiesList:
-                        if not target.getEditorMode(name):
-                            ptype = target.getTypeIdOfProperty(name)
-                            if ptype in ["App::PropertyString","App::PropertyEnumeration","App::PropertyInteger","App::PropertyFloat"]:
-                                setattr(target,name,val)
-                            elif ptype in ["App::PropertyLength","App::PropertyDistance"]:
-                                setattr(target,name,val*1000)
-                            elif ptype == "App::PropertyBool":
-                                if val in [".T.",True]:
-                                    setattr(target,name,True)
-                                else:
-                                    setattr(target,name,False)
-                            elif ptype == "App::PropertyVector":
-                                setattr(target,name,FreeCAD.Vector([float(s) for s in val.split("(")[1].strip(")").split(",")]))
-                            elif ptype == "App::PropertyArea":
-                                setattr(target,name,val*1000000)
-                            elif ptype == "App::PropertyPlacement":
-                                data = val.split("[")[1].strip("]").split("(")
-                                data = [data[1].split(")")[0],data[2].strip(")")]
-                                v = FreeCAD.Vector([float(s) for s in data[0].split(",")])
-                                r = FreeCAD.Rotation(*[float(s) for s in data[1].split(",")])
-                                setattr(target,name,FreeCAD.Placement(v,r))
-                            elif ptype == "App::PropertyLink":
-                                link = val.split("_")[1]
-                                parametrics.append([target,name,link])
-                            else:
-                                print("Unhandled FreeCAD property:",name," of type:",ptype)
-    return obj

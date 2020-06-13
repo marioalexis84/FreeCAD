@@ -70,6 +70,7 @@ BuildRequires:  netgen-mesher-devel
 BuildRequires:  netgen-mesher-devel-private
 BuildRequires:  python3-pivy
 BuildRequires:  mesa-libEGL-devel
+BuildRequires:  openmpi-devel
 BuildRequires:  pcl-devel
 BuildRequires:  pyside2-tools
 BuildRequires:  python3
@@ -80,8 +81,10 @@ BuildRequires:  python3-pycxx-devel
 %endif
 BuildRequires:  python3-pyside2-devel
 BuildRequires:  python3-shiboken2-devel
-BuildRequires:  qt5-devel
 BuildRequires:  qt5-qtwebkit-devel
+BuildRequires:  qt5-qtsvg-devel
+BuildRequires:  qt5-qttools-static
+BuildRequires:  qt5-qtxmlpatterns-devel
 %if ! %{bundled_smesh}
 BuildRequires:  smesh-devel
 %endif

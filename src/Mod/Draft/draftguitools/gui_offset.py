@@ -22,14 +22,14 @@
 # *   USA                                                                   *
 # *                                                                         *
 # ***************************************************************************
-"""Provides tools for offseting objects with the Draft Workbench.
+"""Provides tools for offsetting objects with the Draft Workbench.
 
 It mostly works on lines, polylines, and similar objects with
 regular geometrical shapes, like rectangles.
 """
 ## @package gui_offset
 # \ingroup DRAFT
-# \brief Provides tools for offseting objects with the Draft Workbench.
+# \brief Provides tools for offsetting objects with the Draft Workbench.
 
 import math
 from PySide.QtCore import QT_TRANSLATE_NOOP
@@ -67,7 +67,7 @@ class Offset(gui_base_original.Modifier):
     def Activated(self):
         """Execute when the command is called."""
         self.running = False
-        super().Activated(name=_tr("Offset"))
+        super(Offset, self).Activated(name=_tr("Offset"))
         self.ghost = None
         self.linetrack = None
         self.arctrack = None
@@ -263,7 +263,7 @@ class Offset(gui_base_original.Modifier):
                 self.linetrack.finalize()
             if self.ghost:
                 self.ghost.finalize()
-        super().finish()
+        super(Offset, self).finish()
 
     def numericRadius(self, rad):
         """Validate the radius entry field in the user interface.

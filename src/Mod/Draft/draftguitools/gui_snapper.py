@@ -124,8 +124,8 @@ class Snapper:
         self.callbackMove = None
         self.snapObjectIndex = 0
 
-        # snap keys, it's important tha they are in this order for
-        # saving in preferences and for properly restore the toolbar
+        # snap keys, it's important that they are in this order for
+        # saving in preferences and for properly restoring the toolbar
         self.snaps = ['Lock',           # 0 
                       'Near',           # 1 former "passive" snap
                       'Extension',      # 2
@@ -361,7 +361,7 @@ class Snapper:
             parent = obj
             subname = self.snapInfo['Component']
         if not obj:
-            self.spoint = cstr(point)
+            self.spoint = self.cstr(point)
             self.running = False
             return self.spoint
 
@@ -943,9 +943,9 @@ class Snapper:
                       210, 225, 240, 270,
                       300, 315, 330):
                 ang = math.radians(i)
-                cur = Vector(math.sin(ang) * rad + pos.x,
-                             math.cos(ang) * rad + pos.y,
-                             pos.z)
+                cur = App.Vector(math.sin(ang) * rad + pos.x,
+                                 math.cos(ang) * rad + pos.y,
+                                 pos.z)
                 snaps.append([cur, 'angle', self.toWP(cur)])
         return snaps
 
@@ -1514,7 +1514,7 @@ class Snapper:
 
 
     def get_snap_toolbar(self):
-        """Retuns snap toolbar object."""
+        """Returns snap toolbar object."""
         mw = Gui.getMainWindow()
         if mw:
             toolbar = mw.findChild(QtGui.QToolBar, "Draft Snap")
@@ -1587,7 +1587,7 @@ class Snapper:
             self.makeSnapToolBar()
         bt = self.get_snap_toolbar()
         if not bt:
-            mw = FreeCADGui.getMainWindow()
+            mw = Gui.getMainWindow()
             mw.addToolBar(self.toolbar)
             self.toolbar.setParent(mw)
         self.toolbar.show()

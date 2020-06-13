@@ -29,6 +29,7 @@
 #include <gp_Circ.hxx>
 #include <Geom_Circle.hxx>
 #include <BRepBuilderAPI_MakeEdge.hxx>
+#include <BRepBuilderAPI_MakeVertex.hxx>
 #include <TopoDS.hxx>
 #include <TopoDS_Edge.hxx>
 #include <TopoDS_Shape.hxx>
@@ -48,6 +49,7 @@
 
 #include "DrawViewPart.h"
 #include "GeometryObject.h"
+#include "Geometry.h"
 #include "Cosmetic.h"
 #include "CosmeticExtension.h"
 #include "DrawUtil.h"
@@ -103,8 +105,16 @@ PyObject* DrawViewPartPy::getHiddenEdges(PyObject *args)
     return pEdgeList;
 }
 
-// remove all cosmetics
+PyObject* DrawViewPartPy::requestPaint(PyObject *args)
+{
+    (void) args;
+    DrawViewPart* item = getDrawViewPartPtr();
+    item->requestPaint();
+    Py_INCREF(Py_None);
+    return Py_None;
+}
 
+// remove all cosmetics
 PyObject* DrawViewPartPy::clearCosmeticVertices(PyObject *args)
 {
     (void) args;
@@ -271,17 +281,21 @@ PyObject* DrawViewPartPy::removeCosmeticVertex(PyObject *args)
 
 PyObject* DrawViewPartPy::replaceCosmeticVertex(PyObject *args)
 {
-    PyObject* pNewCV = nullptr;
-    if (!PyArg_ParseTuple(args, "O!", &(TechDraw::CosmeticVertexPy::Type), &pNewCV)) {
-        throw Py::TypeError("expected (CosmeticVertex)");
-    }
-    DrawViewPart* dvp = getDrawViewPartPtr();
-    TechDraw::CosmeticVertexPy* cvPy = static_cast<TechDraw::CosmeticVertexPy*>(pNewCV);
-    TechDraw::CosmeticVertex* cv = cvPy->getCosmeticVertexPtr();
-    bool result = dvp->replaceCosmeticVertex(cv);
-    dvp->refreshCVGeoms();
-    dvp->requestPaint();
-    return PyBool_FromLong((long) result);
+    (void) args;
+    Base::Console().Message("DVPP::replaceCosmeticVertex() - deprecated. do not use.\n");
+    return PyBool_FromLong(0l);
+    
+//    PyObject* pNewCV = nullptr;
+//    if (!PyArg_ParseTuple(args, "O!", &(TechDraw::CosmeticVertexPy::Type), &pNewCV)) {
+//        throw Py::TypeError("expected (CosmeticVertex)");
+//    }
+//    DrawViewPart* dvp = getDrawViewPartPtr();
+//    TechDraw::CosmeticVertexPy* cvPy = static_cast<TechDraw::CosmeticVertexPy*>(pNewCV);
+//    TechDraw::CosmeticVertex* cv = cvPy->getCosmeticVertexPtr();
+//    bool result = dvp->replaceCosmeticVertex(cv);
+//    dvp->refreshCVGeoms();
+//    dvp->requestPaint();
+//    return PyBool_FromLong((long) result);
 }
 
 
@@ -334,8 +348,8 @@ PyObject* DrawViewPartPy::makeCosmeticCircle(PyObject *args)
 {
     PyObject* pPnt1 = nullptr;
     double radius = 5.0;
-    double angle1 = 0.0;
-    double angle2 = 360.0;
+//    double angle1 = 0.0;
+//    double angle2 = 360.0;
     int style = LineFormat::getDefEdgeStyle();
     double weight = LineFormat::getDefEdgeWidth();
     App::Color defCol = LineFormat::getDefEdgeColor();
@@ -350,22 +364,13 @@ PyObject* DrawViewPartPy::makeCosmeticCircle(PyObject *args)
 
     DrawViewPart* dvp = getDrawViewPartPtr();
     Base::Vector3d pnt1 = DrawUtil::invertY(static_cast<Base::VectorPy*>(pPnt1)->value());
-    gp_Pnt loc(pnt1.x, pnt1.y, pnt1.z);
-    gp_Dir dir(0,0,1);
-    gp_Ax1 axis(loc, dir);
-    gp_Circ circle;
-    circle.SetAxis(axis);
-    circle.SetRadius(radius);
-
-    Handle(Geom_Circle) hCircle = new Geom_Circle (circle);
-    BRepBuilderAPI_MakeEdge aMakeEdge(hCircle, angle1*(M_PI/180), angle2*(M_PI/180));
-    TopoDS_Edge edge = aMakeEdge.Edge();
-    TechDraw::BaseGeom* bg = TechDraw::BaseGeom::baseFactory(edge);
+    TechDraw::BaseGeom* bg = new TechDraw::Circle(pnt1, radius);
     std::string newTag = dvp->addCosmeticEdge(bg);
     TechDraw::CosmeticEdge* ce = dvp->getCosmeticEdge(newTag);
     if (ce != nullptr) {
         ce->permaStart = pnt1;
         ce->permaEnd   = pnt1;
+        ce->permaRadius = radius;
         ce->m_format.m_style = style;
         ce->m_format.m_weight = weight;
         if (pColor == nullptr) {
@@ -404,25 +409,13 @@ PyObject* DrawViewPartPy::makeCosmeticCircleArc(PyObject *args)
     //from here on is almost duplicate of makeCosmeticCircle
     DrawViewPart* dvp = getDrawViewPartPtr();
     Base::Vector3d pnt1 = DrawUtil::invertY(static_cast<Base::VectorPy*>(pPnt1)->value());
-    gp_Pnt loc(pnt1.x, pnt1.y, pnt1.z);
-    gp_Dir dir(0,0,1);
-    gp_Ax1 axis(loc, dir);
-    gp_Circ circle;
-    circle.SetAxis(axis);
-    circle.SetRadius(radius);      //full circle @ right loc
-    Handle(Geom_Circle) hCircle = new Geom_Circle (circle);
-    BRepBuilderAPI_MakeEdge aMakeEdge(hCircle, -angle2*(M_PI/180), -angle1*(M_PI/180)); //hack!
-    // right result, but ugly:
-    // Qt angles are cw, OCC angles are CCW
-    // Qt -y is up, OCC -y is down
-
-    TopoDS_Edge edge = aMakeEdge.Edge();
-    TechDraw::BaseGeom* bg = TechDraw::BaseGeom::baseFactory(edge);
+    TechDraw::BaseGeom* bg = new TechDraw::AOC(pnt1, radius, angle1, angle2);
     std::string newTag = dvp->addCosmeticEdge(bg);
     TechDraw::CosmeticEdge* ce = dvp->getCosmeticEdge(newTag);
     if (ce != nullptr) {
         ce->permaStart = pnt1;
         ce->permaEnd   = pnt1;
+        ce->permaRadius = radius;
         ce->m_format.m_style = style;
         ce->m_format.m_weight = weight;
         if (pColor == nullptr) {
@@ -454,9 +447,7 @@ PyObject* DrawViewPartPy::getCosmeticEdge(PyObject *args)
     DrawViewPart* dvp = getDrawViewPartPtr();
     TechDraw::CosmeticEdge* ce = dvp->getCosmeticEdge(tag);
     if (ce != nullptr) {
-//        result = new CosmeticEdgePy(new CosmeticEdge(ce));
-        result = new CosmeticEdgePy(ce->clone());
-//        result = ce->getPyObject();
+        result = ce->getPyObject();
     } else {
         Base::Console().Error("DVPPI::getCosmeticEdge - edge %s not found\n", tag);
     }
@@ -476,8 +467,7 @@ PyObject* DrawViewPartPy::getCosmeticEdgeBySelection(PyObject *args)
 
     TechDraw::CosmeticEdge* ce = dvp->getCosmeticEdgeBySelection(name);
     if (ce != nullptr) {
-//        result = ce->getPyObject();
-        result = new CosmeticEdgePy(ce->clone());
+        result = ce->getPyObject();
     } else {
         Base::Console().Error("DVPPI::getCosmeticEdgebySelection - edge for name %s not found\n", name);
     }
@@ -486,18 +476,25 @@ PyObject* DrawViewPartPy::getCosmeticEdgeBySelection(PyObject *args)
 
 PyObject* DrawViewPartPy::replaceCosmeticEdge(PyObject *args)
 {
+    (void) args;
+    Base::Console().Message("DVPP::replaceCosmeticEdge() - deprecated. do not use.\n");
+    return PyBool_FromLong(0l);
+
 //    Base::Console().Message("DVPPI::replaceCosmeticEdge()\n");
-    PyObject* pNewCE;
-    if (!PyArg_ParseTuple(args, "O!", &(TechDraw::CosmeticEdgePy::Type), &pNewCE)) {
-        throw Py::TypeError("expected (CosmeticEdge)");
-    }
-    DrawViewPart* dvp = getDrawViewPartPtr();
-    TechDraw::CosmeticEdgePy* cePy = static_cast<TechDraw::CosmeticEdgePy*>(pNewCE);
-    TechDraw::CosmeticEdge* ce = cePy->getCosmeticEdgePtr();
-    bool result = dvp->replaceCosmeticEdge(ce);
-    dvp->refreshCEGeoms();
-    dvp->requestPaint();
-    return PyBool_FromLong((long) result);
+//    bool result = false;
+//    PyObject* pNewCE;
+//    if (!PyArg_ParseTuple(args, "O!", &(TechDraw::CosmeticEdgePy::Type), &pNewCE)) {
+//        throw Py::TypeError("expected (CosmeticEdge)");
+//    }
+//    DrawViewPart* dvp = getDrawViewPartPtr();
+//    TechDraw::CosmeticEdgePy* cePy = static_cast<TechDraw::CosmeticEdgePy*>(pNewCE);
+//    TechDraw::CosmeticEdge* ce = cePy->getCosmeticEdgePtr();
+//    if (ce != nullptr) {
+//        result = dvp->replaceCosmeticEdge(ce);                 //<<<
+//        dvp->refreshCEGeoms();
+//        dvp->requestPaint();
+//    }
+//    return PyBool_FromLong((long) result);
 }
 
 PyObject* DrawViewPartPy::removeCosmeticEdge(PyObject *args)
@@ -576,7 +573,7 @@ PyObject* DrawViewPartPy::getCenterLine(PyObject *args)
     DrawViewPart* dvp = getDrawViewPartPtr();
     TechDraw::CenterLine* cl = dvp->getCenterLine(tag);
     if (cl != nullptr) {
-        result = new CenterLinePy(cl->clone());
+        result = cl->getPyObject();
     } else {
         Base::Console().Error("DVPPI::getCenterLine - centerLine %s not found\n", tag);
     }
@@ -596,7 +593,7 @@ PyObject* DrawViewPartPy::getCenterLineBySelection(PyObject *args)
 
     TechDraw::CenterLine* cl = dvp->getCenterLineBySelection(tag);
     if (cl != nullptr) {
-        result = new CenterLinePy(cl->clone());
+        result = cl->getPyObject();
     } else {
         Base::Console().Error("DVPPI::getCenterLinebySelection - centerLine for tag %s not found\n", tag);
     }
@@ -605,18 +602,22 @@ PyObject* DrawViewPartPy::getCenterLineBySelection(PyObject *args)
 
 PyObject* DrawViewPartPy::replaceCenterLine(PyObject *args)
 {
+    (void) args;
+    Base::Console().Message("DVPP::replaceCenterLine() - deprecated. do not use.\n");
+    return PyBool_FromLong(0l);
+
 //    Base::Console().Message("DVPPI::replace CenterLine()\n");
-    PyObject* pNewCL;
-    if (!PyArg_ParseTuple(args, "O!", &(TechDraw::CenterLinePy::Type), &pNewCL)) {
-        throw Py::TypeError("expected (CenterLine)");
-    }
-    DrawViewPart* dvp = getDrawViewPartPtr();
-    TechDraw::CenterLinePy* clPy = static_cast<TechDraw::CenterLinePy*>(pNewCL);
-    TechDraw::CenterLine* cl = clPy->getCenterLinePtr();
-    bool result = dvp->replaceCenterLine(cl);
-    dvp->refreshCLGeoms();
-    dvp->requestPaint();
-    return PyBool_FromLong((long) result);
+//    PyObject* pNewCL;
+//    if (!PyArg_ParseTuple(args, "O!", &(TechDraw::CenterLinePy::Type), &pNewCL)) {
+//        throw Py::TypeError("expected (CenterLine)");
+//    }
+//    DrawViewPart* dvp = getDrawViewPartPtr();
+//    TechDraw::CenterLinePy* clPy = static_cast<TechDraw::CenterLinePy*>(pNewCL);
+//    TechDraw::CenterLine* cl = clPy->getCenterLinePtr();
+//    bool result = dvp->replaceCenterLine(cl);
+//    dvp->refreshCLGeoms();
+//    dvp->requestPaint();
+//    return PyBool_FromLong((long) result);
 }
 
 PyObject* DrawViewPartPy::removeCenterLine(PyObject *args)
@@ -677,8 +678,16 @@ PyObject* DrawViewPartPy::getEdgeByIndex(PyObject *args)
         throw Py::TypeError("expected (edgeIndex)");
     }
     DrawViewPart* dvp = getDrawViewPartPtr();
+
+    //this is scaled and +Yup
+    //need unscaled and +Ydown
     TechDraw::BaseGeom* geom = dvp->getGeomByIndex(edgeIndex);
-    TopoDS_Edge outEdge = geom->occEdge;
+
+    TopoDS_Shape temp = TechDraw::mirrorShapeVec(geom->occEdge,
+                                      Base::Vector3d(0.0, 0.0, 0.0),
+                                      1.0 / dvp->getScale());
+
+    TopoDS_Edge outEdge = TopoDS::Edge(temp);
     return new Part::TopoShapeEdgePy(new Part::TopoShape(outEdge));
 }
 
@@ -689,8 +698,15 @@ PyObject* DrawViewPartPy::getVertexByIndex(PyObject *args)
         throw Py::TypeError("expected (vertIndex)");
     }
     DrawViewPart* dvp = getDrawViewPartPtr();
+
+    //this is scaled and +Yup
+    //need unscaled and +Ydown
     TechDraw::Vertex* vert = dvp->getProjVertexByIndex(vertexIndex);
-    TopoDS_Vertex outVertex = vert->occVertex;
+    Base::Vector3d point = DrawUtil::invertY(vert->point()) / dvp->getScale();
+
+    gp_Pnt gPoint(point.x, point.y, point.z);
+    BRepBuilderAPI_MakeVertex mkVertex(gPoint);
+    TopoDS_Vertex outVertex = mkVertex.Vertex();
     return new Part::TopoShapeVertexPy(new Part::TopoShape(outVertex));
 }
 

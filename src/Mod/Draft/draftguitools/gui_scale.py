@@ -72,14 +72,14 @@ class Scale(gui_base_original.Modifier):
     def Activated(self):
         """Execute when the command is called."""
         self.name = translate("draft", "Scale")
-        super().Activated(name=self.name)
+        super(Scale, self).Activated(name=self.name)
         if not self.ui:
             return
         self.ghosts = []
         self.get_object_selection()
 
     def get_object_selection(self):
-        """Get object selection and proceed if succesful."""
+        """Get object selection and proceed if successful."""
         if Gui.Selection.getSelection():
             return self.proceed()
         self.ui.selectUi()
@@ -399,7 +399,7 @@ class Scale(gui_base_original.Modifier):
 
     def finish(self, closed=False, cont=False):
         """Terminate the operation."""
-        super().finish()
+        super(Scale, self).finish()
         for ghost in self.ghosts:
             ghost.finalize()
 

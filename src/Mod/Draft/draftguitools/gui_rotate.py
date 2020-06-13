@@ -67,7 +67,7 @@ class Rotate(gui_base_original.Modifier):
 
     def Activated(self):
         """Execute when the command is called."""
-        super().Activated(name=_tr("Rotate"))
+        super(Rotate, self).Activated(name=_tr("Rotate"))
         if not self.ui:
             return
         self.ghosts = []
@@ -123,7 +123,7 @@ class Rotate(gui_base_original.Modifier):
             self.handle_mouse_click_event(arg)
 
     def handle_mouse_move_event(self, arg):
-        """Hande the mouse when moving."""
+        """Handle the mouse when moving."""
         plane = App.DraftWorkingPlane
 
         for ghost in self.ghosts:
@@ -175,7 +175,7 @@ class Rotate(gui_base_original.Modifier):
         gui_tool_utils.redraw3DView()
 
     def handle_mouse_click_event(self, arg):
-        """Hande the mouse when the first button is clicked."""
+        """Handle the mouse when the first button is clicked."""
         if not self.point:
             return
         if self.step == 0:
@@ -264,7 +264,7 @@ class Rotate(gui_base_original.Modifier):
         if cont and self.ui:
             if self.ui.continueMode:
                 todo.ToDo.delayAfter(self.Activated, [])
-        super().finish()
+        super(Rotate, self).finish()
         if self.doc:
             self.doc.recompute()
 
