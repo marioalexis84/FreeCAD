@@ -82,7 +82,7 @@ recompute path. Also, it enables more complicated dependencies beyond trees.
 #include <boost/graph/visitors.hpp>
 #endif //USE_OLD_DAG
 
-#include <boost/bind/bind.hpp>
+#include <boost_bind_bind.hpp>
 #include <boost/regex.hpp>
 #include <unordered_set>
 #include <unordered_map>
@@ -182,6 +182,7 @@ struct DocumentP
     int iUndoMode;
     unsigned int UndoMemSize;
     unsigned int UndoMaxStackSize;
+    std::string programVersion;
 #ifdef USE_OLD_DAG
     DependencyList DepList;
     std::map<DocumentObject*,Vertex> VertexObjectList;
@@ -626,7 +627,7 @@ void Document::exportGraphviz(std::ostream& out) const
                 //first build up the coordinate system subgraphs
                 for (auto objectIt : d->objectArray) {
                     // do not require an empty inlist (#0003465: Groups breaking dependency graph)
-                    // App::Origin now has the GeoFeatureGroupExtension but it shoud not move its
+                    // App::Origin now has the GeoFeatureGroupExtension but it should not move its
                     // group symbol outside its parent
                     if (!objectIt->isDerivedFrom(Origin::getClassTypeId()) &&
                          objectIt->hasExtension(GeoFeatureGroupExtension::getExtensionClassTypeId()))
@@ -963,6 +964,7 @@ bool Document::undo(int id)
         d->activeUndoTransaction = new Transaction(mUndoTransactions.back()->getID());
         d->activeUndoTransaction->Name = mUndoTransactions.back()->Name;
 
+        {
         Base::FlagToggler<bool> flag(d->undoing);
         // applying the undo
         mUndoTransactions.back()->apply(*this,false);
@@ -976,7 +978,17 @@ bool Document::undo(int id)
         delete mUndoTransactions.back();
         mUndoTransactions.pop_back();
 
-        signalUndo(*this);
+        }
+
+        for(auto & obj:d->objectArray) {
+            if(obj->testStatus(ObjectStatus::PendingTransactionUpdate)) {
+                obj->onUndoRedoFinished();
+                obj->setStatus(ObjectStatus::PendingTransactionUpdate,false);
+            }
+        }
+
+        signalUndo(*this); // now signal the undo
+
         return true;
     }
 
@@ -1004,6 +1016,7 @@ bool Document::redo(int id)
         d->activeUndoTransaction->Name = mRedoTransactions.back()->Name;
 
         // do the redo
+        {
         Base::FlagToggler<bool> flag(d->undoing);
         mRedoTransactions.back()->apply(*this,true);
 
@@ -1014,6 +1027,14 @@ bool Document::redo(int id)
         mRedoMap.erase(mRedoTransactions.back()->getID());
         delete mRedoTransactions.back();
         mRedoTransactions.pop_back();
+        }
+
+        for(auto & obj:d->objectArray) {
+            if(obj->testStatus(ObjectStatus::PendingTransactionUpdate)) {
+                obj->onUndoRedoFinished();
+                obj->setStatus(ObjectStatus::PendingTransactionUpdate,false);
+            }
+        }
 
         signalRedo(*this);
         return true;
@@ -2711,7 +2732,9 @@ void Document::restore (const char *filename,
     catch (const Base::Exception& e) {
         Base::Console().Error("Invalid Document.xml: %s\n", e.what());
     }
+
     d->partialLoadObjects.clear();
+    d->programVersion = reader.ProgramVersion;
 
     // Special handling for Gui document, the view representations must already
     // exist, what is done in Restore().
@@ -2864,6 +2887,11 @@ const char* Document::getName() const
 
 std::string Document::getFullName() const {
     return myName;
+}
+
+const char* Document::getProgramVersion() const
+{
+    return d->programVersion.c_str();
 }
 
 /// Remove all modifications. After this call The document becomes valid again.
@@ -4518,15 +4546,31 @@ std::vector< DocumentObject* > Document::getObjectsWithExtension(const Base::Typ
 }
 
 
-std::vector<DocumentObject*> Document::findObjects(const Base::Type& typeId, const char* objname) const
+std::vector<DocumentObject*> Document::findObjects(const Base::Type& typeId, const char* objname, const char* label) const
 {
-    boost::regex rx(objname);
     boost::cmatch what;
+    boost::regex rx_name, rx_label;
+
+    if (objname)
+        rx_name.set_expression(objname);
+
+    if (label)
+        rx_label.set_expression(label);
+
     std::vector<DocumentObject*> Objects;
+    DocumentObject* found = nullptr;
     for (std::vector<DocumentObject*>::const_iterator it = d->objectArray.begin(); it != d->objectArray.end(); ++it) {
         if ((*it)->getTypeId().isDerivedFrom(typeId)) {
-            if (boost::regex_match((*it)->getNameInDocument(), what, rx))
-                Objects.push_back(*it);
+            found = *it;
+
+            if (!rx_name.empty() && !boost::regex_search((*it)->getNameInDocument(), what, rx_name))
+                found = nullptr;
+
+            if (!rx_label.empty() && !boost::regex_search((*it)->Label.getValue(), what, rx_label))
+                found = nullptr;
+
+            if (found)
+                Objects.push_back(found);
         }
     }
     return Objects;

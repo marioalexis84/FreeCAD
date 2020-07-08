@@ -26,7 +26,7 @@
 #ifndef _PreComp_
 # include "InventorAll.h"
 # include <boost/signals2.hpp>
-# include <boost/bind/bind.hpp>
+# include <boost_bind_bind.hpp>
 # include <sstream>
 # include <stdexcept>
 # include <iostream>
@@ -147,14 +147,17 @@ namespace Gui {
 // Pimpl class
 struct ApplicationP
 {
-    ApplicationP() :
+    ApplicationP(bool GUIenabled) :
     activeDocument(0L),
     editDocument(0L),
     isClosing(false),
     startingUp(true)
     {
         // create the macro manager
-        macroMngr = new MacroManager();
+        if (GUIenabled)
+            macroMngr = new MacroManager();
+        else
+            macroMngr = nullptr;
     }
 
     ~ApplicationP()
@@ -201,8 +204,16 @@ FreeCADGui_subgraphFromObject(PyObject * /*self*/, PyObject *args)
                 vp->setDisplayMode(modes.front().c_str());
             node = vp->getRoot()->copy();
             node->ref();
-            std::string type = "So";
-            type += node->getTypeId().getName().getString();
+            std::string prefix = "So";
+            std::string type = node->getTypeId().getName().getString();
+            // doesn't start with the prefix 'So'
+            if (type.rfind("So", 0) != 0) {
+                type = prefix + type;
+            }
+            else if (type == "SoFCSelectionRoot") {
+                type = "SoSeparator";
+            }
+
             type += " *";
             PyObject* proxy = 0;
             proxy = Base::Interpreter().createSWIGPointerObj("pivy.coin", type.c_str(), (void*)node, 1);
@@ -217,6 +228,48 @@ FreeCADGui_subgraphFromObject(PyObject * /*self*/, PyObject *args)
 
     Py_INCREF(Py_None);
     return Py_None;
+}
+
+static PyObject *
+FreeCADGui_exportSubgraph(PyObject * /*self*/, PyObject *args)
+{
+    const char* format = "VRML";
+    PyObject* proxy;
+    PyObject* output;
+    if (!PyArg_ParseTuple(args, "OO|s", &proxy, &output, &format))
+        return nullptr;
+
+    void* ptr = 0;
+    try {
+        Base::Interpreter().convertSWIGPointerObj("pivy.coin", "SoNode *", proxy, &ptr, 0);
+        SoNode* node = reinterpret_cast<SoNode*>(ptr);
+        if (node) {
+            std::string formatStr(format);
+            std::string buffer;
+
+            if (formatStr == "VRML") {
+                SoFCDB::writeToVRML(node, buffer);
+            }
+            else if (formatStr == "IV") {
+                buffer = SoFCDB::writeNodesToString(node);
+            }
+            else {
+                throw Base::ValueError("Unsupported format");
+            }
+
+            Base::PyStreambuf buf(output);
+            std::ostream str(0);
+            str.rdbuf(&buf);
+            str << buffer;
+        }
+
+        Py_INCREF(Py_None);
+        return Py_None;
+    }
+    catch (const Base::Exception& e) {
+        PyErr_SetString(PyExc_RuntimeError, e.what());
+        return nullptr;
+    }
 }
 
 static PyObject *
@@ -282,6 +335,10 @@ struct PyMethodDef FreeCADGui_methods[] = {
     {"subgraphFromObject",FreeCADGui_subgraphFromObject,METH_VARARGS,
      "subgraphFromObject(object) -> Node\n\n"
      "Return the Inventor subgraph to an object"},
+    {"exportSubgraph",FreeCADGui_exportSubgraph,METH_VARARGS,
+     "exportSubgraph(Node, File or Buffer, [Format='VRML']) -> None\n\n"
+     "Exports the sub-graph in the requested format"
+     "The format string can be VRML or IV"},
     {"getSoDBVersion",FreeCADGui_getSoDBVersion,METH_VARARGS,
      "getSoDBVersion() -> String\n\n"
      "Return a text string containing the name\n"
@@ -443,7 +500,7 @@ Application::Application(bool GUIenabled)
     View3DInventorViewerPy      ::init_type();
     AbstractSplitViewPy         ::init_type();
 
-    d = new ApplicationP;
+    d = new ApplicationP(GUIenabled);
 
     // global access
     Instance = this;
@@ -897,7 +954,9 @@ void Application::onLastWindowClosed(Gui::Document* pcDoc)
 bool Application::sendMsgToActiveView(const char* pMsg, const char** ppReturn)
 {
     MDIView* pView = getMainWindow()->activeWindow();
-    return pView ? pView->onMsg(pMsg,ppReturn) : false;
+    bool res = pView ? pView->onMsg(pMsg,ppReturn) : false;
+    getMainWindow()->updateActions(true);
+    return res;
 }
 
 bool Application::sendHasMsgToActiveView(const char* pMsg)
@@ -913,8 +972,11 @@ bool Application::sendMsgToFocusView(const char* pMsg, const char** ppReturn)
     if(!pView)
         return false;
     for(auto focus=qApp->focusWidget();focus;focus=focus->parentWidget()) {
-        if(focus == pView)
-            return pView->onMsg(pMsg,ppReturn);
+        if(focus == pView) {
+            bool res = pView->onMsg(pMsg,ppReturn);
+            getMainWindow()->updateActions(true);
+            return res;
+        }
     }
     return false;
 }

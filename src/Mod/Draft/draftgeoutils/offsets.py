@@ -41,7 +41,7 @@ Part = lz.LazyLoader("Part", globals(), "Part")
 
 
 def pocket2d(shape, offset):
-    """Return a list of wires obtained from offseting wires from the shape.
+    """Return a list of wires obtained from offsetting wires from the shape.
 
     Return a list of wires obtained from offsetting the wires
     from the given shape by the given offset, and intersection if needed.
@@ -380,7 +380,14 @@ def offsetWire(wire, dvec, bind=False, occ=False,
             # This is a xor
             if (curOrientation == firstOrientation) != (curDir == firstDir):
                 if curAlign in ['Left', 'Right']:
-                    nedge = curredge
+                    # ArchWall has an Offset properties for user to offset
+                    # the basewire before creating the base profile of wall
+                    # (not applicable to 'Center' align)
+                    if basewireOffset:
+                        delta = DraftVecUtils.scaleTo(delta, basewireOffset)
+                        nedge = offset(curredge,delta,trim=True)
+                    else:
+                        nedge = curredge
                 elif curAlign == 'Center':
                     delta = delta.negative()
                     nedge = offset(curredge, delta, trim=True)
@@ -391,8 +398,10 @@ def offsetWire(wire, dvec, bind=False, occ=False,
                 # the basewire before creating the base profile of wall
                 # (not applicable to 'Center' align)
                 if basewireOffset:
-                    delta = DraftVecUtils.scaleTo(delta,
-                                                  delta.Length + basewireOffset)
+                    if curAlign in ['Left', 'Right']:
+                        delta = DraftVecUtils.scaleTo(delta,
+                                                      delta.Length + basewireOffset)
+                    #else: # elif curAlign == 'Center': #pass # no need to add basewireOffset
                 nedge = offset(curredge, delta, trim=True)
 
             # TODO arc always in counter-clockwise directinon

@@ -109,10 +109,12 @@ SET(Draft_make_functions
     draftmake/make_circulararray.py
     draftmake/make_clone.py
     draftmake/make_copy.py
+    draftmake/make_dimension.py
     draftmake/make_drawingview.py
     draftmake/make_ellipse.py
     draftmake/make_facebinder.py
     draftmake/make_fillet.py
+    draftmake/make_label.py
     draftmake/make_line.py
     draftmake/make_orthoarray.py
     draftmake/make_patharray.py

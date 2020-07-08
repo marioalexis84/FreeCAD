@@ -122,7 +122,7 @@
 
 #include <boost/tokenizer.hpp>
 #include <boost/token_functions.hpp>
-#include <boost/bind/bind.hpp>
+#include <boost_bind_bind.hpp>
 #include <boost/version.hpp>
 #include <QDir>
 #include <QFileInfo>
@@ -1701,6 +1701,7 @@ void Application::initTypes(void)
     App ::PropertyAcceleration      ::init();
     App ::PropertyForce             ::init();
     App ::PropertyPressure          ::init();
+    App ::PropertyVacuumPermittivity::init();
     App ::PropertyInteger           ::init();
     App ::PropertyIntegerConstraint ::init();
     App ::PropertyPercent           ::init();
@@ -1889,7 +1890,7 @@ void Application::initConfig(int argc, char ** argv)
     Branding brand;
     QString binDir = QString::fromUtf8((mConfig["AppHomePath"] + "bin").c_str());
     QFileInfo fi(binDir, QString::fromLatin1("branding.xml"));
-    if (brand.readFile(fi.absoluteFilePath())) {
+    if (fi.exists() && brand.readFile(fi.absoluteFilePath())) {
         Branding::XmlConfig cfg = brand.getUserDefines();
         for (Branding::XmlConfig::iterator it = cfg.begin(); it != cfg.end(); ++it) {
             App::Application::Config()[it.key()] = it.value();

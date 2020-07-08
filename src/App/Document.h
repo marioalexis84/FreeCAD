@@ -223,6 +223,8 @@ public:
     bool isSaved() const;
     /// Get the document name
     const char* getName() const;
+    /// Get program version the project file was created with
+    const char* getProgramVersion() const;
     //@}
 
     virtual void Save (Base::Writer &writer) const override;
@@ -299,7 +301,7 @@ public:
     std::vector<DocumentObject*> getObjectsOfType(const Base::Type& typeId) const;
     /// Returns all object with given extensions. If derived=true also all objects with extensions derived from the given one
     std::vector<DocumentObject*> getObjectsWithExtension(const Base::Type& typeId, bool derived = true) const;
-    std::vector<DocumentObject*> findObjects(const Base::Type& typeId, const char* objname) const;
+    std::vector<DocumentObject*> findObjects(const Base::Type& typeId, const char* objname, const char* label) const;
     /// Returns an array with the correct types already.
     template<typename T> inline std::vector<T*> getObjectsOfType() const;
     int countObjectsOfType(const Base::Type& typeId) const;

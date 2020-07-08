@@ -27,6 +27,7 @@ import FreeCAD
 import Arch
 import ArchIFC
 
+from draftutils.messages import _wrn
 
 # ************************************************************************************************
 # ********** some helper, used in import and export, or should stay together
@@ -340,11 +341,24 @@ def buildRelMaterialColors(ifcfile, prodrepr):
     pass
 
 
+def getColorFromMaterial(material):
+
+    if material.HasRepresentation:
+        rep = material.HasRepresentation[0]
+        if hasattr(rep,"Representations") and rep.Representations:
+            rep = rep.Representations[0]
+            if rep.is_a("IfcStyledRepresentation"):
+                return getColorFromStyledItem(rep)
+    return None
+
+
 def getColorFromStyledItem(styled_item):
 
     # styled_item should be a IfcStyledItem
+    if styled_item.is_a("IfcStyledRepresentation"):
+        styled_item = styled_item.Items[0]
+    
     if not styled_item.is_a("IfcStyledItem"):
-        print("Not a IfcStyledItem passed.")
         return None
 
     rgb_color = None
@@ -554,6 +568,8 @@ def getPlacement(entity,scaling=1000):
         loc = getVector(entity.Location,scaling)
         if loc:
             pl.move(loc)
+    elif entity.is_a("IfcAxis2Placement2D"):
+        _wrn("not implemented IfcAxis2Placement2D, ", end="")
     elif entity.is_a("IfcLocalPlacement"):
         pl = getPlacement(entity.PlacementRelTo,1)  # original placement
         relpl = getPlacement(entity.RelativePlacement,1)  # relative transf
@@ -641,7 +657,7 @@ def get2DShape(representation,scaling=1000):
         for el in elts:
             if el.is_a("IfcPolyline"):
                 result.append(getPolyline(el))
-            if el.is_a("IfcRectangleProfileDef"):
+            elif el.is_a("IfcRectangleProfileDef"):
                 result.append(getRectangle(el))
             elif el.is_a("IfcLine"):
                 result.append(getLine(el))
@@ -719,8 +735,10 @@ def get2DShape(representation,scaling=1000):
                 else:
                     result = preresult
             elif item.is_a("IfcTextLiteral"):
-                t = Draft.makeText([item.Literal],point=getPlacement(item.Placement,scaling).Base)
-                return t  # dirty hack... Object creation should not be done here
+                pl = getPlacement(item.Placement, scaling)
+                if pl:
+                    t = Draft.makeText([item.Literal], point=pl.Base)
+                    return [t]  # dirty hack... Object creation should not be done here
     elif representation.is_a() in ["IfcPolyline","IfcCircle","IfcTrimmedCurve","IfcRectangleProfileDef"]:
         result = getCurveSet(representation)
     return result
@@ -867,3 +885,18 @@ def applyColorDict(doc,colordict=None):
                     obj.ViewObject.Transparency = color[3]
     else:
         print("No valid color dict to apply")
+
+
+def getParents(ifcobj):
+
+    """finds the parent entities of an IFC entity"""
+
+    parentlist = []
+    if hasattr(ifcobj,"ContainedInStructure"):
+        for rel in ifcobj.ContainedInStructure:
+            parentlist.append(rel.RelatingStructure)
+    elif hasattr(ifcobj,"Decomposes"):
+        for rel in ifcobj.Decomposes:
+            if rel.is_a("IfcRelAggregates"):
+                parentlist.append(rel.RelatingObject)
+    return parentlist

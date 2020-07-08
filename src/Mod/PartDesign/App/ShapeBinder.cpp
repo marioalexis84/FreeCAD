@@ -24,7 +24,7 @@
 #include "PreCompiled.h"
 #ifndef _PreComp_
 # include <cfloat>
-# include <boost/bind/bind.hpp>
+# include <boost_bind_bind.hpp>
 # include <gp_Lin.hxx>
 # include <gp_Pln.hxx>
 # include <BRep_Builder.hxx>
@@ -33,6 +33,7 @@
 #endif
 
 #include <unordered_map>
+#include <unordered_set>
 #include <boost/algorithm/string/predicate.hpp>
 
 #include <Base/Console.h>
