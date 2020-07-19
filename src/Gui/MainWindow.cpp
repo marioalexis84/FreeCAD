@@ -678,7 +678,9 @@ bool MainWindow::closeAllDocuments (bool close)
             continue;
         if(!gdoc->canClose(false))
             return false;
-        if(!gdoc->isModified() || doc->testStatus(App::Document::PartialDoc))
+        if(!gdoc->isModified() 
+                || doc->testStatus(App::Document::PartialDoc)
+                || doc->testStatus(App::Document::TempDoc))
             continue;
         bool save = saveAll;
         if(!save && checkModify) {
@@ -810,12 +812,9 @@ bool MainWindow::event(QEvent *e)
         if (!temp)
             return true;
         View3DInventorViewer *view = temp->getViewer();
-        if (!view)
-            return true;
-        QWidget *viewWidget = view->getGLWidget();
-        if (viewWidget) {
+        if (view) {
             Spaceball::MotionEvent anotherEvent(*motionEvent);
-            qApp->sendEvent(viewWidget, &anotherEvent);
+            qApp->sendEvent(view, &anotherEvent);
         }
         return true;
     }else if(e->type() == QEvent::StatusTip) {

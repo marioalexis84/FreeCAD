@@ -2147,6 +2147,8 @@ void TreeWidget::drawRow(QPainter *painter, const QStyleOptionViewItem &options,
 
 void TreeWidget::slotNewDocument(const Gui::Document& Doc, bool isMainDoc)
 {
+    if(Doc.getDocument()->testStatus(App::Document::TempDoc))
+        return;
     DocumentItem* item = new DocumentItem(&Doc, this->rootItem);
     if(isMainDoc)
         this->expandItem(item);
@@ -2434,14 +2436,14 @@ void TreeWidget::onUpdateStatus(void)
         this->blockConnection(false);
     }
 
-    auto currentDocItem = getDocumentItem(Application::Instance->activeDocument());
+    auto activeDocItem = getDocumentItem(Application::Instance->activeDocument());
 
     QTreeWidgetItem *errItem = 0;
     for(auto obj : errors) {
         DocumentObjectDataPtr data;
-        if(currentDocItem) {
-            auto it = currentDocItem->ObjectMap.find(obj);
-            if(it!=currentDocItem->ObjectMap.end())
+        if(activeDocItem) {
+            auto it = activeDocItem->ObjectMap.find(obj);
+            if(it!=activeDocItem->ObjectMap.end())
                 data = it->second;
         }
         if(!data) {

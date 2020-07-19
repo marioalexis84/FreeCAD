@@ -20,24 +20,28 @@
 # *   USA                                                                   *
 # *                                                                         *
 # ***************************************************************************
-"""This module provides the object code for the Draft DrawingView object.
-This module is obsolete, since Drawing was substituted by TechDraw.
+"""Provides the object code for the DrawingView object (OBSOLETE).
+
+This module is obsolete, since the Drawing Workbench stopped
+being developed in v0.17.
+The TechDraw Workbench replaces Drawing, and it no longer requires
+a `DrawingView` object to display objects in a drawing sheet.
+
+This module is still provided in order to be able to open older files
+that use this `DrawingView` object. However, a GUI tool to create
+this object should no longer be available.
 """
 ## @package drawingview
-# \ingroup DRAFT
-# \brief This module provides the object code for the Draft DrawingView object.
+# \ingroup draftobjects
+# \brief Provides the object code for the DrawingView object (OBSOLETE).
 
-import math
-
+## \addtogroup draftobjects
+# @{
 from PySide.QtCore import QT_TRANSLATE_NOOP
 
-import FreeCAD as App
-
-import DraftVecUtils
-
-from getSVG import getSVG
-
+import getSVG
 import draftutils.utils as utils
+import draftutils.groups as groups
 
 from draftobjects.base import DraftObject
 
@@ -105,16 +109,16 @@ class DrawingView(DraftObject):
                     svg = ""
                     shapes = []
                     others = []
-                    objs = utils.getGroupContents([obj.Source])
+                    objs = groups.get_group_contents([obj.Source])
                     for o in objs:
                         v = o.ViewObject.isVisible()
                         if hasattr(obj,"AlwaysOn"):
                             if obj.AlwaysOn:
                                 v = True
                         if v:
-                            svg += getSVG(o,obj.Scale,obj.LineWidth,obj.FontSize.Value,obj.FillStyle,obj.Direction,ls,lc,lp)
+                            svg += getSVG.getSVG(o,obj.Scale,obj.LineWidth,obj.FontSize.Value,obj.FillStyle,obj.Direction,ls,lc,lp)
                 else:
-                    svg = getSVG(obj.Source,obj.Scale,obj.LineWidth,obj.FontSize.Value,obj.FillStyle,obj.Direction,ls,lc,lp)
+                    svg = getSVG.getSVG(obj.Source,obj.Scale,obj.LineWidth,obj.FontSize.Value,obj.FillStyle,obj.Direction,ls,lc,lp)
                 result += '<g id="' + obj.Name + '"'
                 result += ' transform="'
                 result += 'rotate('+str(obj.Rotation)+','+str(obj.X)+','+str(obj.Y)+') '
@@ -130,4 +134,7 @@ class DrawingView(DraftObject):
         return utils.getDXF(obj)
 
 
+# Alias for compatibility with v0.18 and earlier
 _DrawingView = DrawingView
+
+## @}

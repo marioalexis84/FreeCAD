@@ -318,9 +318,7 @@ void CmdTechDrawView::activated(int iMsg)
         }
         //not a Link and not null.  assume to be drawable.  Undrawables will be 
         // skipped later.
-        if (obj != nullptr) {
-            shapes.push_back(obj);
-        }
+        shapes.push_back(obj);
         if(partObj != nullptr) {
             continue;
         }
@@ -576,9 +574,7 @@ void CmdTechDrawProjectionGroup::activated(int iMsg)
         }
         //not a Link and not null.  assume to be drawable.  Undrawables will be 
         // skipped later.
-        if (obj != nullptr) {
-            shapes.push_back(obj);
-        }
+        shapes.push_back(obj);
         if(partObj != nullptr) {
             continue;
         }
@@ -806,7 +802,7 @@ CmdTechDrawClipGroup::CmdTechDrawClipGroup()
     // setting the
     sGroup        = QT_TR_NOOP("TechDraw");
     sMenuText     = QT_TR_NOOP("Insert Clip Group");
-    sToolTipText  = sToolTipText;
+    sToolTipText  = sMenuText;
     sWhatsThis    = "TechDraw_ClipGroup";
     sStatusTip    = sToolTipText;
     sPixmap       = "actions/techdraw-ClipGroup";

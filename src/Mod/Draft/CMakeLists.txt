@@ -68,8 +68,10 @@ SET(Draft_tests
 
 SET(Draft_utilities
     draftutils/__init__.py
+    draftutils/groups.py
     draftutils/init_tools.py
     draftutils/init_draft_statusbar.py
+    draftutils/units.py
     draftutils/utils.py
     draftutils/gui_utils.py
     draftutils/todo.py

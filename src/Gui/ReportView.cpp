@@ -29,6 +29,7 @@
 # include <QContextMenuEvent>
 # include <QTextCursor>
 # include <QTextStream>
+# include <QTime>
 # include <QDockWidget>
 # include <QPointer>
 #endif
@@ -351,7 +352,11 @@ PyObject* ReportOutput::Data::replace_stderr = 0;
  *  name 'name' and widget flags set to 'f' 
  */
 ReportOutput::ReportOutput(QWidget* parent)
-  : QTextEdit(parent), WindowParameter("OutputWindow"), d(new Data), gotoEnd(false)
+  : QTextEdit(parent)
+  , WindowParameter("OutputWindow")
+  , d(new Data)
+  , gotoEnd(false)
+  , blockStart(true)
 {
     bLog = false;
     reportHl = new ReportHighlighter(this);
@@ -437,11 +442,22 @@ void ReportOutput::customEvent ( QEvent* ev )
         CustomReportEvent* ce = (CustomReportEvent*)ev;
         reportHl->setParagraphType(ce->messageType());
 
+        bool showTimecode = getWindowParameter()->GetBool("checkShowReportTimecode", true);
+        QString text = ce->message();
+
+        // The time code can only be set when the cursor is at the block start
+        if (showTimecode && blockStart) {
+            QTime time = QTime::currentTime();
+            text.prepend(time.toString(QLatin1String("hh:mm:ss  ")));
+        }
+
         QTextCursor cursor(this->document());
         cursor.beginEditBlock();
         cursor.movePosition(QTextCursor::End);
-        cursor.insertText(ce->message());
+        cursor.insertText(text);
         cursor.endEditBlock();
+
+        blockStart = cursor.atBlockStart();
         if (gotoEnd) {
             setTextCursor(cursor);
         }

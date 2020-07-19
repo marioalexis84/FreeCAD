@@ -54,7 +54,7 @@ def get_information():
             "meshtype": "solid",
             "meshelement": "Tet10",
             "constraints": ["fixed", "force", "tie"],
-            "solvers": ["ccx"],
+            "solvers": ["calculix"],
             "material": "solid",
             "equation": "mechanical"
             }
@@ -89,7 +89,6 @@ def setup(doc=None, solvertype="ccxtools"):
         cone_cut_obj.ViewObject.hide()
         line_fix_obj.ViewObject.hide()
         line_force_obj.ViewObject.hide()
-
     doc.recompute()
 
     if FreeCAD.GuiUp:

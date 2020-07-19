@@ -1,6 +1,5 @@
 # ***************************************************************************
-# *   Copyright (c) 2019 Bernd Hahnebach <bernd@bimstatik.org>              *
-# *   Copyright (c) 2020 Sudhanshu Dubey <sudhanshu.thethunder@gmail.com    *
+# *   Copyright (c) 2020 Sudhanshu Dubey <sudhanshu.thethunder@gmail.com>   *
 # *                                                                         *
 # *   This file is part of the FreeCAD CAx development system.              *
 # *                                                                         *
@@ -24,17 +23,21 @@
 
 # to run the example use:
 """
-from femexamples.material_multiple_twoboxes import setup
+from femexamples.constraint_selfweight_cantilever import setup
 setup()
 
 """
+
+# cantilever under self weight made from steel grad 235
+# l = 32 m, yields just from self weight, means max sigma around 235 n/mm2
+# max deformation = 576.8 mm
+# https://forum.freecadweb.org/viewtopic.php?f=18&t=48513
 
 import FreeCAD
 
 import Fem
 import ObjectsFem
-from BOPTools import SplitFeatures
-from CompoundTools import CompoundFilter
+
 
 mesh_name = "Mesh"  # needs to be Mesh to work with unit tests
 
@@ -46,49 +49,29 @@ def init_doc(doc=None):
 
 
 def get_information():
-    info = {"name": "Material Multiple Two Boxes",
-            "meshtype": "solid",
-            "meshelement": "Tet10",
-            "constraints": ["fixed", "pressure"],
-            "solvers": ["ccx"],
-            "material": "multimaterial",
-            "equation": "mechanical"
-            }
+    info = {
+        "name": "Constraint Self Weight Cantilever",
+        "meshtype": "solid",
+        "meshelement": "Tet10",
+        "constraints": ["fixed", "self weight"],
+        "solvers": ["calculix", "elmer"],
+        "material": "solid",
+        "equation": "mechanical"
+    }
     return info
 
 
 def setup(doc=None, solvertype="ccxtools"):
-    # setup model
+    # setup self weight cantilever base model
 
     if doc is None:
         doc = init_doc()
 
-    # geometry objects
-    # two boxes
-    boxlow = doc.addObject("Part::Box", "BoxLower")
-    boxupp = doc.addObject("Part::Box", "BoxUpper")
-    boxupp.Placement.Base = (0, 0, 10)
-
-    # boolean fragment of the two boxes
-    bf = SplitFeatures.makeBooleanFragments(name="BooleanFragments")
-    bf.Objects = [boxlow, boxupp]
-    bf.Mode = "CompSolid"
-    doc.recompute()
-    bf.Proxy.execute(bf)
-    bf.purgeTouched()
-    if FreeCAD.GuiUp:
-        for child in bf.ViewObject.Proxy.claimChildren():
-            child.ViewObject.hide()
-    doc.recompute()
-
-    # extract CompSolid by compound filter tool
-    geom_obj = CompoundFilter.makeCompoundFilter(name="MultiMatCompSolid")
-    geom_obj.Base = bf
-    geom_obj.FilterType = "window-volume"
-    geom_obj.Proxy.execute(geom_obj)
-    geom_obj.purgeTouched()
-    if FreeCAD.GuiUp:
-        geom_obj.Base.ViewObject.hide()
+    # geometry object
+    # name is important because the other method in this module use obj name
+    geom_obj = doc.addObject("Part::Box", "Box")
+    geom_obj.Height = geom_obj.Width = 1000
+    geom_obj.Length = 32000
     doc.recompute()
 
     if FreeCAD.GuiUp:
@@ -108,6 +91,11 @@ def setup(doc=None, solvertype="ccxtools"):
             ObjectsFem.makeSolverCalculixCcxTools(doc, "CalculiXccxTools")
         )[0]
         solver_object.WorkingDir = u""
+    elif solvertype == "elmer":
+        solver_object = analysis.addObject(
+            ObjectsFem.makeSolverElmer(doc, "SolverElmer")
+        )[0]
+        ObjectsFem.makeEquationElasticity(doc, solver_object)
     else:
         FreeCAD.Console.PrintWarning(
             "Not known or not supported solver type: {}. "
@@ -122,45 +110,30 @@ def setup(doc=None, solvertype="ccxtools"):
         solver_object.IterationsControlParameterTimeUse = False
 
     # material
-    material_object_low = analysis.addObject(
-        ObjectsFem.makeMaterialSolid(doc, "MechanicalMaterialLow")
+    material_object = analysis.addObject(
+        ObjectsFem.makeMaterialSolid(doc, "FemMaterial")
     )[0]
-    mat = material_object_low.Material
-    mat["Name"] = "Aluminium-Generic"
-    mat["YoungsModulus"] = "70000 MPa"
-    mat["PoissonRatio"] = "0.35"
-    mat["Density"] = "2700  kg/m^3"
-    material_object_low.Material = mat
-    material_object_low.References = [(boxlow, "Solid1")]
-    analysis.addObject(material_object_low)
-
-    material_object_upp = analysis.addObject(
-        ObjectsFem.makeMaterialSolid(doc, "MechanicalMaterialUpp")
-    )[0]
-    mat = material_object_upp.Material
-    mat["Name"] = "Steel-Generic"
-    mat["YoungsModulus"] = "200000 MPa"
+    mat = material_object.Material
+    mat["Name"] = "CalculiX-Steel"
+    mat["YoungsModulus"] = "210000 MPa"
     mat["PoissonRatio"] = "0.30"
-    mat["Density"] = "7980 kg/m^3"
-    material_object_upp.Material = mat
-    material_object_upp.References = [(boxupp, "Solid1")]
+    mat["Density"] = "7900 kg/m^3"
+    material_object.Material = mat
 
     # fixed_constraint
     fixed_constraint = analysis.addObject(
-        ObjectsFem.makeConstraintFixed(doc, "ConstraintFixed")
+        ObjectsFem.makeConstraintFixed(doc, name="ConstraintFixed")
     )[0]
-    fixed_constraint.References = [(geom_obj, "Face5")]
+    fixed_constraint.References = [(geom_obj, "Face1")]
 
-    # pressure_constraint
-    pressure_constraint = analysis.addObject(
-        ObjectsFem.makeConstraintPressure(doc, "ConstraintPressure")
+    # selfweight_constraint
+    selfweight = doc.Analysis.addObject(
+        ObjectsFem.makeConstraintSelfWeight(doc)
     )[0]
-    pressure_constraint.References = [(geom_obj, "Face11")]
-    pressure_constraint.Pressure = 1000.0
-    pressure_constraint.Reversed = False
+    selfweight.Gravity_z = -1.00
 
     # mesh
-    from .meshes.mesh_boxes_2_vertikal_tetra10 import create_nodes, create_elements
+    from .meshes.mesh_selfweight_cantilever_tetra10 import create_nodes, create_elements
     fem_mesh = Fem.FemMesh()
     control = create_nodes(fem_mesh)
     if not control:
