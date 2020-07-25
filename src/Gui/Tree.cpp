@@ -1823,8 +1823,8 @@ void TreeWidget::dropEvent(QDropEvent *event)
                 std::string dropName;
                 ss.str("");
                 if(da == Qt::LinkAction) {
-                    if(targetItemObj->getParentItem()) {
-                        auto parentItem = targetItemObj->getParentItem();
+                    auto parentItem = targetItemObj->getParentItem();
+                    if (parentItem) {
                         ss << Command::getObjectCmd(
                                 parentItem->object()->getObject(),0,".replaceObject(",true)
                             << Command::getObjectCmd(targetObj) << ","
@@ -2268,7 +2268,7 @@ struct UpdateDisabler {
     // Note! DO NOT block signal here, or else
     // QTreeWidgetItem::setChildIndicatorPolicy() does not work
     UpdateDisabler(QWidget &w, int &blocked)
-        :widget(w),blocked(blocked)
+        : widget(w), blocked(blocked), visible(false), focus(false)
     {
         if(++blocked > 1)
             return;

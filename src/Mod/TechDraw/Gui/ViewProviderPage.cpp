@@ -87,7 +87,8 @@ PROPERTY_SOURCE(TechDrawGui::ViewProviderPage, Gui::ViewProviderDocumentObject)
 ViewProviderPage::ViewProviderPage()
   : m_mdiView(0),
     m_docReady(true),
-    m_pageName("")
+    m_pageName(""),
+    m_graphicsView(nullptr)
 {
     sPixmap = "TechDraw_Tree_Page";
     static const char *group = "Base";
@@ -221,8 +222,8 @@ bool ViewProviderPage::onDelete(const std::vector<std::string> &)
         QString bodyMessage;
         QTextStream bodyMessageStream(&bodyMessage);
         bodyMessageStream << qApp->translate("Std_Delete",
-            "The page is not empty, therefore the\n following referencing objects might be lost.\n\n"
-            "Are you sure you want to continue?\n");
+            "The page is not empty, therefore the\nfollowing referencing objects might be lost.\n\n"
+            "Are you sure you want to continue?");
         for (auto ObjIterator : objs)
             bodyMessageStream << '\n' << QString::fromUtf8(ObjIterator->Label.getValue());
         // show and evaluate the dialog
