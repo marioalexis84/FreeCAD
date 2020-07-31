@@ -18,12 +18,17 @@
 # *   USA                                                                   *
 # *                                                                         *
 # ***************************************************************************
+"""Provide the importer for IFC files used above all in Arch and BIM.
+
+Internally it uses IfcOpenShell, which must be installed before using.
+"""
+## @package importIFC
+#  \ingroup ARCH
+#  \brief IFC file format importer
+#
+#  This module provides tools to import IFC files.
 
 from __future__ import print_function
-
-__title__ = "FreeCAD IFC importer - Enhanced ifcopenshell-only version"
-__author__ = "Yorik van Havre","Jonathan Wiedemann","Bernd Hahnebach"
-__url__ = "http://www.freecadweb.org"
 
 import six
 import os
@@ -37,22 +42,25 @@ import Arch
 import DraftVecUtils
 import ArchIFCSchema
 import importIFCHelper
+import importIFCmulticore
 
-## @package importIFC
-#  \ingroup ARCH
-#  \brief IFC file format importer
-#
-#  This module provides tools to import IFC files.
+from draftutils.messages import _err
+
+if FreeCAD.GuiUp:
+    import FreeCADGui
+
+__title__ = "FreeCAD IFC importer - Enhanced ifcopenshell-only version"
+__author__ = ("Yorik van Havre", "Jonathan Wiedemann", "Bernd Hahnebach")
+__url__ = "http://www.freecadweb.org"
 
 DEBUG = False  # Set to True to see debug messages. Otherwise, totally silent
 ZOOMOUT = True  # Set to False to not zoom extents after import
 
-if open.__module__ in ['__builtin__','io']:
-    pyopen = open  # because we'll redefine open below
+# Save the Python open function because it will be redefined
+if open.__module__ in ['__builtin__', 'io']:
+    pyopen = open
 
-
-# ************************************************************************************************
-# ********** templates and other definitions ****
+# Templates and other definitions ****
 # which IFC type must create which FreeCAD type
 
 typesmap = {
@@ -116,7 +124,7 @@ typesmap = {
     "PipeConnector": [
         "IfcPipeFitting"
     ],
-    "BuildingPart":[
+    "BuildingPart": [
         "IfcElementAssembly"
     ]
 }
@@ -136,11 +144,9 @@ structuralifcobjects = (
 )
 
 
-# ************************************************************************************************
-# ********** get the prefs, available in import and export ****************
+# Preferences available in import and export
 def getPreferences():
-
-    """retrieves IFC preferences.
+    """Retrieve the IFC preferences.
 
     MERGE_MODE_ARCH:
         0 = parametric arch objects
@@ -148,30 +154,28 @@ def getPreferences():
         2 = Part shapes
         3 = One compound per storey
     """
-
     p = FreeCAD.ParamGet("User parameter:BaseApp/Preferences/Mod/Arch")
 
-    if FreeCAD.GuiUp and p.GetBool("ifcShowDialog",False):
-        import FreeCADGui
-        FreeCADGui.showPreferences("Import-Export",0)
+    if FreeCAD.GuiUp and p.GetBool("ifcShowDialog", False):
+        FreeCADGui.showPreferences("Import-Export", 0)
 
     preferences = {
-        'DEBUG': p.GetBool("ifcDebug",False),
-        'PREFIX_NUMBERS': p.GetBool("ifcPrefixNumbers",False),
-        'SKIP': p.GetString("ifcSkip","").split(","),
-        'SEPARATE_OPENINGS': p.GetBool("ifcSeparateOpenings",False),
-        'ROOT_ELEMENT': p.GetString("ifcRootElement","IfcProduct"),
-        'GET_EXTRUSIONS': p.GetBool("ifcGetExtrusions",False),
-        'MERGE_MATERIALS': p.GetBool("ifcMergeMaterials",False),
-        'MERGE_MODE_ARCH': p.GetInt("ifcImportModeArch",0),
-        'MERGE_MODE_STRUCT': p.GetInt("ifcImportModeStruct",1),
-        'CREATE_CLONES': p.GetBool("ifcCreateClones",True),
-        'IMPORT_PROPERTIES': p.GetBool("ifcImportProperties",False),
-        'SPLIT_LAYERS': p.GetBool("ifcSplitLayers",False),
-        'FITVIEW_ONIMPORT': p.GetBool("ifcFitViewOnImport",False),
-        'ALLOW_INVALID': p.GetBool("ifcAllowInvalid",False),
-        'REPLACE_PROJECT': p.GetBool("ifcReplaceProject",False),
-        'MULTICORE':p.GetInt("ifcMulticore",0)
+        'DEBUG': p.GetBool("ifcDebug", False),
+        'PREFIX_NUMBERS': p.GetBool("ifcPrefixNumbers", False),
+        'SKIP': p.GetString("ifcSkip", "").split(","),
+        'SEPARATE_OPENINGS': p.GetBool("ifcSeparateOpenings", False),
+        'ROOT_ELEMENT': p.GetString("ifcRootElement", "IfcProduct"),
+        'GET_EXTRUSIONS': p.GetBool("ifcGetExtrusions", False),
+        'MERGE_MATERIALS': p.GetBool("ifcMergeMaterials", False),
+        'MERGE_MODE_ARCH': p.GetInt("ifcImportModeArch", 0),
+        'MERGE_MODE_STRUCT': p.GetInt("ifcImportModeStruct", 1),
+        'CREATE_CLONES': p.GetBool("ifcCreateClones", True),
+        'IMPORT_PROPERTIES': p.GetBool("ifcImportProperties", False),
+        'SPLIT_LAYERS': p.GetBool("ifcSplitLayers", False),
+        'FITVIEW_ONIMPORT': p.GetBool("ifcFitViewOnImport", False),
+        'ALLOW_INVALID': p.GetBool("ifcAllowInvalid", False),
+        'REPLACE_PROJECT': p.GetBool("ifcReplaceProject", False),
+        'MULTICORE': p.GetInt("ifcMulticore", 0)
     }
 
     if preferences['MERGE_MODE_ARCH'] > 0:
@@ -183,57 +187,71 @@ def getPreferences():
     return preferences
 
 
-# ************************************************************************************************
-# ********** backwards compatibility ****************
+def export(exportList, filename, colors=None, preferences=None):
+    """Export the selected objects to IFC format.
 
-def export(exportList,filename,colors=None,preferences=None):
+    The export code is now in a separate module; this call is retained
+    in this module for compatibility purposes with older scripts.
+    """
     import exportIFC
-    exportIFC.export(exportList,filename,colors,preferences)
+    exportIFC.export(exportList, filename, colors, preferences)
 
 
-# ************************************************************************************************
-# ********** open and import IFC ****************
+def open(filename, skip=[], only=[], root=None):
+    """Open an IFC file inside a new document.
 
-def open(filename,skip=[],only=[],root=None):
-
-    "opens an IFC file in a new document"
-
+    Most of the work is done in the `insert` function.
+    """
     docname = os.path.splitext(os.path.basename(filename))[0]
-    docname = importIFCHelper.decode(docname,utf=True)
+    docname = importIFCHelper.decode(docname, utf=True)
     doc = FreeCAD.newDocument(docname)
     doc.Label = docname
-    doc = insert(filename,doc.Name,skip,only,root)
+    doc = insert(filename, doc.Name, skip, only, root)
     return doc
 
 
-def insert(srcfile,docname,skip=[],only=[],root=None,preferences=None):
+def insert(srcfile, docname, skip=[], only=[], root=None, preferences=None):
+    """Import the contents of an IFC file in the current active document.
 
-    """insert(srcfile,docname,skip=[],only=[],root=None,preferences=None): imports the contents of an IFC file.
-    skip can contain a list of ids of objects to be skipped, only can restrict the import to
-    certain object ids (will also get their children) and root can be used to
-    import only the derivates of a certain element type (default = ifcProduct)."""
+    Parameters
+    ----------
+    skip: list
+        By default empty list `[]`.
+        Can contain a list of ids of objects to be skipped.
 
-    starttime = time.time() # in seconds
+    only: list
+        By default, empty list `[]`.
+        Restrict the import to certain object ids; it will also
+        get their children.
+
+    root: object
+        It is used to import only the derivates of a certain element type,
+        for example, `'ifcProduct'
+    """
+    starttime = time.time()  # in seconds
 
     # read preference settings
     if preferences is None:
         preferences = getPreferences()
-    
-    if preferences["MULTICORE"] and (not hasattr(srcfile,"by_guid")):
-        import importIFCmulticore
-        return importIFCmulticore.insert(srcfile,docname,preferences)
+
+    if preferences["MULTICORE"] and not hasattr(srcfile, "by_guid"):
+        return importIFCmulticore.insert(srcfile, docname, preferences)
 
     try:
         import ifcopenshell
-    except:
-        FreeCAD.Console.PrintError("IfcOpenShell was not found on this system. IFC support is disabled\n")
-        FreeCAD.Console.PrintMessage("Visit https://www.freecadweb.org/wiki/Arch_IFC to learn how to install it\n")
+        import ifcopenshell.geom
+    except ModuleNotFoundError:
+        _err("IfcOpenShell was not found on this system. "
+             "IFC support is disabled.\n"
+             "Visit https://wiki.freecadweb.org/IfcOpenShell "
+             "to learn about installing it.")
         return
 
     try:
         doc = FreeCAD.getDocument(docname)
-    except:
+    except NameError:
         doc = FreeCAD.newDocument(docname)
+
     FreeCAD.ActiveDocument = doc
     if preferences['DEBUG']: print("done.")
 
@@ -252,8 +270,8 @@ def insert(srcfile,docname,skip=[],only=[],root=None,preferences=None):
         filename = None
     else:
         if preferences['DEBUG']: print("Opening ",srcfile,"...",end="")
-        filename = importIFCHelper.decode(srcfile,utf=True)
-        filesize = os.path.getsize(filename) * 0.000001 # in megabytes
+        filename = importIFCHelper.decode(srcfile, utf=True)
+        filesize = os.path.getsize(filename) * 0.000001  # in megabytes
         ifcfile = ifcopenshell.open(filename)
 
     # get file scale
@@ -267,18 +285,17 @@ def insert(srcfile,docname,skip=[],only=[],root=None,preferences=None):
     #         ctx.Precision = ctx.Precision/100
 
     # set default ifcopenshell options to work in brep mode
-    from ifcopenshell import geom
     settings = ifcopenshell.geom.settings()
-    settings.set(settings.USE_BREP_DATA,True)
-    settings.set(settings.SEW_SHELLS,True)
-    settings.set(settings.USE_WORLD_COORDS,True)
+    settings.set(settings.USE_BREP_DATA, True)
+    settings.set(settings.SEW_SHELLS, True)
+    settings.set(settings.USE_WORLD_COORDS, True)
     if preferences['SEPARATE_OPENINGS']:
-        settings.set(settings.DISABLE_OPENING_SUBTRACTIONS,True)
-    if preferences['SPLIT_LAYERS'] and hasattr(settings,"APPLY_LAYERSETS"):
-        settings.set(settings.APPLY_LAYERSETS,True)
+        settings.set(settings.DISABLE_OPENING_SUBTRACTIONS, True)
+    if preferences['SPLIT_LAYERS'] and hasattr(settings, "APPLY_LAYERSETS"):
+        settings.set(settings.APPLY_LAYERSETS, True)
 
     # build all needed tables
-    if preferences['DEBUG']: print("Building types and relationships table...",end="")
+    if preferences['DEBUG']: print("Building types and relationships table...", end="")
     # type tables
     sites = ifcfile.by_type("IfcSite")
     buildings = ifcfile.by_type("IfcBuilding")
@@ -286,24 +303,29 @@ def insert(srcfile,docname,skip=[],only=[],root=None,preferences=None):
     openings = ifcfile.by_type("IfcOpeningElement")
     materials = ifcfile.by_type("IfcMaterial")
     products, annotations = importIFCHelper.buildRelProductsAnnotations(ifcfile, preferences['ROOT_ELEMENT'])
+
     # empty relation tables
     objects = {}  # { id:object, ... }
     shapes = {}  # { id:shaoe } only used for merge mode
     structshapes = {}  # { id:shaoe } only used for merge mode
     sharedobjects = {}  # { representationmapid:object }
-    parametrics = []  # a list of imported objects whose parametric relationships need processing after all objects have been created
-    profiles = {}  # to store reused extrusion profiles {ifcid:fcobj,...}
+    parametrics = []  # a list of imported objects whose parametric
+                      # relationships need processing after all objects
+                      # have been created
+    profiles = {}  # to store reused extrusion profiles {ifcid:fcobj, ...}
     layers = {}  # { layer_name, [ids] }
     # filled relation tables
-    # TODO for the following tables might be better use inverse attributes, done for properties
-    # see https://forum.freecadweb.org/viewtopic.php?f=39&t=37892
+
+    # TODO for the following tables might be better use inverse attributes,
+    # done for properties
+    # See https://forum.freecadweb.org/viewtopic.php?f=39&t=37892
     prodrepr = importIFCHelper.buildRelProductRepresentation(ifcfile)
     additions = importIFCHelper.buildRelAdditions(ifcfile)
     groups = importIFCHelper.buildRelGroups(ifcfile)
     subtractions = importIFCHelper.buildRelSubtractions(ifcfile)
     mattable = importIFCHelper.buildRelMattable(ifcfile)
     colors = importIFCHelper.buildRelProductColors(ifcfile, prodrepr)
-    colordict = {} # { objname:color tuple } for non-GUI use
+    colordict = {}  # { objname:color tuple } for non-GUI use
     if preferences['DEBUG']: print("done.")
 
     # only import a list of IDs and their children, if defined

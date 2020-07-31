@@ -23,16 +23,20 @@
 
 # to run the example use:
 """
-from femexamples.square_pipe_end_twisted_edgeforces import setup
+from femexamples.constraint_transform_beam_hinged import setup
 setup()
+
 """
+# Constraint transform on a beam
+# https://forum.freecadweb.org/viewtopic.php?f=18&t=20238#p157643
 
 import FreeCAD
+from FreeCAD import Rotation
 from FreeCAD import Vector
 
 import Fem
 import ObjectsFem
-import Part
+from CompoundTools import CompoundFilter
 
 mesh_name = "Mesh"  # needs to be Mesh to work with unit tests
 
@@ -44,10 +48,10 @@ def init_doc(doc=None):
 
 
 def get_information():
-    info = {"name": "Square Pipe End Twisted Edgeforces",
+    info = {"name": "Constraint Transform Beam Hinged",
             "meshtype": "solid",
-            "meshelement": "Tria6",
-            "constraints": ["force", "fixed"],
+            "meshelement": "Tet10",
+            "constraints": ["pressure", "displacement", "transform"],
             "solvers": ["calculix"],
             "material": "solid",
             "equation": "mechanical"
@@ -56,23 +60,46 @@ def get_information():
 
 
 def setup(doc=None, solvertype="ccxtools"):
+    # setup cylinder base model
 
     if doc is None:
         doc = init_doc()
 
     # geometry object
     # name is important because the other method in this module use obj name
-    l1 = Part.makeLine((-142.5, -142.5, 0), (142.5, -142.5, 0))
-    l2 = Part.makeLine((142.5, -142.5, 0), (142.5, 142.5, 0))
-    l3 = Part.makeLine((142.5, 142.5, 0), (-142.5, 142.5, 0))
-    l4 = Part.makeLine((-142.5, 142.5, 0), (-142.5, -142.5, 0))
-    wire = Part.Wire([l1, l2, l3, l4])
-    shape = wire.extrude(Vector(0, 0, 1000))
-    geom_obj = doc.addObject('Part::Feature', 'SquareTube')
-    geom_obj.Shape = shape
+    cube = doc.addObject("Part::Box", "Cube")
+    cube.Height = "20 mm"
+    cube.Length = "100 mm"
+    cylinder = doc.addObject("Part::Cylinder", "Cylinder")
+    cylinder.Height = "20 mm"
+    cylinder.Radius = "6 mm"
+    cylinder.Placement = FreeCAD.Placement(
+        Vector(10, 12, 10), Rotation(0, 0, 90), Vector(0, 0, 0),
+    )
+    cut = doc.addObject("Part::Cut", "Cut")
+    cut.Base = cube
+    cut.Tool = cylinder
+
+    # mirroring
+    mirror = doc.addObject("Part::Mirroring", "Mirror")
+    mirror.Source = cut
+    mirror.Normal = (1, 0, 0)
+    mirror.Base = (100, 100, 20)
+
+    # fusing
+    fusion = doc.addObject("Part::Fuse", "Fusion")
+    fusion.Base = cut
+    fusion.Tool = mirror
+    fusion.Refine = True
+
+    # compound filter
+    geom_obj = CompoundFilter.makeCompoundFilter(name='CompoundFilter')
+    geom_obj.Base = fusion
+    geom_obj.FilterType = 'window-volume'
     doc.recompute()
 
     if FreeCAD.GuiUp:
+        geom_obj.Base.ViewObject.hide()
         geom_obj.ViewObject.Document.activeView().viewAxonometric()
         geom_obj.ViewObject.Document.activeView().fitAll()
 
@@ -102,66 +129,56 @@ def setup(doc=None, solvertype="ccxtools"):
         solver_object.MatrixSolverType = "default"
         solver_object.IterationsControlParameterTimeUse = False
 
-    # shell thickness
-    thickness = analysis.addObject(
-        ObjectsFem.makeElementGeometry2D(doc, 0, "ShellThickness")
-    )[0]
-    thickness.Thickness = 15.0
-
     # material
     material_object = analysis.addObject(
         ObjectsFem.makeMaterialSolid(doc, "FemMaterial")
     )[0]
     mat = material_object.Material
-    mat["Name"] = "Steel-Generic"
-    mat["YoungsModulus"] = "200000 MPa"
+    mat["Name"] = "CalculiX-Steel"
+    mat["YoungsModulus"] = "210000 MPa"
     mat["PoissonRatio"] = "0.30"
     mat["Density"] = "7900 kg/m^3"
+    mat["ThermalExpansionCoefficient"] = "0.012 mm/m/K"
     material_object.Material = mat
 
-    # fixed_constraint
-    fixed_constraint = analysis.addObject(
-        ObjectsFem.makeConstraintFixed(doc, name="ConstraintFixed"))[0]
-    fixed_constraint.References = [
-        (doc.SquareTube, "Edge4"),
-        (doc.SquareTube, "Edge7"),
-        (doc.SquareTube, "Edge10"),
-        (doc.SquareTube, "Edge12")]
+    # constraint pressure
+    pressure_constraint = analysis.addObject(
+        ObjectsFem.makeConstraintPressure(doc, name="FemConstraintPressure")
+    )[0]
+    pressure_constraint.References = [(geom_obj, "Face8")]
+    pressure_constraint.Pressure = 10.0
+    pressure_constraint.Reversed = False
 
-    # force_constraint1
-    force_constraint1 = analysis.addObject(
-        ObjectsFem.makeConstraintForce(doc, name="ConstraintForce1"))[0]
-    force_constraint1.References = [(doc.SquareTube, "Edge9")]
-    force_constraint1.Force = 100000.00
-    force_constraint1.Direction = (doc.SquareTube, ["Edge9"])
-    force_constraint1.Reversed = True
+    # constraint_displacement
+    displacement_constraint = doc.Analysis.addObject(
+        ObjectsFem.makeConstraintDisplacement(doc, name="FemConstraintDisplacment")
+    )[0]
+    displacement_constraint.References = [(geom_obj, "Face4"), (geom_obj, "Face5")]
+    displacement_constraint.xFree = False
+    displacement_constraint.xFix = True
 
-    # force_constraint2
-    force_constraint2 = analysis.addObject(
-        ObjectsFem.makeConstraintForce(doc, name="ConstraintForce2"))[0]
-    force_constraint2.References = [(doc.SquareTube, "Edge3")]
-    force_constraint2.Force = 100000.00
-    force_constraint2.Direction = (doc.SquareTube, ["Edge3"])
-    force_constraint2.Reversed = True
+    # constraint_transform_1
+    transform_constraint1 = doc.Analysis.addObject(
+        ObjectsFem.makeConstraintTransform(doc, name="FemConstraintTransform1")
+    )[0]
+    transform_constraint1.References = [(geom_obj, "Face4")]
+    transform_constraint1.TransformType = "Cylindrical"
+    transform_constraint1.X_rot = 0.0
+    transform_constraint1.Y_rot = 0.0
+    transform_constraint1.Z_rot = 0.0
 
-    # force_constraint3
-    force_constraint3 = analysis.addObject(
-        ObjectsFem.makeConstraintForce(doc, name="ConstraintForce3"))[0]
-    force_constraint3.References = [(doc.SquareTube, "Edge11")]
-    force_constraint3.Force = 100000.00
-    force_constraint3.Direction = (doc.SquareTube, ["Edge11"])
-    force_constraint3.Reversed = True
-
-    # force_constraint4
-    force_constraint4 = analysis.addObject(
-        ObjectsFem.makeConstraintForce(doc, name="ConstraintForce4"))[0]
-    force_constraint4.References = [(doc.SquareTube, "Edge6")]
-    force_constraint4.Force = 100000.00
-    force_constraint4.Direction = (doc.SquareTube, ["Edge6"])
-    force_constraint4.Reversed = True
+    # constraint_transform_2
+    transform_constraint2 = doc.Analysis.addObject(
+        ObjectsFem.makeConstraintTransform(doc, name="FemConstraintTransform2")
+    )[0]
+    transform_constraint2.References = [(geom_obj, "Face5")]
+    transform_constraint2.TransformType = "Cylindrical"
+    transform_constraint2.X_rot = 0.0
+    transform_constraint2.Y_rot = 0.0
+    transform_constraint2.Z_rot = 0.0
 
     # mesh
-    from .meshes.mesh_square_pipe_end_twisted_tria6 import create_nodes, create_elements
+    from .meshes.mesh_transform_beam_hinged_tetra10 import create_nodes, create_elements
     fem_mesh = Fem.FemMesh()
     control = create_nodes(fem_mesh)
     if not control:
@@ -175,6 +192,7 @@ def setup(doc=None, solvertype="ccxtools"):
     femmesh_obj.FemMesh = fem_mesh
     femmesh_obj.Part = geom_obj
     femmesh_obj.SecondOrderLinear = False
+    femmesh_obj.CharacteristicLengthMax = '7 mm'
 
     doc.recompute()
     return doc
