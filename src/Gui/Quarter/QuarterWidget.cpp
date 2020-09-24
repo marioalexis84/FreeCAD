@@ -71,6 +71,10 @@
 #include <QOpenGLDebugLogger>
 #endif
 
+#if COIN_MAJOR_VERSION >= 4
+#include <Inventor/SbByteBuffer.h>
+#endif
+
 #include <Inventor/SbViewportRegion.h>
 #include <Inventor/system/gl.h>
 #include <Inventor/events/SoEvents.h>
@@ -150,7 +154,7 @@ class CustomGLWidget : public QOpenGLWidget {
 public:
     QSurfaceFormat myFormat;
 
-    CustomGLWidget(const QSurfaceFormat& format, QWidget* parent = 0, const QOpenGLWidget* shareWidget = 0, Qt::WindowFlags f = 0)
+    CustomGLWidget(const QSurfaceFormat& format, QWidget* parent = 0, const QOpenGLWidget* shareWidget = 0, Qt::WindowFlags f = Qt::WindowFlags())
      : QOpenGLWidget(parent, f), myFormat(format)
     {
         Q_UNUSED(shareWidget);
