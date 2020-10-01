@@ -105,6 +105,7 @@
 #include "Mod/Part/App/SurfaceOfRevolutionPy.h"
 #include "Mod/Part/App/ToroidPy.h"
 #include "Mod/Part/App/BRepOffsetAPI_MakePipeShellPy.h"
+#include "Mod/Part/App/BRepOffsetAPI_MakeFillingPy.h"
 #include "Mod/Part/App/PartFeaturePy.h"
 #include "Mod/Part/App/AttachEnginePy.h"
 #include <Mod/Part/App/Geom2d/ArcOfCircle2dPy.h>
@@ -124,6 +125,9 @@
 #include <Mod/Part/App/Geom2d/Line2dPy.h>
 #include <Mod/Part/App/Geom2d/OffsetCurve2dPy.h>
 #include <Mod/Part/App/Geom2d/Parabola2dPy.h>
+#include <Mod/Part/App/GeomPlate/BuildPlateSurfacePy.h>
+#include <Mod/Part/App/GeomPlate/CurveConstraintPy.h>
+#include <Mod/Part/App/GeomPlate/PointConstraintPy.h>
 #include "PropertyGeometryList.h"
 #include "DatumFeature.h"
 #include "Attacher.h"
@@ -384,6 +388,7 @@ PyMOD_INIT_FUNC(Part)
     Py_INCREF(brepModule);
     PyModule_AddObject(partModule, "BRepOffsetAPI", brepModule);
     Base::Interpreter().addType(&Part::BRepOffsetAPI_MakePipeShellPy::Type,brepModule,"MakePipeShell");
+    Base::Interpreter().addType(&Part::BRepOffsetAPI_MakeFillingPy::Type,brepModule,"MakeFilling");
 
     // Geom2d package
 #if PY_MAJOR_VERSION >= 3
@@ -415,6 +420,12 @@ PyMOD_INIT_FUNC(Part)
     Base::Interpreter().addType(&Part::Line2dSegmentPy::Type,geom2dModule,"Line2dSegment");
     Base::Interpreter().addType(&Part::Line2dPy::Type,geom2dModule,"Line2d");
     Base::Interpreter().addType(&Part::OffsetCurve2dPy::Type,geom2dModule,"OffsetCurve2d");
+
+    // GeomPlate sub-module
+    PyObject* geomPlate(module.getAttr("GeomPlate").ptr());
+    Base::Interpreter().addType(&Part::BuildPlateSurfacePy::Type, geomPlate, "BuildPlateSurface");
+    Base::Interpreter().addType(&Part::CurveConstraintPy::Type, geomPlate, "CurveConstraint");
+    Base::Interpreter().addType(&Part::PointConstraintPy::Type, geomPlate, "PointConstraint");
 
     Part::TopoShape             ::init();
     Part::PropertyPartShape     ::init();
