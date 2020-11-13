@@ -457,19 +457,24 @@ class Dimension(gui_base_original.Creator):
                         # else:
                         #     self.node[1] = self.point2
                         self.set_constraint_node()
+                        App.Console.PrintMessage("cont: {}\nlen: {}".format(self.cont, len(self.node)))
                 else:
                     self.force = None
-                    self.proj_point1 = None
-                    self.proj_point2 = None
                     if self.point1:
                         self.node[0] = self.point1
+                        self.proj_point1 = None
+                        self.proj_point2 = None
                     if self.point2 and (len(self.node) > 1):
                         self.node[1] = self.point2
                         # self.point2 = None
                 # update the dimline
+                plane = App.DraftWorkingPlane
                 if self.node and not self.arcmode:
+                    self.proj_point1 = plane.projectPoint(self.node[0])
+                    self.proj_point = plane.projectPoint(self.point)
+#                    self.proj_point2 = plane.projectPoint(self.node[1])
                     self.dimtrack.update(self.node
-                                         + [self.point] + [self.cont])
+                                         + [self.proj_point+self.node[0]-self.proj_point1] + [self.cont])
             gui_tool_utils.redraw3DView()
         elif arg["Type"] == "SoMouseButtonEvent":
             if (arg["State"] == "DOWN") and (arg["Button"] == "BUTTON1"):
@@ -480,6 +485,7 @@ class Dimension(gui_base_original.Creator):
                     if (gui_tool_utils.hasMod(arg, gui_tool_utils.MODALT)
                             or self.selectmode) and (len(self.node) < 3):
                         # print("snapped: ",self.info)
+                        App.Console.PrintMessage("primer condicional\n")
                         if self.info:
                             ob = self.doc.getObject(self.info['Object'])
                             if 'Edge' in self.info['Component']:
@@ -531,9 +537,13 @@ class Dimension(gui_base_original.Creator):
                                             return
                                 self.dimtrack.on()
                     else:
-                        self.node.append(self.point)
+                        App.Console.PrintMessage("nodos:{}\n".format(self.node))
+                        if len(self.node) < 2 or self.arcmode:
+                            self.node.append(self.point)
+                        elif not self.arcmode:
+                            self.node.append(self.proj_point+self.node[0]-self.proj_point1)
                     self.selectmode = False
-                    # print("node", self.node)
+                    print("node", self.node) ###
                     self.dimtrack.update(self.node)
                     if len(self.node) == 2:
                         self.point2 = self.node[1]
@@ -542,7 +552,7 @@ class Dimension(gui_base_original.Creator):
                         if self.planetrack:
                             self.planetrack.set(self.node[0])
                     elif len(self.node) == 2 and self.cont:
-                        self.node.append(self.cont)
+                        self.node.append(self.proj_point+self.node[0]-self.proj_point1)
                         self.createObject()
                         if not self.cont:
                             self.finish()
@@ -564,7 +574,7 @@ class Dimension(gui_base_original.Creator):
     def numericInput(self, numx, numy, numz):
         """Validate the entry fields in the user interface.
 
-        This function is called by the toolbar or taskpanel interface
+        This function   is called by the toolbar or taskpanel interface
         when valid x, y, and z have been entered in the input fields.
         """
         self.point = App.Vector(numx, numy, numz)
@@ -575,11 +585,11 @@ class Dimension(gui_base_original.Creator):
         elif len(self.node) == 3:
             self.createObject()
             if not self.cont:
-                self.finish()
+                    self.finish()
 
     def set_constraint_node(self):
         """Set constrained nodes for vertical or horizontal dimension
-        by projecting on the working plane.
+        on the current working plane.
         """
         if not self.proj_point1 or not self.proj_point2:
             plane = App.DraftWorkingPlane
@@ -599,11 +609,11 @@ class Dimension(gui_base_original.Creator):
                 else:
                     self.force = 1
             if self.force == 1:
-                self.node[0] = self.proj_point1
-                self.node[1] = self.proj_point1 + plane.v*proj_v
+#                self.node[0] = self.proj_point1
+                self.node[1] = self.node[0] + plane.v*proj_v
             elif self.force == 2:
-                self.node[0] = self.proj_point1
-                self.node[1] = self.proj_point1 + plane.u*proj_u
+#                self.node[0] = self.proj_point1
+                self.node[1] = self.node[0] + plane.u*proj_u
 
 
 Gui.addCommand('Draft_Dimension', Dimension())
