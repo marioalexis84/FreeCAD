@@ -7,7 +7,7 @@ if(OPENCV2_FOUND)
 endif(OPENCV2_FOUND)
 
 include_directories(
-    ${OPENCV_INCLUDE2_DIR}
+    ${OPENCV2_INCLUDE_DIR}
     ${PYTHON_INCLUDE_DIRS}
     ${Boost_INCLUDE_DIRS}
     ${ZLIB_INCLUDE_DIR}
@@ -22,6 +22,10 @@ set(Image_LIBS
 set(Image_SRCS
     ImageBase.cpp
     ImageBase.h
+    ImageColor.cpp
+    ImageColor.h
+    ImageGroup.cpp
+    ImageGroup.h
     ImagePlane.cpp
     ImagePlane.h
     PreCompiled.cpp

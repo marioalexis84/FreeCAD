@@ -20,7 +20,8 @@
 #include <Base/Console.h>
 #include <Base/PyObjectBase.h>
 #include "ImagePlane.h"
-
+#include "ImageColor.h"
+#include "ImageGroup.h"
 
 namespace Image {
 class Module : public Py::ExtensionModule<Module>
@@ -50,6 +51,8 @@ PyMOD_INIT_FUNC(Image)
     Base::Console().Log("Loading Image module... done\n");
 
     Image::ImagePlane::init();
+    Image::ImageColor::init();
+    Image::ImageGroup::init();
 
     PyMOD_Return(mod);
 }

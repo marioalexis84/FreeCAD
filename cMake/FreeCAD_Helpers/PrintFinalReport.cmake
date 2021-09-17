@@ -56,7 +56,7 @@ macro(PrintFinalReport)
         message(STATUS "NETGEN:              not enabled")
     endif(DEFINED NETGEN_FOUND)
 
-    #message(STATUS "OpenCV:              ${OpenCV_VERSION}")
+    message(STATUS "OpenCV:              ${OpenCV_VERSION}")
 
     if(DEFINED SWIG_FOUND)
         message(STATUS "SWIG:                ${SWIG_VERSION}")

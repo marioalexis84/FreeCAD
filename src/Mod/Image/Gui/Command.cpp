@@ -203,6 +203,7 @@ CmdImageCapturerTest::CmdImageCapturerTest()
 
 void CmdImageCapturerTest::activated(int iMsg)
 {
+    Q_UNUSED(iMsg)
 	using namespace cv;
 
     VideoCapture cap(0); // open the default camera
@@ -215,9 +216,9 @@ void CmdImageCapturerTest::activated(int iMsg)
     {
         Mat frame;
         cap >> frame; // get a new frame from camera
-        cvtColor(frame, edges, CV_BGR2GRAY);
-        GaussianBlur(edges, edges, Size(7,7), 1.5, 1.5);
-        Canny(edges, edges, 0, 30, 3);
+        cvtColor(frame, edges, COLOR_BGR2GRAY);
+//        GaussianBlur(edges, edges, Size(7,7), 1.5, 1.5);
+//        Canny(edges, edges, 0, 30, 3);
         imshow("edges", edges);
         if(waitKey(30) >= 0) break;
     }

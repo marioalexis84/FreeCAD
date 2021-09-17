@@ -61,7 +61,7 @@ if(NOT FREECAD_LIBPACK_USE OR FREECAD_LIBPACK_CHECKFILE_CLBUNDLER)
         find_package(NETGEN)
     endif(BUILD_FEM_NETGEN)
     # not needed at the moment
-    #find_package(OpenCV REQUIRED)
+    find_package(OpenCV2 REQUIRED)
     SetupSwig()
     SetupEigen()
     # This file is included directly due to some cMake macros that are defined within.
