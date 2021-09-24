@@ -19,13 +19,25 @@ set(Image_LIBS
     FreeCADApp
 )
 
+generate_from_xml(ImageObjectPy)
+generate_from_xml(ImageColorPy)
+
+set(Python_SRCS
+    ImageObjectPy.xml
+    ImageObjectPyImp.cpp
+    ImageColorPy.xml
+    ImageColorPyImp.cpp
+)
+
 set(Image_SRCS
     ImageBase.cpp
     ImageBase.h
     ImageColor.cpp
     ImageColor.h
-    ImageGroup.cpp
-    ImageGroup.h
+    ImageObject.cpp
+    ImageObject.h
+    ImagePipeline.cpp
+    ImagePipeline.h
     ImagePlane.cpp
     ImagePlane.h
     PreCompiled.cpp
@@ -33,7 +45,7 @@ set(Image_SRCS
     AppImage.cpp
 )
 
-add_library(Image SHARED ${Image_SRCS})
+add_library(Image SHARED ${Image_SRCS} ${Python_SRCS})
 target_link_libraries(Image ${Image_LIBS})
 
 

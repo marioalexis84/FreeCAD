@@ -1,0 +1,23 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<GenerateModel xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="generateMetaModel_Module.xsd">
+  <PythonExport
+    Father="ImageObjectPy"
+    Name="ImageColorPy"
+    Twin="ImageColor"
+    TwinPointer="ImageColor"
+    Include="Mod/Image/App/ImageColor.h"
+    Namespace="Image"
+    FatherInclude="Mod/Image/App/ImageObjectPy.h"
+    FatherNamespace="Image">
+    <Documentation>
+      <Author Licence="LGPL" Name="Mario Passaglia" EMail="" />
+      <UserDocu>Feature for color conversion</UserDocu>
+    </Documentation>
+    <Methode Name="setColor">
+      <Documentation>
+        <UserDocu>setColor(color, channels) - Change image color space and number of channels</UserDocu>
+      </Documentation>
+    </Methode>
+    <CustomAttributes />
+  </PythonExport>
+</GenerateModel>

@@ -22,49 +22,55 @@
 
 #include "PreCompiled.h"
 
-#include "ImageColor.h"
-#include "Mod/Image/App/ImageColorPy.h"
+#include /*"Mod/Image/App*/"ImageObject.h"
 
-#include "opencv2/highgui.hpp"
+// inclusion of the generated files (generated out of ImageObjectPy.xml)
+#include "Mod/Image/App/ImageObjectPy.h"
+#include "Mod/Image/App/ImageObjectPy.cpp"
 
 using namespace Image;
 
-const char* ImageColor::ColorCodeEnum[] = {"rgb2rgba", "rgba2rgb", "rgb2bgra" ,"rgba2bgr", "rgb2bgr", "rgba2bgra","bgr2gray", "rgb2gray", NULL};
-
-PROPERTY_SOURCE(Image::ImageColor, App::DocumentObject)
-
-ImageColor::ImageColor()
+// returns a string which represents the object e.g. when printed in python
+std::string ImageObjectPy::representation() const
 {
-    ADD_PROPERTY_TYPE(ColorCode, (6L), "ImageColor", App::Prop_None, "Color conversion code");
-    ColorCode.setEnums(ColorCodeEnum);
-    ADD_PROPERTY_TYPE(File, (0), "ImageColor", App::Prop_None, "File included");
+    return std::string("<ImageObject object>");
 }
 
-ImageColor::~ImageColor()
+
+PyObject* ImageObjectPy::read(PyObject *args)
 {
+    char *fileName;
+    if (!PyArg_ParseTuple(args, "s", &fileName))
+        return nullptr;
+
+    getImageObjectPtr()->read(fileName);
+//    PyErr_SetString(PyExc_NotImplementedError, "Not yet implemented");
+    Py_Return;
 }
 
-App::DocumentObjectExecReturn* ImageColor::execute()
+PyObject* ImageObjectPy::write(PyObject *args)
 {
-//    cv::Mat arch = cv::imread(File.getValue());
-//    setBaseMat(arch);
-    long code = ColorCode.getValue();
-    setColor(code);
-//    cv::imshow("sarasa", mat);
-//    cv::waitKey(0);
+    char *fileName;
+    if (!PyArg_ParseTuple(args, "s", &fileName))
+        return nullptr;
+
+    getImageObjectPtr()->write(fileName);
+//    PyErr_SetString(PyExc_NotImplementedError, "Not yet implemented");
+    Py_Return;
+}
+
+
+
+
+
+PyObject *ImageObjectPy::getCustomAttributes(const char* /*attr*/) const
+{
     return nullptr;
 }
 
-PyObject* ImageColor::getPyObject(void)
+int ImageObjectPy::setCustomAttributes(const char* /*attr*/, PyObject* /*obj*/)
 {
-    if (PythonObject.is(Py::_None())) {
-        // ref counter is set to 1
-        PythonObject = Py::Object(new ImageColorPy(this),true);
-    }
-    return Py::new_reference_to(PythonObject);
+    return 0; 
 }
 
-void ImageColor::setColor(int code, int channels)
-{
-    cv::cvtColor(this->baseMat, this->mat, code, channels);
-}
+

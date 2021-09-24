@@ -22,49 +22,71 @@
 
 #include "PreCompiled.h"
 
-#include "ImageColor.h"
-#include "Mod/Image/App/ImageColorPy.h"
+#include <Base/FileInfo.h>
+#include <Base/Exception.h>
+#include "ImageObject.h"
 
-#include "opencv2/highgui.hpp"
+#include <Mod/Image/App/ImageObjectPy.h>
+
+#include "opencv2/imgcodecs.hpp"
 
 using namespace Image;
 
-const char* ImageColor::ColorCodeEnum[] = {"rgb2rgba", "rgba2rgb", "rgb2bgra" ,"rgba2bgr", "rgb2bgr", "rgba2bgra","bgr2gray", "rgb2gray", NULL};
+PROPERTY_SOURCE(Image::ImageObject, App::DocumentObject)
 
-PROPERTY_SOURCE(Image::ImageColor, App::DocumentObject)
-
-ImageColor::ImageColor()
-{
-    ADD_PROPERTY_TYPE(ColorCode, (6L), "ImageColor", App::Prop_None, "Color conversion code");
-    ColorCode.setEnums(ColorCodeEnum);
-    ADD_PROPERTY_TYPE(File, (0), "ImageColor", App::Prop_None, "File included");
-}
-
-ImageColor::~ImageColor()
+ImageObject::ImageObject()
 {
 }
 
-App::DocumentObjectExecReturn* ImageColor::execute()
+ImageObject::~ImageObject()
 {
-//    cv::Mat arch = cv::imread(File.getValue());
-//    setBaseMat(arch);
-    long code = ColorCode.getValue();
-    setColor(code);
-//    cv::imshow("sarasa", mat);
-//    cv::waitKey(0);
-    return nullptr;
 }
 
-PyObject* ImageColor::getPyObject(void)
+PyObject* ImageObject::getPyObject(void)
 {
     if (PythonObject.is(Py::_None())) {
         // ref counter is set to 1
-        PythonObject = Py::Object(new ImageColorPy(this),true);
+        PythonObject = Py::Object(new ImageObjectPy(this),true);
     }
     return Py::new_reference_to(PythonObject);
 }
 
-void ImageColor::setColor(int code, int channels)
+void ImageObject::setBaseMat(const cv::Mat& input)
 {
-    cv::cvtColor(this->baseMat, this->mat, code, channels);
+    baseMat = input;
+}
+
+void ImageObject::getBaseMat(cv::Mat& output) const
+{
+    output = baseMat;
+}
+
+void ImageObject::getMat(cv::Mat& output) const
+{
+    output = mat;
+}
+
+void ImageObject::read(const char* fileName)
+{
+    Base::FileInfo file(fileName);
+    if (!file.isReadable())
+        throw Base::FileException("File to load not existing or not readable", fileName);
+
+    baseMat = cv::imread(file.filePath().c_str());
+    if(baseMat.empty())
+        throw Base::FileException("Error in reading file");
+}
+
+void ImageObject::write(const char* fileName) const
+{
+    Base::FileInfo file(fileName);
+    bool result = false;
+    try {
+        result = cv::imwrite(file.filePath().c_str(), mat);
+    }
+    catch (const cv::Exception& ex) {
+        throw Base::FileException("Can't write file");
+    }
+    if (!result)       
+        throw Base::FileException("Can't write file");
 }

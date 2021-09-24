@@ -22,49 +22,45 @@
 
 #include "PreCompiled.h"
 
-#include "ImageColor.h"
-#include "Mod/Image/App/ImageColorPy.h"
+#include "Mod/Image/App/ImageColor.h"
 
-#include "opencv2/highgui.hpp"
+// inclusion of the generated files (generated out of ImageColorPy.xml)
+#include "Mod/Image/App/ImageColorPy.h"
+#include "Mod/Image/App/ImageColorPy.cpp"
 
 using namespace Image;
 
-const char* ImageColor::ColorCodeEnum[] = {"rgb2rgba", "rgba2rgb", "rgb2bgra" ,"rgba2bgr", "rgb2bgr", "rgba2bgra","bgr2gray", "rgb2gray", NULL};
-
-PROPERTY_SOURCE(Image::ImageColor, App::DocumentObject)
-
-ImageColor::ImageColor()
+// returns a string which represents the object e.g. when printed in python
+std::string ImageColorPy::representation() const
 {
-    ADD_PROPERTY_TYPE(ColorCode, (6L), "ImageColor", App::Prop_None, "Color conversion code");
-    ColorCode.setEnums(ColorCodeEnum);
-    ADD_PROPERTY_TYPE(File, (0), "ImageColor", App::Prop_None, "File included");
+    return std::string("<ImageColor object>");
 }
 
-ImageColor::~ImageColor()
+
+
+PyObject* ImageColorPy::setColor(PyObject *args)
 {
+    int code;
+    int channels = 0;
+    if(!PyArg_ParseTuple(args, "i|i", &code, &channels))
+        return nullptr;
+
+    getImageColorPtr()->setColor(code, channels);
+    Py_Return;
 }
 
-App::DocumentObjectExecReturn* ImageColor::execute()
+
+
+
+
+PyObject *ImageColorPy::getCustomAttributes(const char* /*attr*/) const
 {
-//    cv::Mat arch = cv::imread(File.getValue());
-//    setBaseMat(arch);
-    long code = ColorCode.getValue();
-    setColor(code);
-//    cv::imshow("sarasa", mat);
-//    cv::waitKey(0);
     return nullptr;
 }
 
-PyObject* ImageColor::getPyObject(void)
+int ImageColorPy::setCustomAttributes(const char* /*attr*/, PyObject* /*obj*/)
 {
-    if (PythonObject.is(Py::_None())) {
-        // ref counter is set to 1
-        PythonObject = Py::Object(new ImageColorPy(this),true);
-    }
-    return Py::new_reference_to(PythonObject);
+    return 0; 
 }
 
-void ImageColor::setColor(int code, int channels)
-{
-    cv::cvtColor(this->baseMat, this->mat, code, channels);
-}
+

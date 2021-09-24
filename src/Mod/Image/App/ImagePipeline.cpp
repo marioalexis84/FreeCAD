@@ -22,49 +22,25 @@
 
 #include "PreCompiled.h"
 
-#include "ImageColor.h"
-#include "Mod/Image/App/ImageColorPy.h"
-
-#include "opencv2/highgui.hpp"
+#include "ImagePipeline.h"
 
 using namespace Image;
 
-const char* ImageColor::ColorCodeEnum[] = {"rgb2rgba", "rgba2rgb", "rgb2bgra" ,"rgba2bgr", "rgb2bgr", "rgba2bgra","bgr2gray", "rgb2gray", NULL};
+PROPERTY_SOURCE(Image::ImagePipeline, App::DocumentObjectFileIncluded)
 
-PROPERTY_SOURCE(Image::ImageColor, App::DocumentObject)
-
-ImageColor::ImageColor()
+ImagePipeline::ImagePipeline()
 {
-    ADD_PROPERTY_TYPE(ColorCode, (6L), "ImageColor", App::Prop_None, "Color conversion code");
-    ColorCode.setEnums(ColorCodeEnum);
-    ADD_PROPERTY_TYPE(File, (0), "ImageColor", App::Prop_None, "File included");
+    ADD_PROPERTY_TYPE(File, (0), "ImagePipeline", App::Prop_ReadOnly, "File of the base image");
+    ADD_PROPERTY_TYPE(Group, (0), "ImagePipeline", App::Prop_None, "Processed images");
+    ADD_PROPERTY_TYPE(BaseImage, (0), "ImagePipeline", App::Prop_None, "Base image");
+    ADD_PROPERTY_TYPE(Tip, (0), "ImagePipeline", App::Prop_None, "Tip image");
 }
 
-ImageColor::~ImageColor()
+ImagePipeline::~ImagePipeline()
 {
 }
 
-App::DocumentObjectExecReturn* ImageColor::execute()
+void ImagePipeline::setBaseImage(const char* fileName)
 {
-//    cv::Mat arch = cv::imread(File.getValue());
-//    setBaseMat(arch);
-    long code = ColorCode.getValue();
-    setColor(code);
-//    cv::imshow("sarasa", mat);
-//    cv::waitKey(0);
-    return nullptr;
-}
-
-PyObject* ImageColor::getPyObject(void)
-{
-    if (PythonObject.is(Py::_None())) {
-        // ref counter is set to 1
-        PythonObject = Py::Object(new ImageColorPy(this),true);
-    }
-    return Py::new_reference_to(PythonObject);
-}
-
-void ImageColor::setColor(int code, int channels)
-{
-    cv::cvtColor(this->baseMat, this->mat, code, channels);
+   File.setValue(fileName);
 }

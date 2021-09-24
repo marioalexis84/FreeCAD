@@ -1,0 +1,28 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<GenerateModel xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="generateMetaModel_Module.xsd">
+  <PythonExport
+    Father="DocumentObjectPy"
+    Name="ImageObjectPy"
+    Twin="ImageObject"
+    TwinPointer="ImageObject"
+    Include="Mod/Image/App/ImageObject.h"
+    Namespace="Image"
+    FatherInclude="App/DocumentObjectPy.h"
+    FatherNamespace="App">
+    <Documentation>
+      <Author Licence="LGPL" Name="Mario Passaglia" EMail="" />
+      <UserDocu>Feature for manipulating images</UserDocu>
+    </Documentation>
+    <Methode Name="read">
+      <Documentation>
+        <UserDocu>read(fileName) - Read the image from file</UserDocu>
+      </Documentation>
+    </Methode>
+    <Methode Name="write" Const="true">
+      <Documentation>
+        <UserDocu>write(fileName) - Write the image to file</UserDocu>
+      </Documentation>
+    </Methode>
+    <CustomAttributes />
+  </PythonExport>
+</GenerateModel>

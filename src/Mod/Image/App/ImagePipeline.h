@@ -20,51 +20,35 @@
  *                                                                         *
  ***************************************************************************/
 
-#include "PreCompiled.h"
+#ifndef Image_ImagePipeline_H
+#define Image_ImagePipeline_H
 
-#include "ImageColor.h"
-#include "Mod/Image/App/ImageColorPy.h"
+#include <App/DocumentObjectFileIncluded.h>
+#include <App/PropertyFile.h>
+#include <App/PropertyLinks.h>
+//#include <App/FeaturePython.h>
 
-#include "opencv2/highgui.hpp"
-
-using namespace Image;
-
-const char* ImageColor::ColorCodeEnum[] = {"rgb2rgba", "rgba2rgb", "rgb2bgra" ,"rgba2bgr", "rgb2bgr", "rgba2bgra","bgr2gray", "rgb2gray", NULL};
-
-PROPERTY_SOURCE(Image::ImageColor, App::DocumentObject)
-
-ImageColor::ImageColor()
+namespace Image
 {
-    ADD_PROPERTY_TYPE(ColorCode, (6L), "ImageColor", App::Prop_None, "Color conversion code");
-    ColorCode.setEnums(ColorCodeEnum);
-    ADD_PROPERTY_TYPE(File, (0), "ImageColor", App::Prop_None, "File included");
-}
 
-ImageColor::~ImageColor()
+class ImageExport ImagePipeline : public App::DocumentObjectFileIncluded
 {
-}
+    PROPERTY_HEADER(Image::ImagePipeline);
 
-App::DocumentObjectExecReturn* ImageColor::execute()
-{
-//    cv::Mat arch = cv::imread(File.getValue());
-//    setBaseMat(arch);
-    long code = ColorCode.getValue();
-    setColor(code);
-//    cv::imshow("sarasa", mat);
-//    cv::waitKey(0);
-    return nullptr;
-}
+public:
+    ImagePipeline();
+    ~ImagePipeline();
 
-PyObject* ImageColor::getPyObject(void)
-{
-    if (PythonObject.is(Py::_None())) {
-        // ref counter is set to 1
-        PythonObject = Py::Object(new ImageColorPy(this),true);
-    }
-    return Py::new_reference_to(PythonObject);
-}
+    App::PropertyLinkList Group;
+    App::PropertyLink BaseImage;
+    App::PropertyLink Tip;
 
-void ImageColor::setColor(int code, int channels)
-{
-    cv::cvtColor(this->baseMat, this->mat, code, channels);
-}
+    void setBaseImage(const char* fileName);
+//    PyObject* getPyObject() override;
+};
+
+//typedef App::FeaturePythonT<ImagePipeline> ImagePipelinePython;
+
+} // namespace Image
+
+#endif // Image_ImagePipeline_H

@@ -23,15 +23,17 @@
 #ifndef Image_ImageColor_H
 #define Image_ImageColor_H
 
-#include <App/DocumentObject.h>
 #include <App/PropertyStandard.h>
+#include <App/PropertyFile.h>
+
+#include "ImageObject.h"
 
 #include "opencv2/imgproc.hpp"
 
 namespace Image
 {
 
-class ImageExport ImageColor : App::DocumentObject
+class ImageExport ImageColor : public ImageObject
 {
     PROPERTY_HEADER(Image::ImageColor);
 
@@ -40,14 +42,19 @@ public:
     ~ImageColor();
 
     App::PropertyEnumeration ColorCode;
+    App::PropertyFileIncluded File;
 
     App::DocumentObjectExecReturn* execute();
+    PyObject* getPyObject();
 
     void setColor(int code, int channels = 0);
-    
+
+    virtual const char* getViewProviderName(void) const
+    {
+        return "Gui::ViewProviderDocumentObject";
+    }
+
 private:
-    cv::Mat baseMat;
-    cv::Mat mat;
     static const char* ColorCodeEnum[];
 };
 

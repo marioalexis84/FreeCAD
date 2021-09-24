@@ -216,7 +216,7 @@ void CmdImageCapturerTest::activated(int iMsg)
     {
         Mat frame;
         cap >> frame; // get a new frame from camera
-        cvtColor(frame, edges, COLOR_BGR2GRAY);
+        cvtColor(frame, edges, COLOR_BGR2RGB);
 //        GaussianBlur(edges, edges, Size(7,7), 1.5, 1.5);
 //        Canny(edges, edges, 0, 30, 3);
         imshow("edges", edges);

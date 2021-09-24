@@ -20,51 +20,37 @@
  *                                                                         *
  ***************************************************************************/
 
-#include "PreCompiled.h"
+#ifndef Image_ImageObject_H
+#define Image_ImageObject_H
 
-#include "ImageColor.h"
-#include "Mod/Image/App/ImageColorPy.h"
+#include <App/DocumentObject.h>
 
-#include "opencv2/highgui.hpp"
+#include "opencv2/core.hpp"
 
-using namespace Image;
-
-const char* ImageColor::ColorCodeEnum[] = {"rgb2rgba", "rgba2rgb", "rgb2bgra" ,"rgba2bgr", "rgb2bgr", "rgba2bgra","bgr2gray", "rgb2gray", NULL};
-
-PROPERTY_SOURCE(Image::ImageColor, App::DocumentObject)
-
-ImageColor::ImageColor()
+namespace Image
 {
-    ADD_PROPERTY_TYPE(ColorCode, (6L), "ImageColor", App::Prop_None, "Color conversion code");
-    ColorCode.setEnums(ColorCodeEnum);
-    ADD_PROPERTY_TYPE(File, (0), "ImageColor", App::Prop_None, "File included");
-}
 
-ImageColor::~ImageColor()
+class ImageExport ImageObject: public App::DocumentObject
 {
-}
+    PROPERTY_HEADER(Image::ImageObject);
 
-App::DocumentObjectExecReturn* ImageColor::execute()
-{
-//    cv::Mat arch = cv::imread(File.getValue());
-//    setBaseMat(arch);
-    long code = ColorCode.getValue();
-    setColor(code);
-//    cv::imshow("sarasa", mat);
-//    cv::waitKey(0);
-    return nullptr;
-}
+public:
+    ImageObject();
+    ~ImageObject();
 
-PyObject* ImageColor::getPyObject(void)
-{
-    if (PythonObject.is(Py::_None())) {
-        // ref counter is set to 1
-        PythonObject = Py::Object(new ImageColorPy(this),true);
-    }
-    return Py::new_reference_to(PythonObject);
-}
+    PyObject* getPyObject();
 
-void ImageColor::setColor(int code, int channels)
-{
-    cv::cvtColor(this->baseMat, this->mat, code, channels);
-}
+    void setBaseMat(const cv::Mat& input);
+    void getBaseMat(cv::Mat& output) const;
+    void getMat(cv::Mat& output) const;  
+    void read(const char* fileName);
+    void write(const char* fileName) const;
+
+protected:
+    cv::Mat baseMat;
+    cv::Mat mat;
+};
+
+} // namespace Image
+
+#endif // Image_ImageObject_H
