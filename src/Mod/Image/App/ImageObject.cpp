@@ -36,6 +36,7 @@ PROPERTY_SOURCE(Image::ImageObject, App::DocumentObject)
 
 ImageObject::ImageObject()
 {
+    ADD_PROPERTY_TYPE(BaseImage, (0), "ImageObject", App::Prop_None, "Base image");
 }
 
 ImageObject::~ImageObject()
@@ -51,9 +52,59 @@ PyObject* ImageObject::getPyObject(void)
     return Py::new_reference_to(PythonObject);
 }
 
+int ImageObject::getCols() const
+{
+    return mat.rows;
+}
+
+int ImageObject::getDepth() const
+{
+    return mat.depth();
+}
+
+int ImageObject::getDims() const
+{
+    return mat.dims;
+}
+
+int ImageObject::getRows() const
+{
+    return mat.cols;
+}
+
+int ImageObject::getChannels() const
+{
+    return mat.channels();
+}
+
+size_t ImageObject::getStep(const int& i) const
+{
+    if (isEmpty())
+        throw Base::RuntimeError("The array has no elements");
+    if (i >= mat.dims || i < 0)
+        throw Base::IndexError("Value must be in the range (0, dims-1)");
+
+    return mat.step[i];
+}
+
+bool ImageObject::isContinuous() const
+{
+    return mat.isContinuous();
+}
+
+bool ImageObject::isEmpty() const
+{
+    return mat.empty();
+}
+
 void ImageObject::setBaseMat(const cv::Mat& input)
 {
     baseMat = input;
+}
+
+void ImageObject::setBaseMat(ImageObject* input)
+{
+    input->getMat(baseMat);
 }
 
 void ImageObject::getBaseMat(cv::Mat& output) const
@@ -64,6 +115,12 @@ void ImageObject::getBaseMat(cv::Mat& output) const
 void ImageObject::getMat(cv::Mat& output) const
 {
     output = mat;
+}
+
+void ImageObject::checkBaseMat() const
+{
+    if (baseMat.empty())
+        throw Base::ValueError("Base array is empty");
 }
 
 void ImageObject::read(const char* fileName)

@@ -36,6 +36,65 @@ std::string ImageObjectPy::representation() const
     return std::string("<ImageObject object>");
 }
 
+Py::Int ImageObjectPy::getCols() const
+{
+    int cols = getImageObjectPtr()->getCols();
+
+    return Py::Int(cols);
+}
+
+Py::Int ImageObjectPy::getRows() const
+{
+    int rows = getImageObjectPtr()->getRows();
+
+    return Py::Int(rows);
+}
+
+Py::Int ImageObjectPy::getChannels() const
+{
+    int channels = getImageObjectPtr()->getChannels();
+
+    return Py::Int(channels);
+}
+
+Py::Int ImageObjectPy::getDepth() const
+{
+    int depth = getImageObjectPtr()->getDepth();
+
+    return Py::Int(depth);
+}
+
+Py::Int ImageObjectPy::getDims() const
+{
+    int dims = getImageObjectPtr()->getDims();
+
+    return Py::Int(dims);
+}
+
+PyObject* ImageObjectPy::step(PyObject *args)
+{
+    int i;
+    if (!PyArg_ParseTuple(args, "i", &i))
+        return nullptr;
+
+    const size_t step = getImageObjectPtr()->getStep(i);
+
+    return PyLong_FromSize_t(step);
+}
+
+Py::Boolean ImageObjectPy::getIsContinuous() const
+{
+    bool continuous = getImageObjectPtr()->isContinuous();
+
+    return Py::Boolean(continuous);
+}
+
+Py::Boolean ImageObjectPy::getIsEmpty() const
+{
+    bool empty = getImageObjectPtr()->isEmpty();
+
+    return Py::Boolean(empty);
+}
 
 PyObject* ImageObjectPy::read(PyObject *args)
 {

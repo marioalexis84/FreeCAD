@@ -47,15 +47,14 @@ public:
     App::DocumentObjectExecReturn* execute();
     PyObject* getPyObject();
 
-    void setColor(int code, int channels = 0);
-
     virtual const char* getViewProviderName(void) const
     {
         return "Gui::ViewProviderDocumentObject";
     }
 
+    void setColor(int code, int channels = 0);
 private:
-    static const char* ColorCodeEnum[];
+    static const std::vector<std::string> ColorCodeEnum;
 };
 
 } // namespace Image

@@ -26,12 +26,12 @@
 
 using namespace Image;
 
-PROPERTY_SOURCE(Image::ImagePipeline, App::DocumentObjectFileIncluded)
+PROPERTY_SOURCE(Image::ImagePipeline, App::DocumentObjectGroup)
 
 ImagePipeline::ImagePipeline()
 {
-    ADD_PROPERTY_TYPE(File, (0), "ImagePipeline", App::Prop_ReadOnly, "File of the base image");
-    ADD_PROPERTY_TYPE(Group, (0), "ImagePipeline", App::Prop_None, "Processed images");
+//    ADD_PROPERTY_TYPE(File, (0), "ImagePipeline", App::Prop_ReadOnly, "File of the base image");
+//    ADD_PROPERTY_TYPE(Group, (0), "ImagePipeline", App::Prop_None, "Processed images");
     ADD_PROPERTY_TYPE(BaseImage, (0), "ImagePipeline", App::Prop_None, "Base image");
     ADD_PROPERTY_TYPE(Tip, (0), "ImagePipeline", App::Prop_None, "Tip image");
 }
@@ -40,7 +40,7 @@ ImagePipeline::~ImagePipeline()
 {
 }
 
-void ImagePipeline::setBaseImage(const char* fileName)
-{
-   File.setValue(fileName);
-}
+//void ImagePipeline::setBaseImage(const char* fileName)
+//{
+//   File.setValue(fileName);
+//}

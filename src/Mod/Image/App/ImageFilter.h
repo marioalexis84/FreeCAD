@@ -20,4 +20,51 @@
  *                                                                         *
  ***************************************************************************/
 
+#ifndef Image_ImageFilter_H
+#define Image_ImageFilter_H
 
+#include <App/PropertyStandard.h>
+
+#include "ImageObject.h"
+
+namespace Image
+{
+
+class ImageExport ImageFilter : public ImageObject
+{
+    PROPERTY_HEADER(Image::ImageFilter);
+
+public:
+    ImageFilter();
+    ~ImageFilter();
+
+};
+
+class ImageExport ImageThreshold : public ImageFilter
+{
+    PROPERTY_HEADER(Image::ImageThreshold);
+
+public:
+    ImageThreshold();
+    ~ImageThreshold();
+
+    App::PropertyFloat Threshold;
+    App::PropertyFloat MaximumValue;
+    App::PropertyEnumeration Type;
+
+    App::DocumentObjectExecReturn* execute();
+    PyObject* getPyObject();
+
+    virtual const char* getViewProviderName(void) const
+    {
+        return "Gui::ViewProviderDocumentObject";
+    }
+
+protected:
+    static const std::vector<std::string> ThresholdEnum;
+    double setThreshold(const double& thresh, const double& maxVal, cons int& type);
+};
+
+} // namespace Image
+
+#endif // Image_ImageFilter_H

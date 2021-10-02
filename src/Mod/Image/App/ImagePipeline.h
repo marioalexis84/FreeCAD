@@ -23,15 +23,15 @@
 #ifndef Image_ImagePipeline_H
 #define Image_ImagePipeline_H
 
-#include <App/DocumentObjectFileIncluded.h>
-#include <App/PropertyFile.h>
+#include <App/DocumentObjectGroup.h>
+#include <App/PropertyStandard.h>
 #include <App/PropertyLinks.h>
 //#include <App/FeaturePython.h>
 
 namespace Image
 {
 
-class ImageExport ImagePipeline : public App::DocumentObjectFileIncluded
+class ImageExport ImagePipeline : public App::DocumentObjectGroup
 {
     PROPERTY_HEADER(Image::ImagePipeline);
 
@@ -39,11 +39,10 @@ public:
     ImagePipeline();
     ~ImagePipeline();
 
-    App::PropertyLinkList Group;
     App::PropertyLink BaseImage;
     App::PropertyLink Tip;
 
-    void setBaseImage(const char* fileName);
+//    void setBaseImage(const char* fileName);
 //    PyObject* getPyObject() override;
 };
 

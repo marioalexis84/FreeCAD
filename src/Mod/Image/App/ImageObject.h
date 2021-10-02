@@ -35,18 +35,30 @@ class ImageExport ImageObject: public App::DocumentObject
     PROPERTY_HEADER(Image::ImageObject);
 
 public:
+    App::PropertyLink BaseImage;
+
     ImageObject();
     ~ImageObject();
 
     PyObject* getPyObject();
 
+    int getCols() const;
+    int getDims() const;
+    int getDepth() const;
+    int getRows() const;
+    int getChannels() const;
+    size_t getStep(const int& i) const;
+    bool isContinuous() const;
+    bool isEmpty() const;
     void setBaseMat(const cv::Mat& input);
+    void setBaseMat(ImageObject* input);
     void getBaseMat(cv::Mat& output) const;
     void getMat(cv::Mat& output) const;  
     void read(const char* fileName);
     void write(const char* fileName) const;
 
 protected:
+    void checkBaseMat() const;
     cv::Mat baseMat;
     cv::Mat mat;
 };

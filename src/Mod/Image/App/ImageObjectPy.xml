@@ -13,6 +13,53 @@
       <Author Licence="LGPL" Name="Mario Passaglia" EMail="" />
       <UserDocu>Feature for manipulating images</UserDocu>
     </Documentation>
+    <Attribute Name="Cols"  ReadOnly="true">
+      <Documentation>
+        <UserDocu>cols - Number of columns in the image</UserDocu>
+      </Documentation>
+      <Parameter Name="Cols" Type="Int"/>
+    </Attribute>
+    <Attribute Name="Rows"  ReadOnly="true">
+      <Documentation>
+        <UserDocu>cols - Number of rows in the image</UserDocu>
+      </Documentation>
+      <Parameter Name="Rows" Type="Int"/>
+    </Attribute>
+    <Attribute Name="Channels"  ReadOnly="true">
+      <Documentation>
+        <UserDocu>channels - Number of channels in the image</UserDocu>
+      </Documentation>
+      <Parameter Name="Channels" Type="Int"/>
+    </Attribute>
+    <Attribute Name="Dims"  ReadOnly="true">
+      <Documentation>
+        <UserDocu>Dims - Dimensionality of the matrix</UserDocu>
+      </Documentation>
+      <Parameter Name="Dims" Type="Int"/>
+    </Attribute>
+    <Attribute Name="Depth"  ReadOnly="true">
+      <Documentation>
+        <UserDocu>Depth - Depth of a matrix element</UserDocu>
+      </Documentation>
+      <Parameter Name="Depth" Type="Int"/>
+    </Attribute>
+    <Attribute Name="IsContinuous"  ReadOnly="true">
+      <Documentation>
+        <UserDocu>isContinuous - Return True if the elements are stored continuously</UserDocu>
+      </Documentation>
+      <Parameter Name="IsContinuous" Type="Boolean"/>
+    </Attribute>
+    <Attribute Name="IsEmpty"  ReadOnly="true">
+      <Documentation>
+        <UserDocu>isEmpty - Return True if the array has no elements</UserDocu>
+      </Documentation>
+      <Parameter Name="IsEmpty" Type="Boolean"/>
+    </Attribute>
+    <Methode Name="step"  const="true">
+      <Documentation>
+        <UserDocu>step(i) - Size in the level i</UserDocu>
+      </Documentation>
+    </Methode>
     <Methode Name="read">
       <Documentation>
         <UserDocu>read(fileName) - Read the image from file</UserDocu>
