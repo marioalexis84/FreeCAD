@@ -50,7 +50,7 @@ public:
     void setDisplayMode(const char* ModeName);
     std::vector<std::string> getDisplayModes() const;
     void updateData(const App::Property*);
-
+    void onChanged(const App::Property*);
 private:
     bool loadSvg(const char*, float x, float y, QImage& img);
 

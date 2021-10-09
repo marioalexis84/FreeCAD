@@ -20,26 +20,65 @@
  *                                                                         *
  ***************************************************************************/
 
-#ifndef Image_ImageFilter_H
-#define Image_ImageFilter_H
 
-#include <App/PropertyStandard.h>
+#ifndef IMAGE_PROPERTYIMAGE_H
+#define IMAGE_PROPERTYIMAGE_H
 
-#include "ImageObject.h"
+#include <App/Property.h>
+
+#include "opencv2/core.hpp"
 
 namespace Image
 {
 
-class ImageExport ImageFilter : public ImageObjectLinked
+class ImageExport PropertyImage : public App::Property
 {
-    PROPERTY_HEADER(Image::ImageFilter);
+    TYPESYSTEM_HEADER();
 
 public:
-    ImageFilter();
-    ~ImageFilter();
+    PropertyImage();
+    ~PropertyImage();
 
+    /** @name Getter/setter */
+    //@{
+    /// set the dataset
+    void setValue(const cv::Mat& mat);
+    /// get the Mat image
+    const cv::Mat& getValue() const; //chequear esto con resize por ejemplo
+    /// set the dataset with cloned Mat
+    void setValueClone(const cv::Mat& mat);
+    /// get Mat image cloned
+    cv::Mat getValueClone() const;
+    //@}
+
+    /** @name Python interface */
+    //@{
+    PyObject* getPyObject();
+    void setPyObject(PyObject* value);
+    //@}
+
+    /** @name Save/restore */
+    //@{
+    void Save (Base::Writer& writer) const;
+    void Restore(Base::XMLReader& reader);
+
+    void SaveDocFile (Base::Writer& writer) const;
+    void RestoreDocFile(Base::Reader& reader);
+
+    App::Property* Copy() const;
+    void Paste(const App::Property& from);
+    unsigned int getMemSize () const;
+    //@}
+
+    /// Get valid paths for this property; used by auto completer
+    virtual void getPaths(std::vector<App::ObjectIdentifier>& paths) const;
+
+protected:
+//    void createDataObjectByExternalType(vtkSmartPointer<vtkDataObject> ex);
+    cv::Mat mat;
 };
 
-} // namespace Image
+} //namespace Image
 
-#endif // Image_ImageFilter_H
+
+#endif // IMAGE_PROPERTYIMAGE_H

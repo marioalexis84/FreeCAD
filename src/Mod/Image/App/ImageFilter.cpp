@@ -24,25 +24,10 @@
 
 #include "ImageFilter.h"
 
-#include "opencv2/imgproc.hpp"
-
 using namespace Image;
 
-template<typename T>
-std::vector<std::string> mapEnum(std::map<std::string, T>& m)
-{
-    std::vector<std::string> strVec;
-    for (const auto& p: m) {
-        strVec.push_back(p.first);
-    }
-    return strVec;
-}
 
-//**************************************************************************
-// ImageFilter
-//**************************************************************************
-
-PROPERTY_SOURCE(Image::ImageFilter, App::ImageObject)
+PROPERTY_SOURCE(Image::ImageFilter, Image::ImageObjectLinked)
 
 ImageFilter::ImageFilter()
 {
@@ -51,53 +36,3 @@ ImageFilter::ImageFilter()
 ImageFilter::~ImageFilter()
 {
 }
-
-//**************************************************************************
-// ImageThreshold
-//**************************************************************************
-
-std::map<std::string, cv::ThresholdTypes> mapThreshold = {
-    {"Binary", cv::THRESH_BINARY},
-    {"Bynary inverted", cv::THRESH_BINARY_INV},
-    {"Truncate", cv::THRESH_TRUNC},
-    {"Zero", cv::THRESH_TOZERO},
-    {"Zero inverted", cv::THRESH_TOZERO_INV},
-    {"Masked", cv::THRESH_MASK},
-    {"Otsu", cv::THRESH_OTSU},
-    {"Triangle", cv::THRESH_TRIANGLE}
-}
-
-
-const std::vector<std::string> ImageThreshold::ThresholdEnum = 
-    mapEnum<cv::ThresholdTypes>(mapThreshold);
-
-PROPERTY_SOURCE(Image::ImageThreshold, App::ImageObject)
-
-ImageThreshold::ImageThreshold()
-{
-    ADD_PROPERTY_TYPE(MaximumValue, (0), "ImageThreshold", App::Prop_None,
-        "Maximum value for binary thresholding types");
-    ADD_PROPERTY_TYPE(Threshold, (0), "ImageThreshold", App::Prop_None,
-        "Threshold value");
-    ADD_PROPERTY_TYPE(Type, (0), "ImageThreshold", App::Prop_None,
-        "Threshold type");
-}
-
-ImageThreshold::~ImageThreshold()
-{
-}
-
-double ImageThreshold::setThreshold(const double& thresh, const double& maxVal, const int& type)
-{
-    double threshComp = cv::threshold(baseMat, mat, thresh, maxVal, type);
-    return threshComp;
-}
-
-App::DocumentObjectExecReturn* ImageThreshold::execute()
-{
-    if (baseMat.empty())
-        return nullptr;
-    double threshComp = setThreshold();
-
-}
-ImageThreshold::

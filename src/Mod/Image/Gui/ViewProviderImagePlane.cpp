@@ -74,6 +74,7 @@ ViewProviderImagePlane::~ViewProviderImagePlane()
 
 void ViewProviderImagePlane::attach(App::DocumentObject *pcObj)
 {
+    Base::Console().Message("nombre:%s\n", pcObj->getNameInDocument());    
     ViewProviderDocumentObject::attach(pcObj);
 
     // NOTE: SoFCSelection node has beem removed because it led to
@@ -135,6 +136,7 @@ bool ViewProviderImagePlane::loadSvg(const char* filename, float x, float y, QIm
 
 void ViewProviderImagePlane::updateData(const App::Property* prop)
 {
+    Base::Console().Message("prop:%s\n", prop->getName());    
     Image::ImagePlane* pcPlaneObj = static_cast<Image::ImagePlane*>(pcObject);
     if (prop == &pcPlaneObj->XSize || prop == &pcPlaneObj->YSize) {
         float x = pcPlaneObj->XSize.getValue();
@@ -171,4 +173,11 @@ void ViewProviderImagePlane::updateData(const App::Property* prop)
     else {
         Gui::ViewProviderGeometryObject::updateData(prop);
     }
+}
+
+void ViewProviderImagePlane::onChanged(const App::Property *prop)
+{
+
+    Base::Console().Message("onChanged:%s\n", prop->getName());
+    ViewProviderDocumentObject::onChanged(prop);
 }

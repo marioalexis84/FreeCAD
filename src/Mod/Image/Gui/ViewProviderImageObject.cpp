@@ -20,26 +20,46 @@
  *                                                                         *
  ***************************************************************************/
 
-#ifndef Image_ImageFilter_H
-#define Image_ImageFilter_H
+#include "PreCompiled.h"
 
-#include <App/PropertyStandard.h>
+#include <Base/Exception.h>
+#include <Gui/MainWindow.h>
+#include <Mod/Image/App/ImageObject.h>
+#include "ImageView.h"
+#include "ViewProviderImageObject.h"
 
-#include "ImageObject.h"
+using namespace ImageGui;
 
-namespace Image
+PROPERTY_SOURCE(ImageGui::ViewProviderImageObject, Gui::ViewProviderDocumentObject)
+
+ViewProviderImageObject::ViewProviderImageObject()
 {
+    Base::Console().Message("object_constr\n");
+    iView = new ImageView(Gui::getMainWindow());
+}
 
-class ImageExport ImageFilter : public ImageObjectLinked
+ViewProviderImageObject::~ViewProviderImageObject()
 {
-    PROPERTY_HEADER(Image::ImageFilter);
+    Base::Console().Message("object_destruct\n");
+}
 
-public:
-    ImageFilter();
-    ~ImageFilter();
+void ViewProviderImageObject::attach(App::DocumentObject* pcObj)
+{
+    ViewProviderDocumentObject::attach(pcObj);
+    Base::Console().Message("object_attach:%s\n", pcObj->getTypeId().getName());
+    if (!pcObj->getTypeId().isDerivedFrom(Image::ImageObject::getClassTypeId()))
+        throw Base::TypeError("tipo erroneo");
+    Image::ImageObject* pcImg = static_cast<Image::ImageObject*>(pcObj);
 
-};
+    cv::Mat mat;
+    pcImg->getMat(mat);
+    iView->resize(400, 300);
+    Gui::getMainWindow()->addWindow(iView);
+    if (!pcImg->isEmpty())
+        iView->pointImageTo((void*)mat.data, mat.cols, mat.rows, IB_CF_BGR24, 0, true);
+}
 
-} // namespace Image
-
-#endif // Image_ImageFilter_H
+void ViewProviderImageObject::updateData(const App::Property* prop)
+{
+    Base::Console().Message("object_update:%s\n", prop->getName());
+}

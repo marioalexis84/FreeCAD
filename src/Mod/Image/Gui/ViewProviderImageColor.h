@@ -20,26 +20,26 @@
  *                                                                         *
  ***************************************************************************/
 
-#ifndef Image_ImageFilter_H
-#define Image_ImageFilter_H
+#ifndef Image_ViewProviderImageColor_H
+#define Image_ViewProviderImageColor_H
 
-#include <App/PropertyStandard.h>
+#include "ViewProviderImageObject.h"
 
-#include "ImageObject.h"
-
-namespace Image
+namespace ImageGui
 {
 
-class ImageExport ImageFilter : public ImageObjectLinked
+class ImageGuiExport ViewProviderImageColor: public ViewProviderImageObject
 {
-    PROPERTY_HEADER(Image::ImageFilter);
+    PROPERTY_HEADER(ImageGui::ViewProviderImageColor);
 
 public:
-    ImageFilter();
-    ~ImageFilter();
+    ViewProviderImageColor();
+    ~ViewProviderImageColor();
+    void updateData(const App::Property* prop);
+//    void attach(App::DocumentObject* pcObj);
 
 };
 
-} // namespace Image
+} // namespace ImageGui
 
-#endif // Image_ImageFilter_H
+#endif // Image_ViewProviderImageColor_H

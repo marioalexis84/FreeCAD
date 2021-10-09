@@ -28,6 +28,7 @@
 #include "Mod/Image/App/ImageObjectPy.h"
 #include "Mod/Image/App/ImageObjectPy.cpp"
 
+#include <Base/Console.h>
 using namespace Image;
 
 // returns a string which represents the object e.g. when printed in python
@@ -53,7 +54,7 @@ Py::Int ImageObjectPy::getRows() const
 Py::Int ImageObjectPy::getChannels() const
 {
     int channels = getImageObjectPtr()->getChannels();
-
+    Base::Console().Message("puntero:%x\tchan%i\n", getImageObjectPtr(), channels);
     return Py::Int(channels);
 }
 

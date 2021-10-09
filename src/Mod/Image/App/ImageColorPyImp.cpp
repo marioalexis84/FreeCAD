@@ -40,9 +40,9 @@ std::string ImageColorPy::representation() const
 
 PyObject* ImageColorPy::setColor(PyObject *args)
 {
-    int code;
+    const char* code;
     int channels = 0;
-    if(!PyArg_ParseTuple(args, "i|i", &code, &channels))
+    if(!PyArg_ParseTuple(args, "s|i", &code, &channels))
         return nullptr;
 
     getImageColorPtr()->setColor(code, channels);

@@ -33,7 +33,7 @@
 namespace Image
 {
 
-class ImageExport ImageColor : public ImageObject
+class ImageExport ImageColor : public ImageObjectLinked
 {
     PROPERTY_HEADER(Image::ImageColor);
 
@@ -44,15 +44,17 @@ public:
     App::PropertyEnumeration ColorCode;
     App::PropertyFileIncluded File;
 
+    short mustExecute() const;
     App::DocumentObjectExecReturn* execute();
+    void onChanged(const App::Property* prop);
     PyObject* getPyObject();
 
     virtual const char* getViewProviderName(void) const
     {
-        return "Gui::ViewProviderDocumentObject";
+        return "ImageGui::ViewProviderImageColor";
     }
 
-    void setColor(int code, int channels = 0);
+    void setColor(const char* code, int channels = 0);
 private:
     static const std::vector<std::string> ColorCodeEnum;
 };

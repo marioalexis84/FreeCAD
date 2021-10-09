@@ -25,6 +25,8 @@
 
 #include <App/DocumentObject.h>
 
+#include "PropertyImage.h"
+
 #include "opencv2/core.hpp"
 
 namespace Image
@@ -35,12 +37,18 @@ class ImageExport ImageObject: public App::DocumentObject
     PROPERTY_HEADER(Image::ImageObject);
 
 public:
-    App::PropertyLink BaseImage;
-
     ImageObject();
     ~ImageObject();
 
+    Image::PropertyImage MatImage;
+
+    App::DocumentObjectExecReturn* execute();
     PyObject* getPyObject();
+
+    virtual const char* getViewProviderName(void) const
+    {
+        return "ImageGui::ViewProviderImageObject";
+    }
 
     int getCols() const;
     int getDims() const;
@@ -48,19 +56,40 @@ public:
     int getRows() const;
     int getChannels() const;
     size_t getStep(const int& i) const;
+
     bool isContinuous() const;
     bool isEmpty() const;
-    void setBaseMat(const cv::Mat& input);
-    void setBaseMat(ImageObject* input);
-    void getBaseMat(cv::Mat& output) const;
+
     void getMat(cv::Mat& output) const;  
+
     void read(const char* fileName);
     void write(const char* fileName) const;
 
 protected:
-    void checkBaseMat() const;
-    cv::Mat baseMat;
-    cv::Mat mat;
+
+private:
+    const cv::Mat* _mat; // = MatImage.getValue();
+};
+
+
+class ImageExport ImageObjectLinked: public ImageObject
+{
+    PROPERTY_HEADER(Image::ImageObjectLinked);
+
+public:
+    ImageObjectLinked();
+    ~ImageObjectLinked();
+
+    App::PropertyLink BaseImage;
+    App::PropertyLink Pipeline;
+
+    void getBaseMat(cv::Mat& output) const;
+
+    ImageObject* checkBase() const;
+    void setBaseMat(ImageObject* input);
+
+    
+    bool baseIsEmpty() const;
 };
 
 } // namespace Image

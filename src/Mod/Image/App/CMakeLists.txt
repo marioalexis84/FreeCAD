@@ -36,12 +36,18 @@ set(Image_SRCS
     ImageColor.h
     ImageObject.cpp
     ImageObject.h
+    ImageFilter.cpp
+    ImageFilter.h
     ImagePipeline.cpp
     ImagePipeline.h
     ImagePlane.cpp
     ImagePlane.h
+    ImageThreshold.cpp
+    ImageThreshold.h
     PreCompiled.cpp
     PreCompiled.h
+    PropertyImage.h
+    PropertyImage.cpp
     AppImage.cpp
 )
 

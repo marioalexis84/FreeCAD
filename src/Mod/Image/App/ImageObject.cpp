@@ -29,14 +29,19 @@
 #include <Mod/Image/App/ImageObjectPy.h>
 
 #include "opencv2/imgcodecs.hpp"
-
+#include <Base/Console.h>
 using namespace Image;
+
+//***************************************************************************
+// ImageObject
+//***************************************************************************
 
 PROPERTY_SOURCE(Image::ImageObject, App::DocumentObject)
 
 ImageObject::ImageObject()
 {
-    ADD_PROPERTY_TYPE(BaseImage, (0), "ImageObject", App::Prop_None, "Base image");
+    ADD_PROPERTY_TYPE(MatImage, (cv::Mat()), "ImageObject", App::Prop_None, "Mat image");
+    _mat = &MatImage.getValue();
 }
 
 ImageObject::~ImageObject()
@@ -52,75 +57,61 @@ PyObject* ImageObject::getPyObject(void)
     return Py::new_reference_to(PythonObject);
 }
 
+App::DocumentObjectExecReturn* ImageObject::execute()
+{
+//    mat = baseMat;
+    return DocumentObject::execute();
+}
+
 int ImageObject::getCols() const
 {
-    return mat.rows;
+    return _mat->rows;
 }
 
 int ImageObject::getDepth() const
 {
-    return mat.depth();
+    return _mat->depth();
 }
 
 int ImageObject::getDims() const
 {
-    return mat.dims;
+    return _mat->dims;
 }
 
 int ImageObject::getRows() const
 {
-    return mat.cols;
+    return _mat->cols;
 }
 
 int ImageObject::getChannels() const
 {
-    return mat.channels();
+    Base::Console().Message("puntero c++: %x\tchan:%i\n", this, _mat->channels());
+    return _mat->channels();
 }
 
 size_t ImageObject::getStep(const int& i) const
 {
     if (isEmpty())
         throw Base::RuntimeError("The array has no elements");
-    if (i >= mat.dims || i < 0)
+    if (i >= _mat->dims || i < 0)
         throw Base::IndexError("Value must be in the range (0, dims-1)");
 
-    return mat.step[i];
+    return _mat->step[i];
 }
 
 bool ImageObject::isContinuous() const
 {
-    return mat.isContinuous();
+    return _mat->isContinuous();
 }
 
 bool ImageObject::isEmpty() const
 {
-    return mat.empty();
-}
-
-void ImageObject::setBaseMat(const cv::Mat& input)
-{
-    baseMat = input;
-}
-
-void ImageObject::setBaseMat(ImageObject* input)
-{
-    input->getMat(baseMat);
-}
-
-void ImageObject::getBaseMat(cv::Mat& output) const
-{
-    output = baseMat;
+    return _mat->empty();
 }
 
 void ImageObject::getMat(cv::Mat& output) const
 {
-    output = mat;
-}
-
-void ImageObject::checkBaseMat() const
-{
-    if (baseMat.empty())
-        throw Base::ValueError("Base array is empty");
+    output = *_mat;
 }
 
 void ImageObject::read(const char* fileName)
@@ -129,8 +120,10 @@ void ImageObject::read(const char* fileName)
     if (!file.isReadable())
         throw Base::FileException("File to load not existing or not readable", fileName);
 
-    baseMat = cv::imread(file.filePath().c_str());
-    if(baseMat.empty())
+    cv::Mat img = cv::imread(file.filePath().c_str());
+    MatImage.setValue(img);
+
+    if(_mat->empty())
         throw Base::FileException("Error in reading file");
 }
 
@@ -139,11 +132,60 @@ void ImageObject::write(const char* fileName) const
     Base::FileInfo file(fileName);
     bool result = false;
     try {
-        result = cv::imwrite(file.filePath().c_str(), mat);
+        result = cv::imwrite(file.filePath().c_str(), *_mat);
     }
     catch (const cv::Exception& ex) {
         throw Base::FileException("Can't write file");
     }
     if (!result)       
         throw Base::FileException("Can't write file");
+}
+
+//***************************************************************************
+// ImageObjectLinked
+//***************************************************************************
+
+PROPERTY_SOURCE(Image::ImageObjectLinked, Image::ImageObject)
+
+ImageObjectLinked::ImageObjectLinked()
+{
+    ADD_PROPERTY_TYPE(BaseImage, (nullptr), "Base", App::Prop_None, "Base image");
+    ADD_PROPERTY_TYPE(Pipeline, (nullptr), "Base", App::Prop_None, "Pipeline group");
+}
+
+ImageObjectLinked::~ImageObjectLinked()
+{
+}
+
+void ImageObjectLinked::getBaseMat(cv::Mat& output) const
+{
+    ImageObject* base = checkBase();
+    output = base->MatImage.getValue();
+}
+
+void ImageObjectLinked::setBaseMat(ImageObject* input)
+{
+    BaseImage.setValue(input);
+}
+
+ImageObject* ImageObjectLinked::checkBase() const
+{
+    App::DocumentObject* base = BaseImage.getValue();
+    if (base && base->isDerivedFrom(ImageObject::getClassTypeId())) {
+        ImageObject* baseImg = static_cast<ImageObject*>(base);
+        return baseImg;
+    }
+    else {
+        return nullptr;
+    }
+}
+
+bool ImageObjectLinked::baseIsEmpty() const
+{
+    ImageObject* base = checkBase();
+
+    if (base)
+        return base->isEmpty();
+    else
+        return true;
 }

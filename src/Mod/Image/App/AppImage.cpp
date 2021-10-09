@@ -20,8 +20,11 @@
 #include <Base/Console.h>
 #include <Base/PyObjectBase.h>
 #include "ImageColor.h"
+#include "ImageFilter.h"
 #include "ImagePipeline.h"
 #include "ImagePlane.h"
+#include "PropertyImage.h"
+#include "ImageThreshold.h"
 
 namespace Image {
 class Module : public Py::ExtensionModule<Module>
@@ -50,9 +53,13 @@ PyMOD_INIT_FUNC(Image)
     PyObject* mod = Image::initModule();
     Base::Console().Log("Loading Image module... done\n");
 
+    Image::PropertyImage::init();
     Image::ImageObject::init();
+    Image::ImageObjectLinked::init();
     Image::ImageColor::init();
     Image::ImagePipeline::init();
+    Image::ImageFilter::init();
+    Image::ImageThreshold::init();
     Image::ImagePlane::init();
 
     PyMOD_Return(mod);

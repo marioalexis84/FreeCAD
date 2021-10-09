@@ -51,6 +51,10 @@ SET(ImageGui_SRCS
     Command.cpp
     ImageOrientationDialog.cpp
     ImageOrientationDialog.h
+    ViewProviderImageColor.cpp
+    ViewProviderImageColor.h
+    ViewProviderImageObject.cpp
+    ViewProviderImageObject.h
     ViewProviderImagePlane.cpp
     ViewProviderImagePlane.h
     Resources/Image.qrc

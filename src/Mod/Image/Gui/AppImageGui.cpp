@@ -20,6 +20,8 @@
 #include <Gui/Language/Translator.h>
 #include "Workbench.h"
 #include "ViewProviderImagePlane.h"
+#include "ViewProviderImageObject.h"
+#include "ViewProviderImageColor.h"
 
 // use a different name to CreateCommand()
 void CreateImageCommands(void);
@@ -50,6 +52,8 @@ PyMOD_INIT_FUNC(ImageGui)
     // instantiating the commands
     CreateImageCommands();
 
+    ImageGui::ViewProviderImageObject::init();
+    ImageGui::ViewProviderImageColor::init();
     ImageGui::ViewProviderImagePlane::init();
     ImageGui::Workbench::init();
 
