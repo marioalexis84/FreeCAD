@@ -91,7 +91,6 @@ App::DocumentObjectExecReturn* ImageColor::execute()
 //    cv::waitKey(0);
     Base::Console().Message("color_execute:%i\t%s\n", getChannels(), ColorCode.getName());
     App::DocumentObjectExecReturn* ret = ImageObject::execute();
-    Base::Console().Message("color_execute2:%i\t%s\n", getChannels(), ColorCode.getName());
     return ret;
 }
 
