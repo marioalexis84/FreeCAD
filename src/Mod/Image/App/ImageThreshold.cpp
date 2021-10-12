@@ -49,9 +49,24 @@ std::map<std::string, cv::ThresholdTypes> mapThreshold = {
     {"Triangle", cv::THRESH_TRIANGLE}
 };
 
+const char* ImageThreshold::ThresholdEnum[] = {
+    "Binary", 
+    "Bynary inverted",
+    "Truncate",
+    "Zero",
+    "Zero inverted",
+    "Masked",
+    "Otsu",
+    "Triangle",
+    NULL
+};
 
-const std::vector<std::string> ImageThreshold::ThresholdEnum = 
-    mapEnum<cv::ThresholdTypes>(mapThreshold);
+
+
+
+
+//const std::vector<std::string> ImageThreshold::ThresholdEnum = 
+//    mapEnum<cv::ThresholdTypes>(mapThreshold);
 
 PROPERTY_SOURCE(Image::ImageThreshold, Image::ImageFilter)
 
@@ -73,24 +88,35 @@ ImageThreshold::~ImageThreshold()
 double ImageThreshold::setThreshold(const double& thresh, const double& maxVal, const int& type)
 {
     cv::Mat tmpMat;
-    cv::Mat tmpBase;
-    getBaseMat(tmpBase);
-    double threshComp = cv::threshold(tmpBase, tmpMat, thresh, maxVal, type);
+    cv::Mat tmpSrc;
+    getSourceMat(tmpSrc);
+    double threshComp = cv::threshold(tmpSrc, tmpMat, thresh, maxVal, type);
     MatImage.setValue(tmpMat);
     return threshComp;
 }
 
 App::DocumentObjectExecReturn* ImageThreshold::execute()
 {
-    if (baseIsEmpty())
+    if (isEmpty())
         return nullptr;
 
-    double thresh = Threshold.getValue();
-    double maxVal = MaximumValue.getValue();
-    std::string type = Type.getValueAsString();
+    App::DocumentObjectExecReturn* ret = ImageObject::execute();
+    return ret;
+}
+
+void ImageThreshold::onChanged(const App::Property* prop)
+{
+    if (prop == &Threshold || prop == &MaximumValue || prop == &Type) {
+        if (!sourceIsEmpty()) {
+            double thresh = Threshold.getValue();
+            double maxVal = MaximumValue.getValue();
+            std::string type = Type.getValueAsString();
 
     /*double threshComp = */setThreshold(thresh, maxVal, mapThreshold[type]);
-    return nullptr;
+        }
+    }
+
+    ImageObject::onChanged(prop);
 }
 //ImageThreshold::
 

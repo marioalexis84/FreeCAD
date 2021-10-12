@@ -54,7 +54,7 @@ Py::Int ImageObjectPy::getRows() const
 Py::Int ImageObjectPy::getChannels() const
 {
     int channels = getImageObjectPtr()->getChannels();
-    Base::Console().Message("puntero:%x\tchan%i\n", getImageObjectPtr(), channels);
+
     return Py::Int(channels);
 }
 

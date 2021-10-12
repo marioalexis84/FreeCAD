@@ -80,16 +80,16 @@ public:
     ImageObjectLinked();
     ~ImageObjectLinked();
 
-    App::PropertyLink BaseImage;
+    App::PropertyLink SourceImage;
     App::PropertyLink Pipeline;
 
-    void getBaseMat(cv::Mat& output) const;
+    void getSourceMat(cv::Mat& output) const;
 
-    ImageObject* checkBase() const;
-    void setBaseMat(ImageObject* input);
+    ImageObject* checkSource() const;
+    void setSourceMat(ImageObject* input);
 
     
-    bool baseIsEmpty() const;
+    bool sourceIsEmpty() const;
 };
 
 } // namespace Image

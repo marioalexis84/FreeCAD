@@ -41,28 +41,53 @@ std::vector<std::string> mapEnum(std::map<std::string, T>& m)
 
 std::map<std::string, int> mapColorCodes = {
     {"Unchanged", -1},
-    {"RGB to RGBA", cv::COLOR_RGB2RGBA},
-    {"RGBA to RGB", cv::COLOR_RGBA2RGB},
-    {"RGB to BGRA", cv::COLOR_RGB2BGRA},
-    {"RGBA to BGR", cv::COLOR_RGBA2BGR},
     {"RGB to BGR", cv::COLOR_RGB2BGR},
-    {"RGBA to BGRA", cv::COLOR_RGBA2BGRA},
-    {"BGR to GRAY", cv::COLOR_BGR2GRAY},
+    {"RGB to RGBA", cv::COLOR_RGB2RGBA},
+    {"RGB to BGRA", cv::COLOR_RGB2BGRA},
     {"RGB to GRAY", cv::COLOR_RGB2GRAY},
+    {"RGBA to RGB", cv::COLOR_RGBA2RGB},
+    {"RGBA to BGR", cv::COLOR_RGBA2BGR},
+    {"RGBA to BGRA", cv::COLOR_RGBA2BGRA},
+    {"RGBA to GRAY", cv::COLOR_RGBA2GRAY},
+    {"BGR to GRAY", cv::COLOR_BGR2GRAY},
     {"BGR to RGB", cv::COLOR_BGR2RGB},
+    {"BGR to RGBA", cv::COLOR_BGR2RGBA}, 
+    {"BGR to BGRA", cv::COLOR_BGR2BGRA},
     {"BGRA to GRAY", cv::COLOR_BGRA2GRAY},
-    {"RGBA to GRAY", cv::COLOR_RGBA2GRAY}
+    {"BGRA to BGR", cv::COLOR_BGRA2BGR},
+    {"BGRA to RGB", cv::COLOR_BGRA2RGB}, 
+    {"BGRA to RGBA", cv::COLOR_BGRA2RGBA},
 };
 
-const std::vector<std::string> ImageColor::ColorCodeEnum = mapEnum(mapColorCodes);
+
+const char* ImageColor::ColorCodeEnum[] = {
+    "Unchanged",
+    "BGR to GRAY",
+    "BGR to RGB", 
+    "BGR to RGBA",
+    "BGR to BGRA",
+    "RGB to BGR", 
+    "RGB to RGBA",
+    "RGB to BGRA",
+    "RGB to GRAY",
+    "BGRA to GRAY",
+    "BGRA to BGR",
+    "BGRA to RGB",
+    "BGRA to RGBA",
+    "RGBA to RGB",
+    "RGBA to BGR",
+    "RGBA to BGRA",
+    "RGBA to GRAY",
+    NULL
+};
+
 
 PROPERTY_SOURCE(Image::ImageColor, Image::ImageObjectLinked)
 
 ImageColor::ImageColor()
 {
     ColorCode.setEnums(ColorCodeEnum);
-    ADD_PROPERTY_TYPE(ColorCode, ("RGB to BGR"), "ImageColor", App::Prop_None, "Color conversion code");
-    Base::Console().Message("el color:%s\t%i\n", ColorCode.getValueAsString(), ColorCode.getValue());
+    ADD_PROPERTY_TYPE(ColorCode, ("Unchanged"), "ImageColor", App::Prop_None, "Color conversion code");
     ADD_PROPERTY_TYPE(File, (0), "ImageColor", App::Prop_None, "File included");
 }
 
@@ -72,7 +97,6 @@ ImageColor::~ImageColor()
 
 short ImageColor::mustExecute() const
 {
-    Base::Console().Message("color_mustExecute\n");
     if (ColorCode.isTouched())
         return 1;
 
@@ -81,30 +105,21 @@ short ImageColor::mustExecute() const
 
 App::DocumentObjectExecReturn* ImageColor::execute()
 {
-//    cv::Mat arch = cv::imread(File.getValue());
-//    setBaseMat(arch);
-//    const char* code = ColorCode.getValueAsString();
-    if (isEmpty())
-        return StdReturn;
-//    setColor(code);
-//    cv::imshow("sarasa", mat);
-//    cv::waitKey(0);
-    Base::Console().Message("color_execute:%i\t%s\n", getChannels(), ColorCode.getName());
-    App::DocumentObjectExecReturn* ret = ImageObject::execute();
+    App::DocumentObjectExecReturn* ret = ImageObjectLinked::execute();
     return ret;
 }
 
 void ImageColor::onChanged(const App::Property* prop)
 {
     if (prop == &ColorCode) {
-        if (!baseIsEmpty()) {
+        if (!sourceIsEmpty()) {
             const char* code = ColorCode.getValueAsString();
+            Base::Console().Message("%s\n", code);
             setColor(code);
         }
     }
 
-    ImageObject::onChanged(prop);
-    Base::Console().Message("color_onchanged:%i\t%s\n", getChannels(), prop->getName());
+    ImageObjectLinked::onChanged(prop);
 }
 
 PyObject* ImageColor::getPyObject(void)
@@ -119,19 +134,19 @@ PyObject* ImageColor::getPyObject(void)
 void ImageColor::setColor(const char* code, int channels)
 {
     int cvCode =  mapColorCodes[code];
-    cv::Mat tmpBase;
-    getBaseMat(tmpBase);
+    Base::Console().Message("%i\n", cvCode);
+    cv::Mat tmpSrc;
+    getSourceMat(tmpSrc);
 
     if (cvCode == -1) {
-        MatImage.setValueClone(tmpBase);
+        MatImage.setValueClone(tmpSrc);
         return;
     }
 
     try {
     cv::Mat tmpMat;
-    cv::cvtColor(tmpBase, tmpMat, cvCode, channels);
+    cv::cvtColor(tmpSrc, tmpMat, cvCode, channels);
     MatImage.setValue(tmpMat);
-    Base::Console().Error("tmpCols:%i\tMatImageCols:%i\n", tmpMat.cols, MatImage.getValue().cols);
     }
     catch (const cv::Exception& ex) {
         throw Base::RuntimeError("Fail to set color conversion code");

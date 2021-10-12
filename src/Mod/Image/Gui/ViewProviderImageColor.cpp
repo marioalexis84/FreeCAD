@@ -55,20 +55,13 @@ ViewProviderImageColor::~ViewProviderImageColor()
 //    iView->pointImageTo((void*)mat.data, mat.rows, mat.cols, IB_CF_RGB24, 0, true);
 //}
 
-void ViewProviderImageColor::updateData(const App::Property* prop)
-{
-    Image::ImageColor* pcImg = static_cast<Image::ImageColor*>(pcObject);
-
-    if (prop == &pcImg->ColorCode && !pcImg->baseIsEmpty()) {
-//        pcImg->setColor((pcImg->ColorCode).getValueAsString());
-        cv::Mat mat;
-        pcImg->getMat(mat);
-        Base::Console().Error("color_update:%i\t%s\n", pcImg->getChannels(), (pcImg->ColorCode).getValueAsString());
-        iView->pointImageTo((void*)mat.data, mat.cols, mat.rows, IB_CF_BGR24, 0, false);
-        Base::Console().Message("color_update_2:%s\n", pcObject->getTypeId().getName());
-    }
-    Base::Console().Message("color_update_3:%s\n", prop->getName());
-
-    ViewProviderImageObject::updateData(prop);
-        Base::Console().Error("color_update_4:%i\t%s\n", pcImg->getChannels(), (pcImg->ColorCode).getValueAsString());
-}
+//void ViewProviderImageColor::updateData(const App::Property* prop)
+//{
+//    Image::ImageColor* pcImg = static_cast<Image::ImageColor*>(pcObject);
+//
+//        Base::Console().Message("color_update_2:%s\n", pcObject->getTypeId().getName());
+//
+//    ViewProviderImageObject::updateData(prop);
+////    }
+//        Base::Console().Error("color_update_3:\t%s\n", prop->getName());
+//}

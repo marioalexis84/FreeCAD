@@ -191,7 +191,6 @@ void PropertyImage::RestoreDocFile(Base::Reader &reader)
     if (ulSize > 0) {
     aboutToSetValue();
     mat = cv::imread(fi.filePath().c_str());
-    Base::Console().Error("mat.rows: %i\n", mat.rows);
     hasSetValue();
     }
 

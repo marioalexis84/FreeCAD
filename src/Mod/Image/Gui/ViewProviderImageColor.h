@@ -35,7 +35,7 @@ class ImageGuiExport ViewProviderImageColor: public ViewProviderImageObject
 public:
     ViewProviderImageColor();
     ~ViewProviderImageColor();
-    void updateData(const App::Property* prop);
+//    void updateData(const App::Property* prop);
 //    void attach(App::DocumentObject* pcObj);
 
 };

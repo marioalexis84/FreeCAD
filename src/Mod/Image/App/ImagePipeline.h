@@ -39,6 +39,7 @@ public:
     ImagePipeline();
     ~ImagePipeline();
 
+    App::PropertyLinkList Group;
     App::PropertyLink BaseImage;
     App::PropertyLink Tip;
 

@@ -43,6 +43,7 @@ public:
     App::PropertyEnumeration Type;
 
     App::DocumentObjectExecReturn* execute();
+    void onChanged(const App::Property* prop);
 //    PyObject* getPyObject();
 
     virtual const char* getViewProviderName(void) const
@@ -51,7 +52,7 @@ public:
     }
 
 protected:
-    static const std::vector<std::string> ThresholdEnum;
+    static const char* ThresholdEnum[];
     double setThreshold(const double& thresh, const double& maxVal, const int& type);
 };
 

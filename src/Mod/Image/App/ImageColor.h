@@ -56,7 +56,7 @@ public:
 
     void setColor(const char* code, int channels = 0);
 private:
-    static const std::vector<std::string> ColorCodeEnum;
+    static const char* ColorCodeEnum[];
 };
 
 } // namespace Image

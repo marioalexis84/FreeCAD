@@ -34,32 +34,35 @@ PROPERTY_SOURCE(ImageGui::ViewProviderImageObject, Gui::ViewProviderDocumentObje
 
 ViewProviderImageObject::ViewProviderImageObject()
 {
-    Base::Console().Message("object_constr\n");
     iView = new ImageView(Gui::getMainWindow());
 }
 
 ViewProviderImageObject::~ViewProviderImageObject()
 {
-    Base::Console().Message("object_destruct\n");
 }
 
 void ViewProviderImageObject::attach(App::DocumentObject* pcObj)
 {
     ViewProviderDocumentObject::attach(pcObj);
-    Base::Console().Message("object_attach:%s\n", pcObj->getTypeId().getName());
     if (!pcObj->getTypeId().isDerivedFrom(Image::ImageObject::getClassTypeId()))
         throw Base::TypeError("tipo erroneo");
     Image::ImageObject* pcImg = static_cast<Image::ImageObject*>(pcObj);
 
     cv::Mat mat;
     pcImg->getMat(mat);
-    iView->resize(400, 300);
+    iView->resize(400, 600);
     Gui::getMainWindow()->addWindow(iView);
-    if (!pcImg->isEmpty())
-        iView->pointImageTo((void*)mat.data, mat.cols, mat.rows, IB_CF_BGR24, 0, true);
+//    if (!pcImg->isEmpty())
+//        iView->pointImageTo((void*)mat.data, mat.cols, mat.rows, IB_CF_BGR24, 0, true);
 }
 
 void ViewProviderImageObject::updateData(const App::Property* prop)
 {
-    Base::Console().Message("object_update:%s\n", prop->getName());
+    Image::ImageObject* pcImg = static_cast<Image::ImageObject*>(getObject());
+        cv::Mat mat;
+        pcImg->getMat(mat);
+
+    if (prop == &pcImg->MatImage && !pcImg->isEmpty()) {
+        iView->pointImageTo((void*)mat.data, mat.cols, mat.rows, IB_CF_BGR24, 0, false);
+    }
 }

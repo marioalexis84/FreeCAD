@@ -85,7 +85,6 @@ int ImageObject::getRows() const
 
 int ImageObject::getChannels() const
 {
-    Base::Console().Message("puntero c++: %x\tchan:%i\n", this, _mat->channels());
     return _mat->channels();
 }
 
@@ -149,7 +148,7 @@ PROPERTY_SOURCE(Image::ImageObjectLinked, Image::ImageObject)
 
 ImageObjectLinked::ImageObjectLinked()
 {
-    ADD_PROPERTY_TYPE(BaseImage, (nullptr), "Base", App::Prop_None, "Base image");
+    ADD_PROPERTY_TYPE(SourceImage, (nullptr), "Base", App::Prop_None, "Source image");
     ADD_PROPERTY_TYPE(Pipeline, (nullptr), "Base", App::Prop_None, "Pipeline group");
 }
 
@@ -157,35 +156,35 @@ ImageObjectLinked::~ImageObjectLinked()
 {
 }
 
-void ImageObjectLinked::getBaseMat(cv::Mat& output) const
+void ImageObjectLinked::getSourceMat(cv::Mat& output) const
 {
-    ImageObject* base = checkBase();
-    output = base->MatImage.getValue();
+    ImageObject* src = checkSource();
+    output = src->MatImage.getValue();
 }
 
-void ImageObjectLinked::setBaseMat(ImageObject* input)
+void ImageObjectLinked::setSourceMat(ImageObject* input)
 {
-    BaseImage.setValue(input);
+    SourceImage.setValue(input);
 }
 
-ImageObject* ImageObjectLinked::checkBase() const
+ImageObject* ImageObjectLinked::checkSource() const
 {
-    App::DocumentObject* base = BaseImage.getValue();
-    if (base && base->isDerivedFrom(ImageObject::getClassTypeId())) {
-        ImageObject* baseImg = static_cast<ImageObject*>(base);
-        return baseImg;
+    App::DocumentObject* src = SourceImage.getValue();
+    if (src && src->isDerivedFrom(ImageObject::getClassTypeId())) {
+        ImageObject* srcImg = static_cast<ImageObject*>(src);
+        return srcImg;
     }
     else {
         return nullptr;
     }
 }
 
-bool ImageObjectLinked::baseIsEmpty() const
+bool ImageObjectLinked::sourceIsEmpty() const
 {
-    ImageObject* base = checkBase();
+    ImageObject* src = checkSource();
 
-    if (base)
-        return base->isEmpty();
+    if (src)
+        return src->isEmpty();
     else
         return true;
 }
