@@ -32,16 +32,20 @@ set(Python_SRCS
 set(Image_SRCS
     ImageBase.cpp
     ImageBase.h
+    ImageCanny.cpp
+    ImageCanny.h
     ImageColor.cpp
     ImageColor.h
-    ImageObject.cpp
-    ImageObject.h
+    ImageContour.cpp
+    ImageContour.h
     ImageFilter.cpp
     ImageFilter.h
     ImagePipeline.cpp
     ImagePipeline.h
     ImagePlane.cpp
     ImagePlane.h
+    ImageObject.cpp
+    ImageObject.h
     ImageThreshold.cpp
     ImageThreshold.h
     PreCompiled.cpp

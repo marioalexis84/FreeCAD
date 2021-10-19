@@ -19,7 +19,9 @@
 
 #include <Base/Console.h>
 #include <Base/PyObjectBase.h>
+#include "ImageCanny.h"
 #include "ImageColor.h"
+#include "ImageContour.h"
 #include "ImageFilter.h"
 #include "ImagePipeline.h"
 #include "ImagePlane.h"
@@ -59,6 +61,8 @@ PyMOD_INIT_FUNC(Image)
     Image::ImageColor::init();
     Image::ImagePipeline::init();
     Image::ImageFilter::init();
+    Image::ImageCanny::init();
+    Image::ImageContour::init();
     Image::ImageThreshold::init();
     Image::ImagePlane::init();
 

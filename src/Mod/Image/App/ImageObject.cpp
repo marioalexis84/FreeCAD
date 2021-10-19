@@ -41,6 +41,10 @@ PROPERTY_SOURCE(Image::ImageObject, App::DocumentObject)
 ImageObject::ImageObject()
 {
     ADD_PROPERTY_TYPE(MatImage, (cv::Mat()), "ImageObject", App::Prop_None, "Mat image");
+    ADD_PROPERTY_TYPE(Height, (0), "ImageObject", App::Prop_ReadOnly, "Image height");
+    ADD_PROPERTY_TYPE(Width, (0), "ImageObject", App::Prop_ReadOnly, "Image width");
+    ADD_PROPERTY_TYPE(Channels, (1), "ImageObject", App::Prop_ReadOnly, "Image channels");
+    ADD_PROPERTY_TYPE(Depth, (0), "ImageObject", App::Prop_ReadOnly, "Image element depth");
     _mat = &MatImage.getValue();
 }
 
@@ -55,6 +59,18 @@ PyObject* ImageObject::getPyObject(void)
         PythonObject = Py::Object(new ImageObjectPy(this),true);
     }
     return Py::new_reference_to(PythonObject);
+}
+
+void ImageObject::onChanged(const App::Property* prop)
+{
+    if (prop == &MatImage) {
+        Channels.setValue(_mat->channels());
+        Width.setValue(_mat->cols);
+        Height.setValue(_mat->rows);
+        Depth.setValue(_mat->depth());
+    }
+
+    DocumentObject::onChanged(prop);
 }
 
 App::DocumentObjectExecReturn* ImageObject::execute()
@@ -149,17 +165,33 @@ PROPERTY_SOURCE(Image::ImageObjectLinked, Image::ImageObject)
 ImageObjectLinked::ImageObjectLinked()
 {
     ADD_PROPERTY_TYPE(SourceImage, (nullptr), "Base", App::Prop_None, "Source image");
-    ADD_PROPERTY_TYPE(Pipeline, (nullptr), "Base", App::Prop_None, "Pipeline group");
+    ADD_PROPERTY_TYPE(SupportImage, (nullptr), "Base", App::Prop_None, "Support image");
+    ADD_PROPERTY_TYPE(Pipeline, (nullptr), "Base", App::Prop_Hidden, "Pipeline group");
 }
 
 ImageObjectLinked::~ImageObjectLinked()
 {
 }
 
-void ImageObjectLinked::getSourceMat(cv::Mat& output) const
+void ImageObjectLinked::onChanged(const App::Property* prop)
 {
-    ImageObject* src = checkSource();
-    output = src->MatImage.getValue();
+    if (prop == &SourceImage || prop == &SupportImage) {
+       ImageObject::recompute();
+    }
+
+    ImageObject::onChanged(prop);
+}
+
+const cv::Mat& ImageObjectLinked::getLinkMat(App::PropertyLink* prop) const
+{
+    ImageObject* link = checkLink(prop);
+    if (link) {
+        const cv::Mat& output = link->MatImage.getValue();
+        return output;
+    }
+    else {
+        throw Base::ValueError("Link must be no empty Image object");
+    }
 }
 
 void ImageObjectLinked::setSourceMat(ImageObject* input)
@@ -167,24 +199,24 @@ void ImageObjectLinked::setSourceMat(ImageObject* input)
     SourceImage.setValue(input);
 }
 
-ImageObject* ImageObjectLinked::checkSource() const
+ImageObject* ImageObjectLinked::checkLink(App::PropertyLink* prop) const
 {
-    App::DocumentObject* src = SourceImage.getValue();
-    if (src && src->isDerivedFrom(ImageObject::getClassTypeId())) {
-        ImageObject* srcImg = static_cast<ImageObject*>(src);
-        return srcImg;
+    App::DocumentObject* link = prop->getValue();
+    if (link && link->isDerivedFrom(ImageObject::getClassTypeId())) {
+        ImageObject* linkImg = static_cast<ImageObject*>(link);
+        return linkImg;
     }
     else {
         return nullptr;
     }
 }
 
-bool ImageObjectLinked::sourceIsEmpty() const
+bool ImageObjectLinked::linkIsEmpty(App::PropertyLink* prop) const
 {
-    ImageObject* src = checkSource();
+    ImageObject* link = checkLink(prop);
 
-    if (src)
-        return src->isEmpty();
+    if (link)
+        return link->isEmpty();
     else
         return true;
 }

@@ -190,7 +190,7 @@ void PropertyImage::RestoreDocFile(Base::Reader &reader)
     // Read the data from the temp file
     if (ulSize > 0) {
     aboutToSetValue();
-    mat = cv::imread(fi.filePath().c_str());
+    mat = cv::imread(fi.filePath().c_str(), cv::IMREAD_UNCHANGED);
     hasSetValue();
     }
 

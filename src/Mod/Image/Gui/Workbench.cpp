@@ -54,6 +54,12 @@ Gui::ToolBarItem* Workbench::setupToolBars() const
     part->setCommand("Image");
     *part << "Image_Open" << "Image_CreateImagePlane";
 #if HAVE_OPENCV2
+    *part << "Image_CreateImageObject";
+    *part << "Image_CreateImagePipeline";
+    *part << "Image_CreateImageCanny";
+    *part << "Image_CreateImageColor";
+    *part << "Image_CreateImageContour";
+    *part << "Image_CreateImageThreshold";
     *part << "Image_CapturerTest";
 #endif
     *part << "Image_Scaling";

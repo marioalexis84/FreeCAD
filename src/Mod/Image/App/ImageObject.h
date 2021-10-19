@@ -41,8 +41,13 @@ public:
     ~ImageObject();
 
     Image::PropertyImage MatImage;
+    App::PropertyInteger Channels;
+    App::PropertyInteger Width;
+    App::PropertyInteger Height;
+    App::PropertyInteger Depth;
 
     App::DocumentObjectExecReturn* execute();
+    void onChanged(const App::Property* prop);
     PyObject* getPyObject();
 
     virtual const char* getViewProviderName(void) const
@@ -81,15 +86,17 @@ public:
     ~ImageObjectLinked();
 
     App::PropertyLink SourceImage;
-    App::PropertyLink Pipeline;
+    App::PropertyLinkHidden SupportImage;
+    App::PropertyLinkHidden Pipeline;
 
-    void getSourceMat(cv::Mat& output) const;
+    void onChanged(const App::Property* prop);
 
-    ImageObject* checkSource() const;
     void setSourceMat(ImageObject* input);
 
-    
-    bool sourceIsEmpty() const;
+protected:
+    const cv::Mat& getLinkMat(App::PropertyLink* prop) const;
+    ImageObject* checkLink(App::PropertyLink* prop) const;
+    bool linkIsEmpty(App::PropertyLink* prop) const;
 };
 
 } // namespace Image

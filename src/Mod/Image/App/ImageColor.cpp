@@ -62,22 +62,22 @@ std::map<std::string, int> mapColorCodes = {
 
 const char* ImageColor::ColorCodeEnum[] = {
     "Unchanged",
+    "BGR to BGRA",
     "BGR to GRAY",
     "BGR to RGB", 
     "BGR to RGBA",
-    "BGR to BGRA",
-    "RGB to BGR", 
-    "RGB to RGBA",
-    "RGB to BGRA",
-    "RGB to GRAY",
-    "BGRA to GRAY",
     "BGRA to BGR",
+    "BGRA to GRAY",
     "BGRA to RGB",
     "BGRA to RGBA",
-    "RGBA to RGB",
+    "RGB to BGR", 
+    "RGB to BGRA",
+    "RGB to GRAY",
+    "RGB to RGBA",
     "RGBA to BGR",
     "RGBA to BGRA",
     "RGBA to GRAY",
+    "RGBA to RGB",
     NULL
 };
 
@@ -111,10 +111,9 @@ App::DocumentObjectExecReturn* ImageColor::execute()
 
 void ImageColor::onChanged(const App::Property* prop)
 {
-    if (prop == &ColorCode) {
-        if (!sourceIsEmpty()) {
+    if (!linkIsEmpty(&SourceImage)) {
+        if (prop == &ColorCode) {
             const char* code = ColorCode.getValueAsString();
-            Base::Console().Message("%s\n", code);
             setColor(code);
         }
     }
@@ -134,9 +133,7 @@ PyObject* ImageColor::getPyObject(void)
 void ImageColor::setColor(const char* code, int channels)
 {
     int cvCode =  mapColorCodes[code];
-    Base::Console().Message("%i\n", cvCode);
-    cv::Mat tmpSrc;
-    getSourceMat(tmpSrc);
+    cv::Mat tmpSrc = getLinkMat(&SourceImage);
 
     if (cvCode == -1) {
         MatImage.setValueClone(tmpSrc);

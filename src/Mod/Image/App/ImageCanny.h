@@ -20,38 +20,43 @@
  *                                                                         *
  ***************************************************************************/
 
-#ifndef Image_ImagePipeline_H
-#define Image_ImagePipeline_H
+#ifndef Image_ImageCanny_H
+#define Image_ImageCanny_H
 
-#include <App/DocumentObjectGroup.h>
 #include <App/PropertyStandard.h>
-#include <App/PropertyLinks.h>
-//#include <App/FeaturePython.h>
+
+#include "ImageFilter.h"
 
 namespace Image
 {
 
-class ImageExport ImagePipeline : public App::DocumentObjectGroup
+class ImageExport ImageCanny : public ImageFilter
 {
-    PROPERTY_HEADER(Image::ImagePipeline);
+    PROPERTY_HEADER(Image::ImageCanny);
 
 public:
-    ImagePipeline();
-    ~ImagePipeline();
+    ImageCanny();
+    ~ImageCanny();
 
-    App::PropertyLink BaseImage;
-    App::PropertyLink Tip;
+    App::PropertyFloat Threshold1;
+    App::PropertyFloat Threshold2;
+    App::PropertyIntegerConstraint ApertureSize;
+    App::PropertyEnumeration Norm;
 
-    bool allowObject(App::DocumentObject* obj) override;
-    std::vector<App::DocumentObject*> addObject(App::DocumentObject* doc) override;
-    std::vector<App::DocumentObject*> addObjects(std::vector<App::DocumentObject*> docs) override;
-    // replaceObject
-//    void onChanged(const App::Property* prop);
-//    PyObject* getPyObject() override;
+    App::DocumentObjectExecReturn* execute();
+    void onChanged(const App::Property* prop);
+//    PyObject* getPyObject();
+
+    virtual const char* getViewProviderName(void) const
+    {
+        return "ImageGui::ViewProviderImageObject";
+    }
+
+protected:
+    static const char* NormEnum[];
+    void setCanny(const double& thresh1, const double& thresh2, const int& size, const int& norm);
 };
-
-//typedef App::FeaturePythonT<ImagePipeline> ImagePipelinePython;
 
 } // namespace Image
 
-#endif // Image_ImagePipeline_H
+#endif // Image_ImageCanny_H

@@ -38,9 +38,9 @@
 #  include "opencv2/opencv.hpp"
 #endif
 
-
 #include "ImageView.h"
-
+#include "Mod/Image/App/ImagePipeline.h"
+#include <Base/Console.h>
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 using namespace ImageGui;
@@ -227,6 +227,213 @@ void CmdImageCapturerTest::activated(int iMsg)
 }
 #endif
 
+//++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+DEF_STD_CMD_A(CmdCreateImageObject)
+
+CmdCreateImageObject::CmdCreateImageObject()
+    :Command("Image_CreateImageObject")
+{
+    sAppModule      = "Image";
+    sGroup          = QT_TR_NOOP("Image");
+    sMenuText       = QT_TR_NOOP("Image object");
+    sToolTipText    = QT_TR_NOOP("Create image object");
+    sWhatsThis      = "Image_CreateImageObject";
+    sStatusTip      = sToolTipText;
+    sPixmap         = "";
+}
+
+void CmdCreateImageObject::activated(int iMsg)
+{
+    Q_UNUSED(iMsg);
+
+    QString formats;
+    QTextStream str(&formats);
+    str << QObject::tr("Images") << " (";
+    QList<QByteArray> qtformats = QImageReader::supportedImageFormats();
+    for (QList<QByteArray>::Iterator it = qtformats.begin(); it != qtformats.end(); ++it) {
+        str << "*." << it->toLower() << " ";
+    }
+    str << ");;" << QObject::tr("All files") << " (*.*)";
+    // Reading an image
+    QString s = QFileDialog::getOpenFileName(Gui::getMainWindow(), QObject::tr("Choose an image file to open"),
+                                             QString(), formats);
+    if (!s.isEmpty()) {
+
+//        QImage impQ(s);
+//        if (impQ.isNull()) {
+//            QMessageBox::warning(Gui::getMainWindow(), QObject::tr("Error opening image"),
+//                QObject::tr("Could not load the chosen image"));
+//            return;
+//        }
+        std::string FeatName = getUniqueObjectName("ImageObject");
+        QString pyfile = Base::Tools::escapeEncodeFilename(s);
+
+        openCommand(QT_TRANSLATE_NOOP("Command", "Create ImageObject"));
+        doCommand(Doc,"App.activeDocument().addObject('Image::ImageObject','%s\')",FeatName.c_str());
+        doCommand(Doc,"App.activeDocument().%s.read('%s')",FeatName.c_str(), pyfile.toUtf8().data());
+        commitCommand();
+    }
+}
+
+bool CmdCreateImageObject::isActive()
+{
+    return App::GetApplication().getActiveDocument();
+}
+
+//****************************************************************************
+DEF_STD_CMD_A(CmdCreateImagePipeline)
+
+CmdCreateImagePipeline::CmdCreateImagePipeline()
+    :Command("Image_CreateImagePipeline")
+{
+    sAppModule      = "Image";
+    sGroup          = QT_TR_NOOP("Image");
+    sMenuText       = QT_TR_NOOP("Pipeline");
+    sToolTipText    = QT_TR_NOOP("Create image pipeline");
+    sWhatsThis      = "Image_CreateImagePipeline";
+    sStatusTip      = sToolTipText;
+    sPixmap         = "";
+}
+
+void CmdCreateImagePipeline::activated(int iMsg)
+{
+    Q_UNUSED(iMsg);
+
+    std::string FeatName = getUniqueObjectName("ImagePipeline");
+
+    openCommand(QT_TRANSLATE_NOOP("Command", "Create ImagePipeline"));
+    doCommand(Doc,"App.activeDocument().addObject('Image::ImagePipeline','%s\')",FeatName.c_str());
+    commitCommand();
+}
+
+bool CmdCreateImagePipeline::isActive()
+{
+    return App::GetApplication().getActiveDocument();
+}
+
+void addToPipeline(Gui::Command& cmd, const char* objType)
+{
+    Base::Type container = Image::ImagePipeline::getClassTypeId();
+    std::vector<App::DocumentObject*> select = Gui::Selection().getObjectsOfType(container, nullptr, 0);
+    if (select.size() != 1) {
+        QMessageBox::warning(Gui::getMainWindow(), QObject::tr("ImagePipeline error"),
+            QString::fromUtf8("Single image pipeline must be selected"));
+        return;
+    }
+    const char* pipeName = select.front()->getNameInDocument();
+    const char* featName = cmd.getUniqueObjectName(objType).c_str();
+    Base::Console().Message("nombre:%s\n", featName);
+    cmd.openCommand(QT_TRANSLATE_NOOP("Command", "Create "));
+    cmd.doCommand(cmd.Doc, "App.activeDocument().addObject('Image::%s', '%s')", objType, featName);
+    cmd.doCommand(cmd.Doc, "App.activeDocument().getObject('%s').addObject(App.activeDocument().getObject('%s'))", pipeName, featName);
+    cmd.commitCommand();
+}
+
+//****************************************************************************
+DEF_STD_CMD_A(CmdCreateImageCanny)
+
+CmdCreateImageCanny::CmdCreateImageCanny()
+    :Command("Image_CreateImageCanny")
+{
+    sAppModule      = "Image";
+    sGroup          = QT_TR_NOOP("Image");
+    sMenuText       = QT_TR_NOOP("Canny");
+    sToolTipText    = QT_TR_NOOP("Apply Canny filter on image");
+    sWhatsThis      = "Image_CreateImageCanny";
+    sStatusTip      = sToolTipText;
+    sPixmap         = "";
+}
+
+void CmdCreateImageCanny::activated(int iMsg)
+{
+    Q_UNUSED(iMsg);
+    addToPipeline(*this, "ImageCanny");
+}
+
+bool CmdCreateImageCanny::isActive()
+{
+    return App::GetApplication().getActiveDocument();
+}
+
+//****************************************************************************
+DEF_STD_CMD_A(CmdCreateImageColor)
+
+CmdCreateImageColor::CmdCreateImageColor()
+    :Command("Image_CreateImageColor")
+{
+    sAppModule      = "Image";
+    sGroup          = QT_TR_NOOP("Image");
+    sMenuText       = QT_TR_NOOP("ColorSpace");
+    sToolTipText    = QT_TR_NOOP("Set image color space");
+    sWhatsThis      = "Image_CreateImageColor";
+    sStatusTip      = sToolTipText;
+    sPixmap         = "";
+}
+
+void CmdCreateImageColor::activated(int iMsg)
+{
+    Q_UNUSED(iMsg);
+    addToPipeline(*this, "ImageColor");
+}
+
+bool CmdCreateImageColor::isActive()
+{
+    return App::GetApplication().getActiveDocument();
+}
+
+//****************************************************************************
+DEF_STD_CMD_A(CmdCreateImageContour)
+
+CmdCreateImageContour::CmdCreateImageContour()
+    :Command("Image_CreateImageContour")
+{
+    sAppModule      = "Image";
+    sGroup          = QT_TR_NOOP("Image");
+    sMenuText       = QT_TR_NOOP("Contour");
+    sToolTipText    = QT_TR_NOOP("Find contours on image");
+    sWhatsThis      = "Image_CreateImageContour";
+    sStatusTip      = sToolTipText;
+    sPixmap         = "";
+}
+
+void CmdCreateImageContour::activated(int iMsg)
+{
+    Q_UNUSED(iMsg);
+    addToPipeline(*this, "ImageContour");
+}
+
+bool CmdCreateImageContour::isActive()
+{
+    return App::GetApplication().getActiveDocument();
+}
+
+//****************************************************************************
+DEF_STD_CMD_A(CmdCreateImageThreshold)
+
+CmdCreateImageThreshold::CmdCreateImageThreshold()
+    :Command("Image_CreateImageThreshold")
+{
+    sAppModule      = "Image";
+    sGroup          = QT_TR_NOOP("Image");
+    sMenuText       = QT_TR_NOOP("Threshold");
+    sToolTipText    = QT_TR_NOOP("Set threshold on binary image");
+    sWhatsThis      = "Image_CreateImageThreshold";
+    sStatusTip      = sToolTipText;
+    sPixmap         = "";
+}
+
+void CmdCreateImageThreshold::activated(int iMsg)
+{
+    Q_UNUSED(iMsg);
+    addToPipeline(*this, "ImageThreshold");
+}
+
+bool CmdCreateImageThreshold::isActive()
+{
+    return App::GetApplication().getActiveDocument();
+}
+
+//****************************************************************************
 void CreateImageCommands(void)
 {
     Gui::CommandManager &rcCmdMgr = Gui::Application::Instance->commandManager();
@@ -235,5 +442,12 @@ void CreateImageCommands(void)
     rcCmdMgr.addCommand(new CmdCreateImagePlane());
 #if HAVE_OPENCV2
 	rcCmdMgr.addCommand(new CmdImageCapturerTest());
+	rcCmdMgr.addCommand(new CmdCreateImageObject());
+	rcCmdMgr.addCommand(new CmdCreateImagePipeline());
+	rcCmdMgr.addCommand(new CmdCreateImageCanny());
+	rcCmdMgr.addCommand(new CmdCreateImageColor());
+	rcCmdMgr.addCommand(new CmdCreateImageContour());
+	rcCmdMgr.addCommand(new CmdCreateImageThreshold());
 #endif
 }
+

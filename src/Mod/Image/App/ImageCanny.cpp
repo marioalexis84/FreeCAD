@@ -22,64 +22,47 @@
 
 #include "PreCompiled.h"
 
-#include "ImageThreshold.h"
+#include "ImageCanny.h"
 
 #include "opencv2/imgproc.hpp"
 
 using namespace Image;
 
-std::map<std::string, cv::ThresholdTypes> mapThreshold = {
-    {"Binary", cv::THRESH_BINARY},
-    {"Bynary inverted", cv::THRESH_BINARY_INV},
-    {"Truncate", cv::THRESH_TRUNC},
-    {"Zero", cv::THRESH_TOZERO},
-    {"Zero inverted", cv::THRESH_TOZERO_INV},
-    {"Masked", cv::THRESH_MASK},
-    {"Otsu", cv::THRESH_OTSU},
-    {"Triangle", cv::THRESH_TRIANGLE}
-};
+const char* ImageCanny::NormEnum[] = {"L1", "L2", NULL};
+const App::PropertyIntegerConstraint::Constraints ConstraintApertureSize = {3, 7, 2};
 
-const char* ImageThreshold::ThresholdEnum[] = {
-    "Binary", 
-    "Bynary inverted",
-    "Truncate",
-    "Zero",
-    "Zero inverted",
-    "Masked",
-    "Otsu",
-    "Triangle",
-    NULL
-};
+PROPERTY_SOURCE(Image::ImageCanny, Image::ImageFilter)
 
-
-PROPERTY_SOURCE(Image::ImageThreshold, Image::ImageFilter)
-
-ImageThreshold::ImageThreshold()
+ImageCanny::ImageCanny()
 {
-    ADD_PROPERTY_TYPE(MaximumValue, (0), "ImageThreshold", App::Prop_None,
-        "Maximum value for binary thresholding types");
-    ADD_PROPERTY_TYPE(Threshold, (0), "ImageThreshold", App::Prop_None,
-        "Threshold value");
-    ADD_PROPERTY_TYPE(Type, (0L), "ImageThreshold", App::Prop_None,
-        "Threshold type");
-    Type.setEnums(ThresholdEnum);
+    ADD_PROPERTY_TYPE(Threshold1, (0), "ImageCanny", App::Prop_None,
+        "First threshold");
+    ADD_PROPERTY_TYPE(Threshold2, (0), "ImageCanny", App::Prop_None,
+        "Second threshold");
+    ApertureSize.setConstraints(&ConstraintApertureSize);
+    ADD_PROPERTY_TYPE(ApertureSize, (3), "ImageCanny", App::Prop_None,
+        "Sobel operator aperture size");
+    Norm.setEnums(NormEnum);
+    ADD_PROPERTY_TYPE(Norm, (0L), "ImageCanny", App::Prop_None,
+        "Norm used to calculate the image gradient");
 }
 
-ImageThreshold::~ImageThreshold()
+ImageCanny::~ImageCanny()
 {
 }
 
-double ImageThreshold::setThreshold(const double& thresh, const double& maxVal, const int& type)
+void ImageCanny::setCanny(const double& thresh1, const double& thresh2,
+    const int& size, const int& norm)
 {
     cv::Mat tmpMat;
     cv::Mat tmpSrc = getLinkMat(&SourceImage);
-    double threshComp = cv::threshold(tmpSrc, tmpMat, thresh, maxVal, type);
-    MatImage.setValue(tmpMat);
 
-    return threshComp;
+    cv::Canny(tmpSrc, tmpMat, thresh1, thresh2, size, bool(norm));
+
+    MatImage.setValue(tmpMat);
 }
 
-App::DocumentObjectExecReturn* ImageThreshold::execute()
+App::DocumentObjectExecReturn* ImageCanny::execute()
 {
     if (isEmpty())
         return nullptr;
@@ -88,20 +71,21 @@ App::DocumentObjectExecReturn* ImageThreshold::execute()
     return ret;
 }
 
-void ImageThreshold::onChanged(const App::Property* prop)
+void ImageCanny::onChanged(const App::Property* prop)
 {
-    if (prop == &Threshold || prop == &MaximumValue || prop == &Type) {
+    if (prop == &Threshold1 || prop == &Threshold2 || prop == &ApertureSize || prop == &Norm) {
         if (!linkIsEmpty(&SourceImage)) {
-            double thresh = Threshold.getValue();
-            double maxVal = MaximumValue.getValue();
-            std::string type = Type.getValueAsString();
+            double thresh1 = Threshold1.getValue();
+            double thresh2 = Threshold2.getValue();
+            int size = ApertureSize.getValue();
+            int norm = Norm.getValue();
 
-    /*double threshComp = */setThreshold(thresh, maxVal, mapThreshold[type]);
+            setCanny(thresh1, thresh2, size, norm);
         }
     }
 
     ImageObject::onChanged(prop);
 }
-//ImageThreshold::
+//ImageCanny::
 
 //**************************************************************************

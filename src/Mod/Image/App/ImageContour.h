@@ -20,38 +20,55 @@
  *                                                                         *
  ***************************************************************************/
 
-#ifndef Image_ImagePipeline_H
-#define Image_ImagePipeline_H
+#ifndef Image_ImageContour_H
+#define Image_ImageContour_H
 
-#include <App/DocumentObjectGroup.h>
 #include <App/PropertyStandard.h>
-#include <App/PropertyLinks.h>
-//#include <App/FeaturePython.h>
+
+#include "ImageFilter.h"
 
 namespace Image
 {
 
-class ImageExport ImagePipeline : public App::DocumentObjectGroup
+class ImageExport ImageContour : public ImageFilter
 {
-    PROPERTY_HEADER(Image::ImagePipeline);
+    PROPERTY_HEADER(Image::ImageContour);
 
 public:
-    ImagePipeline();
-    ~ImagePipeline();
+    ImageContour();
+    ~ImageContour();
 
-    App::PropertyLink BaseImage;
-    App::PropertyLink Tip;
+    App::PropertyEnumeration Mode;
+    App::PropertyEnumeration Method;
+    App::PropertyColor Color;
+    App::PropertyInteger Index;
+    App::PropertyEnumeration LineStyle;
+    App::PropertyInteger Thickness;
+    App::PropertyInteger Level;
 
-    bool allowObject(App::DocumentObject* obj) override;
-    std::vector<App::DocumentObject*> addObject(App::DocumentObject* doc) override;
-    std::vector<App::DocumentObject*> addObjects(std::vector<App::DocumentObject*> docs) override;
-    // replaceObject
-//    void onChanged(const App::Property* prop);
-//    PyObject* getPyObject() override;
+    App::DocumentObjectExecReturn* execute();
+    void onChanged(const App::Property* prop);
+//    PyObject* getPyObject();
+
+    virtual const char* getViewProviderName(void) const
+    {
+        return "ImageGui::ViewProviderImageObject";
+    }
+
+protected:
+    static const char* ModeEnum[];
+    static const char* MethodEnum[];
+    static const char* LineStyleEnum[];
+    void findContours(const char* mode, const char* method);
+    void drawContours(const int& index, const App::Color& color,
+        const int& thickness, const char* lineType, const int& level);
+
+private:
+    std::vector<std::vector<cv::Point>> _contours;
+    std::vector<cv::Vec4i> _hierarchy;
+    cv::Point _point = cv::Point();
 };
-
-//typedef App::FeaturePythonT<ImagePipeline> ImagePipelinePython;
 
 } // namespace Image
 
-#endif // Image_ImagePipeline_H
+#endif // Image_ImageContour_H

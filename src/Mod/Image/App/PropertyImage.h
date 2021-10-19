@@ -74,7 +74,6 @@ public:
     virtual void getPaths(std::vector<App::ObjectIdentifier>& paths) const;
 
 protected:
-//    void createDataObjectByExternalType(vtkSmartPointer<vtkDataObject> ex);
     cv::Mat mat;
 };
 

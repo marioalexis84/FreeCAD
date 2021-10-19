@@ -24,11 +24,28 @@
 
 #include <Base/Exception.h>
 #include <Gui/MainWindow.h>
+
+#include <QString>
+
 #include <Mod/Image/App/ImageObject.h>
 #include "ImageView.h"
 #include "ViewProviderImageObject.h"
 
 using namespace ImageGui;
+
+static std::map<int, int> mapFormat = {
+    {CV_8U, IB_CF_GREY8},
+    {CV_16U, IB_CF_GREY16},
+    //IB_CF_GREY32},
+    //cv::CV_8UC3, IB_CF_RGB24}, 
+    //cv::CV_16UC3, IB_CF_RGB48},
+    {CV_8UC3, IB_CF_BGR24},
+    {CV_16UC3, IB_CF_BGR48}, 
+    //cv::CV_8UC4, IB_CF_RGBA32},
+    //cv::CV_16UC4, IB_CF_RGBA64},
+    {CV_8UC4, IB_CF_BGRA32},
+    {CV_16UC4, IB_CF_BGRA64}
+};
 
 PROPERTY_SOURCE(ImageGui::ViewProviderImageObject, Gui::ViewProviderDocumentObject)
 
@@ -48,9 +65,11 @@ void ViewProviderImageObject::attach(App::DocumentObject* pcObj)
         throw Base::TypeError("tipo erroneo");
     Image::ImageObject* pcImg = static_cast<Image::ImageObject*>(pcObj);
 
+    QString str = QString::fromUtf8(pcImg->Label.getValue());
     cv::Mat mat;
     pcImg->getMat(mat);
-    iView->resize(400, 600);
+    iView->resize(400, 300);
+    iView->setWindowTitle(str);
     Gui::getMainWindow()->addWindow(iView);
 //    if (!pcImg->isEmpty())
 //        iView->pointImageTo((void*)mat.data, mat.cols, mat.rows, IB_CF_BGR24, 0, true);
@@ -63,6 +82,10 @@ void ViewProviderImageObject::updateData(const App::Property* prop)
         pcImg->getMat(mat);
 
     if (prop == &pcImg->MatImage && !pcImg->isEmpty()) {
-        iView->pointImageTo((void*)mat.data, mat.cols, mat.rows, IB_CF_BGR24, 0, false);
+        iView->pointImageTo((void*)mat.data, mat.cols, mat.rows, mapFormat[mat.type()], 0, false);
+    }
+    else if (prop == &pcImg->Label) {
+        QString str = QString::fromUtf8(pcImg->Label.getValue());
+        iView->setWindowTitle(str);
     }
 }
