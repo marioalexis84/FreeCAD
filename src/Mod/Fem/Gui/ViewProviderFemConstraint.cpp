@@ -29,10 +29,13 @@
 #include <Inventor/nodes/SoCube.h>
 #include <Inventor/nodes/SoCylinder.h>
 #include <Inventor/nodes/SoFontStyle.h>
+#include <Inventor/nodes/SoMultipleCopy.h>
 #include <Inventor/nodes/SoRotation.h>
+#include <Inventor/nodes/SoScale.h>
 #include <Inventor/nodes/SoSeparator.h>
 #include <Inventor/nodes/SoShapeHints.h>
 #include <Inventor/nodes/SoText2.h>
+#include <Inventor/nodes/SoTransform.h>
 #include <Inventor/nodes/SoTranslation.h>
 #include <QAction>
 #include <QDockWidget>
@@ -40,10 +43,12 @@
 #include <QStackedWidget>
 #endif
 
+#include "App/Application.h"
 #include "Gui/Command.h"
 #include "Gui/Control.h"
 #include "Gui/Document.h"
 #include "Gui/MainWindow.h"
+#include "Mod/Fem/App/FemConstraint.h"
 
 #include "TaskFemConstraint.h"
 #include "ViewProviderFemConstraint.h"
@@ -56,6 +61,13 @@ PROPERTY_SOURCE(FemGui::ViewProviderFemConstraint, Gui::ViewProviderGeometryObje
 
 
 ViewProviderFemConstraint::ViewProviderFemConstraint()
+    : rotateSymbol(true)
+    , pSymbol(nullptr)
+    , pExtraSymbol(nullptr)
+    , ivFile(nullptr)
+    , wizardWidget(nullptr)
+    , wizardSubLayout(nullptr)
+    , constraintDialog(nullptr)
 {
     ADD_PROPERTY(TextColor, (0.0f, 0.0f, 0.0f));
     ADD_PROPERTY(FaceColor, (1.0f, 0.0f, 0.2f));
@@ -69,21 +81,23 @@ ViewProviderFemConstraint::ViewProviderFemConstraint()
     pLabel->ref();
     pTextColor = new SoBaseColor();
     pTextColor->ref();
+    pShapeSep = new SoSeparator();
+    pShapeSep->ref();
+    pMultCopy = new SoMultipleCopy();
+    pMultCopy->ref();
 
     pMaterials = new SoBaseColor();
     pMaterials->ref();
     pMaterials->rgb.setValue(1.0f, 0.0f, 0.2f);
 
-    pShapeSep = new SoSeparator();
-    pShapeSep->ref();
+    pScale = new SoScale();
+    pScale->ref();
+    pSymbolTransf = new SoTransform();
+    pSymbolTransf->ref();
 
     TextColor.touch();
     FontSize.touch();
     FaceColor.touch();
-
-    wizardWidget = nullptr;
-    wizardSubLayout = nullptr;
-    constraintDialog = nullptr;
 
     Gui::ViewProviderSuppressibleExtension::initExtension(this);
 }
@@ -94,6 +108,9 @@ ViewProviderFemConstraint::~ViewProviderFemConstraint()
     pLabel->unref();
     pTextColor->unref();
     pMaterials->unref();
+    pSymbolTransf->unref();
+    pScale->unref();
+    pMultCopy->unref();
     pShapeSep->unref();
 }
 
@@ -113,6 +130,34 @@ void ViewProviderFemConstraint::attach(App::DocumentObject* pcObject)
     sep->addChild(pMaterials);
     sep->addChild(pShapeSep);
     addDisplayMaskMode(sep, "Base");
+}
+
+std::string ViewProviderFemConstraint::resourceSymbolDir =
+    App::Application::getResourceDir() + "Mod/Fem/Resources/symbols/";
+
+void ViewProviderFemConstraint::loadSymbol(const char* fileName)
+{
+    ivFile = fileName;
+    SoInput* in = new SoInput;
+    in->openFile(ivFile);
+    SoSeparator* nodes = SoDB::readAll(in);
+    nodes->ref();
+    pSymbol = dynamic_cast<SoSeparator*>(nodes->getChild(0));
+    pShapeSep->addChild(pMultCopy);
+    pMultCopy->addChild(pScale);
+    pMultCopy->addChild(pSymbolTransf);
+    if (pSymbol) {
+        pMultCopy->addChild(pSymbol);
+    }
+    if (nodes->getNumChildren() == 2) {
+        pExtraSymbol = dynamic_cast<SoSeparator*>(nodes->getChild(1));
+        if (pExtraSymbol) {
+            pShapeSep->addChild(pExtraSymbol);
+        }
+    }
+    pMultCopy->matrix.setNum(0);
+    delete in;
+    nodes->unref();
 }
 
 std::vector<std::string> ViewProviderFemConstraint::getDisplayModes() const
@@ -148,7 +193,12 @@ void ViewProviderFemConstraint::setupContextMenu(QMenu* menu, QObject* receiver,
 
 void ViewProviderFemConstraint::onChanged(const App::Property* prop)
 {
-    if (prop == &Mirror || prop == &DistFactor) {
+    if (prop == &DistFactor) {
+        float s = static_cast<float>(DistFactor.getValue());
+        s = s > 0 ? s : 0;
+        pScale->scaleFactor.setValue(SbVec3f(s, s, s));
+    }
+    else if (prop == &Mirror) {
         updateData(prop);
     }
     else if (prop == &TextColor) {
@@ -164,6 +214,38 @@ void ViewProviderFemConstraint::onChanged(const App::Property* prop)
     }
     else {
         ViewProviderDocumentObject::onChanged(prop);  // clazy:exclude=skipped-base-method
+    }
+}
+
+void ViewProviderFemConstraint::updateData(const App::Property* prop)
+{
+    auto pcConstraint = static_cast<Fem::Constraint*>(this->getObject());
+
+    if (prop == &pcConstraint->Points || prop == &pcConstraint->Scale) {
+        const std::vector<Base::Vector3d>& points = pcConstraint->Points.getValue();
+        const std::vector<Base::Vector3d>& normals = pcConstraint->Normals.getValue();
+        SbVec3f axisY(0, 1, 0);
+        pMultCopy->matrix.setNum(points.size());
+        SbMatrix* mat = pMultCopy->matrix.startEditing();
+        float s = static_cast<float>(pcConstraint->Scale.getValue());
+        s = s > 0 ? s : 0;
+        SbVec3f scale(s, s, s);
+        int i = 0;
+        for (const auto& point : points) {
+            const auto& normal = normals[i];
+            SbVec3f norm = rotateSymbol ? SbVec3f(normal.x, normal.y, normal.z) : axisY;
+            SbRotation rot(axisY, norm);
+            SbVec3f tra(static_cast<float>(point.x),
+                        static_cast<float>(point.y),
+                        static_cast<float>(point.z));
+            mat[i].setTransform(tra, rot, scale);
+            ++i;
+        }
+
+        pMultCopy->matrix.finishEditing();
+    }
+    else {
+        ViewProviderGeometryObject::updateData(prop);
     }
 }
 

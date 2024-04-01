@@ -90,10 +90,9 @@ Constraint::Constraint()
                       "Normal direction pointing outside of solid");
     ADD_PROPERTY_TYPE(Scale,
                       (1),
-                      "Base",
-                      App::PropertyType(App::Prop_Output),
-                      "Scale used for drawing constraints");  // OvG: Add scale parameter inherited
-                                                              // by all derived constraints
+                      "Constraint",
+                      App::PropertyType(App::Prop_ReadOnly | App::Prop_Output | App::Prop_Hidden),
+                      "Scale used for drawing constraints");
     ADD_PROPERTY_TYPE(Points,
                       (Base::Vector3d()),
                       "Constraint",

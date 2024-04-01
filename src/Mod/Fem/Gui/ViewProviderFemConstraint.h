@@ -34,12 +34,15 @@
 #include <Gui/ViewProviderSuppressibleExtension.h>
 
 
+class SbRotation;
 class SoFontStyle;
 class SoText2;
 class SoBaseColor;
-class SoTranslation;
-class SbRotation;
 class SoMaterial;
+class SoMultipleCopy;
+class SoScale;
+class SoTranslation;
+class SoTransform;
 
 namespace FemGui
 {
@@ -64,10 +67,7 @@ public:
     App::PropertyBool Mirror;
 
     void attach(App::DocumentObject*) override;
-    void updateData(const App::Property* prop) override
-    {
-        Gui::ViewProviderGeometryObject::updateData(prop);
-    }
+    void updateData(const App::Property* prop) override;
     std::vector<std::string> getDisplayModes() const override;
     void setDisplayMode(const char* ModeName) override;
 
@@ -80,10 +80,20 @@ public:
     virtual void highlightReferences(const bool /* on */)
     {}
 
-    SoSeparator* getSymbolSeparator() const
-    {
-        return pShapeSep;
-    }
+    SoSeparator* getSymbolSeparator() const;
+    SoSeparator* getExtraSymbolSeparator() const;
+    SoTransform* getSymbolTransform() const;
+    /// Apply rotation on copies of the constraint symbol
+    void setRotateSymbol(bool rotate);
+    bool getRotateSymbol() const;
+
+    /** Load constraint symbol from Open Inventor file
+     * The file structure should be as follows:
+     * A separator containing a separator with the symbol used in multiple
+     * copies at points on the surface and an optional separator with a symbol
+     * excluded from multiple copies.
+     */
+    void loadSymbol(const char* fileName);
 
     static std::string gethideMeshShowPartStr();
     static std::string gethideMeshShowPartStr(const std::string showConstr);
@@ -159,9 +169,18 @@ private:
     SoText2* pLabel;
     SoBaseColor* pTextColor;
     SoBaseColor* pMaterials;
+    SoScale* pScale;
+    SoTransform* pSymbolTransf;
+    bool rotateSymbol;
 
 protected:
     SoSeparator* pShapeSep;
+    SoSeparator* pSymbol;
+    SoSeparator* pExtraSymbol;
+    SoMultipleCopy* pMultCopy;
+    const char* ivFile;
+
+    static std::string resourceSymbolDir;
 
     // Shaft design wizard integration
 protected:
@@ -175,6 +194,32 @@ protected:
 };
 
 using ViewProviderFemConstraintPython = Gui::ViewProviderPythonFeatureT<ViewProviderFemConstraint>;
+
+
+inline SoSeparator* ViewProviderFemConstraint::getSymbolSeparator() const
+{
+    return pSymbol;
+}
+
+inline SoSeparator* ViewProviderFemConstraint::getExtraSymbolSeparator() const
+{
+    return pExtraSymbol;
+}
+
+inline SoTransform* ViewProviderFemConstraint::getSymbolTransform() const
+{
+    return pSymbolTransf;
+}
+
+inline bool ViewProviderFemConstraint::getRotateSymbol() const
+{
+    return rotateSymbol;
+}
+
+inline void ViewProviderFemConstraint::setRotateSymbol(bool rotate)
+{
+    rotateSymbol = rotate;
+}
 
 
 }  // namespace FemGui
