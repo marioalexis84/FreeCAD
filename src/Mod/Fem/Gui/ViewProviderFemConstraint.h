@@ -103,6 +103,11 @@ protected:
     bool setEdit(int ModNum) override;
     void unsetEdit(int ModNum) override;
 
+    virtual void transformSymbol(const App::DocumentObject* obj,
+                                 const Base::Vector3d& point,
+                                 const Base::Vector3d& normal,
+                                 SbMatrix& mat) const;
+
     static void createPlacement(SoSeparator* sep, const SbVec3f& base, const SbRotation& r);
     static void updatePlacement(const SoSeparator* sep,
                                 const int idx,
@@ -193,8 +198,6 @@ protected:
     static QObject* findChildByName(const QObject* parent, const QString& name);
 };
 
-using ViewProviderFemConstraintPython = Gui::ViewProviderPythonFeatureT<ViewProviderFemConstraint>;
-
 
 inline SoSeparator* ViewProviderFemConstraint::getSymbolSeparator() const
 {
@@ -220,6 +223,27 @@ inline void ViewProviderFemConstraint::setRotateSymbol(bool rotate)
 {
     rotateSymbol = rotate;
 }
+
+
+template<typename ViewProviderT>
+class ViewProviderFemConstraintPythonT: public ViewProviderT
+{
+    //    PROPERTY_HEADER(FemGui::ViewProviderFemConstraintPythonT<ViewProviderT>);
+public:
+    ViewProviderFemConstraintPythonT() = default;
+    ~ViewProviderFemConstraintPythonT() override = default;
+
+protected:
+    void transformSymbol(const App::DocumentObject* obj,
+                         const Base::Vector3d& point,
+                         const Base::Vector3d& normal,
+                         SbMatrix& mat) const override;
+};
+
+// using ViewProviderFemConstraintPythonExt =
+// Gui::ViewProviderPythonFeatureT<ViewProviderFemConstraint>;
+using ViewProviderFemConstraintPython =
+    Gui::ViewProviderPythonFeatureT<ViewProviderFemConstraintPythonT<ViewProviderFemConstraint>>;
 
 
 }  // namespace FemGui

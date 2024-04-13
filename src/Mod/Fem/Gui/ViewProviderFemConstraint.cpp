@@ -219,26 +219,27 @@ void ViewProviderFemConstraint::onChanged(const App::Property* prop)
 
 void ViewProviderFemConstraint::updateData(const App::Property* prop)
 {
-    auto pcConstraint = static_cast<Fem::Constraint*>(this->getObject());
+    auto pcConstraint = static_cast<const Fem::Constraint*>(this->getObject());
 
     if (prop == &pcConstraint->Points || prop == &pcConstraint->Scale) {
         const std::vector<Base::Vector3d>& points = pcConstraint->Points.getValue();
         const std::vector<Base::Vector3d>& normals = pcConstraint->Normals.getValue();
-        SbVec3f axisY(0, 1, 0);
         pMultCopy->matrix.setNum(points.size());
         SbMatrix* mat = pMultCopy->matrix.startEditing();
-        float s = static_cast<float>(pcConstraint->Scale.getValue());
-        s = s > 0 ? s : 0;
-        SbVec3f scale(s, s, s);
+        //        SbVec3f axisY(0, 1, 0);
+        //        float s = static_cast<float>(pcConstraint->Scale.getValue());
+        //        s = s > 0 ? s : 0;
+        //        SbVec3f scale(s, s, s);
         int i = 0;
         for (const auto& point : points) {
             const auto& normal = normals[i];
-            SbVec3f norm = rotateSymbol ? SbVec3f(normal.x, normal.y, normal.z) : axisY;
-            SbRotation rot(axisY, norm);
-            SbVec3f tra(static_cast<float>(point.x),
-                        static_cast<float>(point.y),
-                        static_cast<float>(point.z));
-            mat[i].setTransform(tra, rot, scale);
+            //            SbVec3f norm = rotateSymbol ? SbVec3f(normal.x, normal.y, normal.z) :
+            //            axisY; SbRotation rot(axisY, norm); SbVec3f
+            //            tra(static_cast<float>(point.x),
+            //                        static_cast<float>(point.y),
+            //                        static_cast<float>(point.z));
+            //            mat[i].setTransform(tra, rot, scale);
+            transformSymbol(pcConstraint, point, normal, mat[i]);
             ++i;
         }
 
@@ -248,6 +249,25 @@ void ViewProviderFemConstraint::updateData(const App::Property* prop)
         ViewProviderGeometryObject::updateData(prop);
     }
 }
+
+void ViewProviderFemConstraint::transformSymbol(const App::DocumentObject* obj,
+                                                const Base::Vector3d& point,
+                                                const Base::Vector3d& normal,
+                                                SbMatrix& mat) const
+{
+    SbVec3f axisY(0, 1, 0);
+    auto pcConstraint = static_cast<const Fem::Constraint*>(obj);
+    float s = static_cast<float>(pcConstraint->Scale.getValue());
+    s = s > 0 ? s : 0;
+    SbVec3f scale(s, s, s);
+    SbVec3f norm = rotateSymbol ? SbVec3f(normal.x, normal.y, normal.z) : axisY;
+    SbRotation rot(axisY, norm);
+    SbVec3f tra(static_cast<float>(point.x),
+                static_cast<float>(point.y),
+                static_cast<float>(point.z));
+    mat.setTransform(tra, rot, scale);
+}
+
 
 // OvG: Visibility automation show parts and hide meshes on activation of a constraint
 std::string ViewProviderFemConstraint::gethideMeshShowPartStr(const std::string showConstr)
@@ -711,13 +731,36 @@ void ViewProviderFemConstraint::checkForWizard()
 
 
 // Python feature -----------------------------------------------------------------------
+template<>
+void /*FemGui::*/
+ViewProviderFemConstraintPythonT</*FemGui::*/ ViewProviderFemConstraint>::transformSymbol(
+    const App::DocumentObject* obj,
+    const Base::Vector3d& point,
+    const Base::Vector3d& normal,
+    SbMatrix& mat) const
+{
+    Py::Object prop =
+        Base::freecad_dynamic_cast<App::PropertyPythonObject>(getPropertyByName("Proxy"))
+            ->getValue();
+
+#ifdef FC_PY_VIEW_OBJECT
+
+    printf("aca\n");
+#endif
+}
 
 namespace Gui
 {
 /// @cond DOXERR
+// PROPERTY_SOURCE_TEMPLATE(FemGui::ViewProviderFemConstraintPython,
+// FemGui::ViewProviderFemConstraint)
 PROPERTY_SOURCE_TEMPLATE(FemGui::ViewProviderFemConstraintPython, FemGui::ViewProviderFemConstraint)
 /// @endcond
 
-// explicit template instantiation
-template class FemGuiExport ViewProviderPythonFeatureT<ViewProviderFemConstraint>;
+// namespace Gui {
+// template class FemGuiExport ViewProviderPythonFeatureT<ViewProviderFemConstraint>;
+// }
+//  explicit template instantiation
+template class FemGuiExport
+    ViewProviderPythonFeatureT<ViewProviderFemConstraintPythonT<ViewProviderFemConstraint>>;
 }  // namespace Gui

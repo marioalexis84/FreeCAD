@@ -44,6 +44,9 @@ ViewProviderFemConstraintForce::ViewProviderFemConstraintForce()
 {
     sPixmap = "FEM_ConstraintForce";
     loadSymbol((resourceSymbolDir + "ConstraintForce.iv").c_str());
+
+    // do not rotate symbol according to boundary normal
+    setRotateSymbol(false);
 }
 
 ViewProviderFemConstraintForce::~ViewProviderFemConstraintForce() = default;
@@ -110,11 +113,24 @@ void ViewProviderFemConstraintForce::updateData(const App::Property* prop)
 {
     auto pcConstraint = static_cast<Fem::ConstraintForce*>(this->getObject());
 
-    if (prop == &pcConstraint->Reversed) {
+    if (prop == &pcConstraint->Reversed || prop == &pcConstraint->DirectionVector) {
         SoTransform* trans = getSymbolTransform();
-        trans->center.setValue(SbVec3f(0, 2, 0));
-        float rotAngle = pcConstraint->Reversed.getValue() ? F_PI : 0.0f;
-        trans->rotation.setValue(SbVec3f(0, 0, 1), rotAngle);
+        bool rev = pcConstraint->Reversed.getValue();
+        Base::Vector3d dir = (rev ? -1.0d : 1.0d) * pcConstraint->DirectionVector.getValue();
+        float rotAngle = rev ? F_PI : 0.0f;
+        SbMatrix mat0, mat1;
+        mat0.setTransform(SbVec3f(0, 0, 0),
+                          SbRotation(SbVec3f(0, 0, 1), rotAngle),
+                          SbVec3f(1, 1, 1),
+                          SbRotation(SbVec3f(0, 0, 1), 0.0f),
+                          SbVec3f(0, 2, 0));
+
+        mat1.setRotate(SbRotation(SbVec3f(0, 1, 0), SbVec3f(dir.x, dir.y, dir.z)));
+
+        mat0 *= mat1;
+        trans->setMatrix(mat0);
+        //     trans->center.setValue();
+        //     trans->rotation.setValue(SbVec3f(0, 0, 1), rotAngle);
     }
     else {
         ViewProviderFemConstraint::updateData(prop);
