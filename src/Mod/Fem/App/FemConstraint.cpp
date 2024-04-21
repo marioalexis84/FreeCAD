@@ -28,6 +28,7 @@
 #include <BRepAdaptor_CompCurve.hxx>
 #include <BRepAdaptor_Curve.hxx>
 #include <BRepAdaptor_Surface.hxx>
+#include <BRepBndLib.hxx>
 #include <BRepClass_FaceClassifier.hxx>
 #include <BRepGProp.hxx>
 #include <BRepGProp_Face.hxx>
@@ -280,11 +281,11 @@ bool Constraint::getPoints(std::vector<Base::Vector3d>& points,
             gp_Pnt p = BRep_Tool::Pnt(vertex);
             points.emplace_back(p.X(), p.Y(), p.Z());
             normals.push_back(NormalDirection.getValue());
-            // OvG: Scale by whole object mass in case of a vertex
-            GProp_GProps props;
-            BRepGProp::VolumeProperties(toposhape.getShape(), props);
-            double lx = props.Mass();
-            // OvG: setup draw scale for constraint
+            // Scale by bounding box of the object in case of a vertex
+            Bnd_Box box;
+            BRepBndLib::Add(toposhape.getShape(), box);
+            double l = sqrt(box.SquareExtent() / 3.0);
+            double lx = pow(l, 3);
             *scale = this->calcDrawScaleFactor(sqrt(lx) * 0.5);
         }
         else if (sh.ShapeType() == TopAbs_EDGE) {
