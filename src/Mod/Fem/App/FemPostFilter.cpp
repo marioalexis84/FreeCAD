@@ -461,6 +461,11 @@ FemPostClipFilter::FemPostClipFilter()
 
     m_extractor->SetExtractInside(0);
     setActiveFilterPipeline("extract");
+
+    //    m_implicitFallback = vtkSmartPointer<vtkBox>::New();
+
+    //    m_clipper->SetClipFunction(m_implicitFallback);
+    //    m_extractor->SetImplicitFunction(m_implicitFallback);
 }
 
 FemPostClipFilter::~FemPostClipFilter() = default;
@@ -475,6 +480,10 @@ void FemPostClipFilter::onChanged(const Property* prop)
                 static_cast<FemPostFunction*>(Function.getValue())->getImplicitFunction());
             m_extractor->SetImplicitFunction(
                 static_cast<FemPostFunction*>(Function.getValue())->getImplicitFunction());
+        }
+        else {
+            //            m_clipper->SetClipFunction(m_implicitFallback);
+            //            m_extractor->SetImplicitFunction(m_implicitFallback);
         }
     }
     else if (prop == &InsideOut) {
@@ -815,6 +824,10 @@ FemPostCutFilter::FemPostCutFilter()
     cut.target = m_cutter;
     addFilterPipeline(cut, "cut");
     setActiveFilterPipeline("cut");
+
+    //    m_implicitFallback = vtkSmartPointer<vtkPlane>::New();
+    // m_implicitFallback->SetOrigin(0.0,0.0,0.0);
+    //    m_cutter->SetCutFunction(m_implicitFallback);
 }
 
 FemPostCutFilter::~FemPostCutFilter() = default;
@@ -826,6 +839,9 @@ void FemPostCutFilter::onChanged(const Property* prop)
             && Function.getValue()->isDerivedFrom(FemPostFunction::getClassTypeId())) {
             m_cutter->SetCutFunction(
                 static_cast<FemPostFunction*>(Function.getValue())->getImplicitFunction());
+        }
+        else {
+            //            m_cutter->SetCutFunction(m_implicitFallback);
         }
     }
 

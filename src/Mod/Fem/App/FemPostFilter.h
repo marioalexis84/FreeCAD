@@ -23,6 +23,8 @@
 #ifndef Fem_FemPostFilter_H
 #define Fem_FemPostFilter_H
 
+#include <vtkBox.h>
+#include <vtkPlane.h>
 #include <vtkContourFilter.h>
 #include <vtkCutter.h>
 #include <vtkExtractGeometry.h>
@@ -56,9 +58,9 @@ public:
 
     App::DocumentObjectExecReturn* execute() override;
 
-protected:
     vtkDataObject* getInputData();
 
+protected:
     // pipeline handling for derived filter
     struct FilterPipeline
     {
@@ -182,6 +184,7 @@ protected:
 private:
     vtkSmartPointer<vtkTableBasedClipDataSet> m_clipper;
     vtkSmartPointer<vtkExtractGeometry> m_extractor;
+    //    vtkSmartPointer<vtkBox> m_implicitFallback;
 };
 
 
@@ -251,6 +254,7 @@ protected:
 
 private:
     vtkSmartPointer<vtkCutter> m_cutter;
+    //    vtkSmartPointer<vtkPlane> m_implicitFallback;
 };
 
 
