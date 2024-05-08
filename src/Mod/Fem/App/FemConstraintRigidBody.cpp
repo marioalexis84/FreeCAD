@@ -29,38 +29,63 @@ using namespace Fem;
 
 PROPERTY_SOURCE(Fem::ConstraintRigidBody, Fem::Constraint)
 
+const char* ConstraintRigidBody::loadModeEnum[] = {"Displacement-Rotation",
+                                                   "Force-Moment",
+                                                   "Displacement-Moment",
+                                                   "Force-Rotation",
+                                                   nullptr};
+
+const char* ConstraintRigidBody::freeModeEnum[] =
+    {"None", "X", "Y", "Z", "XY", "XZ", "YZ", "All", nullptr};
+
 ConstraintRigidBody::ConstraintRigidBody()
 {
-    ADD_PROPERTY(xRefNode, (0.0));
-    ADD_PROPERTY(yRefNode, (0.0));
-    ADD_PROPERTY(zRefNode, (0.0));
-    ADD_PROPERTY(xDisplacement, (0.0));
-    ADD_PROPERTY(yDisplacement, (0.0));
-    ADD_PROPERTY(zDisplacement, (0.0));
-    ADD_PROPERTY(xRotation, (0.0));
-    ADD_PROPERTY(yRotation, (0.0));
-    ADD_PROPERTY(zRotation, (0.0));
-    ADD_PROPERTY(xForce, (0.0));
-    ADD_PROPERTY(yForce, (0.0));
-    ADD_PROPERTY(zForce, (0.0));
-    ADD_PROPERTY(xMoment, (0.0));
-    ADD_PROPERTY(yMoment, (0.0));
-    ADD_PROPERTY(zMoment, (0.0));
-    ADD_PROPERTY(DefineRefNode, (1));
+    ADD_PROPERTY_TYPE(ReferenceNode,
+                      (0.0, 0.0, 0.0),
+                      "ConstraintRigidBody",
+                      App::Prop_Output,
+                      "Reference node position");
+    ADD_PROPERTY_TYPE(Displacement,
+                      (0.0, 0.0, 0.0),
+                      "ConstraintRigidBody",
+                      App::Prop_Output,
+                      "Reference node displacement");
+    ADD_PROPERTY_TYPE(Rotation,
+                      (Base::Rotation(0.0, 0.0, 0.0, 0.0)),
+                      "ConstraintRigidBody",
+                      App::Prop_Output,
+                      "Reference node rotation");
+    ADD_PROPERTY_TYPE(Force, (0.0), "ConstraintRigidBody", App::Prop_Output, "Applied force");
+    ADD_PROPERTY_TYPE(ForceDirection,
+                      (0.0, 0.0, 0.0),
+                      "ConstraintRigidBody",
+                      App::Prop_Output,
+                      "Direction of applied force");
+    ADD_PROPERTY_TYPE(Moment, (0.0), "ConstraintRigidBody", App::Prop_Output, "Applied moment");
+    ADD_PROPERTY_TYPE(MomentDirection,
+                      (0.0, 0.0, 0.0),
+                      "ConstraintRigidBody",
+                      App::Prop_Output,
+                      "Direction of applied moment");
+    ADD_PROPERTY_TYPE(FreeTranslationalMode,
+                      ("None"),
+                      "ConstraintRigidBody",
+                      App::Prop_Output,
+                      "Free displacement/force  mode");
+    ADD_PROPERTY_TYPE(FreeRotationalMode,
+                      ("None"),
+                      "ConstraintRigidBody",
+                      App::Prop_Output,
+                      "Free rotation/moment mode");
+    ADD_PROPERTY_TYPE(LoadMode,
+                      ("Displacement-Rotation"),
+                      "ConstraintRigidBody",
+                      App::Prop_Output,
+                      "Load/boundary condition mode");
 
-    // For drawing the icons
-    ADD_PROPERTY_TYPE(Points,
-                      (Base::Vector3d()),
-                      "ConstraintRigidBody",
-                      App::PropertyType(App::Prop_ReadOnly | App::Prop_Output),
-                      "Points where symbols are drawn");
-    ADD_PROPERTY_TYPE(Normals,
-                      (Base::Vector3d()),
-                      "ConstraintRigidBody",
-                      App::PropertyType(App::Prop_ReadOnly | App::Prop_Output),
-                      "Normals where symbols are drawn");
-    Points.setValues(std::vector<Base::Vector3d>());
-    Normals.setValues(std::vector<Base::Vector3d>());
+    FreeTranslationalMode.setEnums(freeModeEnum);
+    FreeRotationalMode.setEnums(freeModeEnum);
+    LoadMode.setEnums(loadModeEnum);
 }
 
 App::DocumentObjectExecReturn* ConstraintRigidBody::execute()
@@ -70,19 +95,5 @@ App::DocumentObjectExecReturn* ConstraintRigidBody::execute()
 
 void ConstraintRigidBody::onChanged(const App::Property* prop)
 {
-    // Note: If we call this at the end, then the symbols are not oriented correctly initially
-    // because the NormalDirection has not been calculated yet
     Constraint::onChanged(prop);
-
-    if (prop == &References) {
-        std::vector<Base::Vector3d> points;
-        std::vector<Base::Vector3d> normals;
-        double scale = 1;  // OvG: Enforce use of scale
-        if (getPoints(points, normals, &scale)) {
-            Points.setValues(points);
-            Normals.setValues(normals);
-            Scale.setValue(scale);  // OvG: Scale
-            Points.touch();         // This triggers ViewProvider::updateData()
-        }
-    }
 }

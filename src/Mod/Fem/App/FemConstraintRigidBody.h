@@ -37,27 +37,17 @@ public:
     /// Constructor
     ConstraintRigidBody();
 
-    // Read-only (calculated values). These trigger changes in the ViewProvider
-    App::PropertyVectorList Points;
-    App::PropertyVectorList Normals;
-
     // Rigid Body parameters
-    App::PropertyFloat xRefNode;
-    App::PropertyFloat yRefNode;
-    App::PropertyFloat zRefNode;
-    App::PropertyFloat xDisplacement;
-    App::PropertyFloat yDisplacement;
-    App::PropertyFloat zDisplacement;
-    App::PropertyFloat xRotation;
-    App::PropertyFloat yRotation;
-    App::PropertyFloat zRotation;
-    App::PropertyFloat xForce;
-    App::PropertyFloat yForce;
-    App::PropertyFloat zForce;
-    App::PropertyFloat xMoment;
-    App::PropertyFloat yMoment;
-    App::PropertyFloat zMoment;
-    App::PropertyBool DefineRefNode;
+    App::PropertyPosition ReferenceNode;
+    App::PropertyPosition Displacement;
+    App::PropertyRotation Rotation;
+    App::PropertyForce Force;
+    App::PropertyVector ForceDirection;
+    App::PropertyMoment Moment;
+    App::PropertyVector MomentDirection;
+    App::PropertyEnumeration FreeTranslationalMode;
+    App::PropertyEnumeration FreeRotationalMode;
+    App::PropertyEnumeration LoadMode;
 
     /// recalculate the object
     App::DocumentObjectExecReturn* execute() override;
@@ -70,6 +60,10 @@ public:
 
 protected:
     void onChanged(const App::Property* prop) override;
+
+private:
+    static const char* loadModeEnum[];
+    static const char* freeModeEnum[];
 };
 
 }  // namespace Fem
