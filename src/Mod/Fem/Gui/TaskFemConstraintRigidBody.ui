@@ -79,15 +79,18 @@
         </widget>
        </item>
        <item row="0" column="1">
-        <widget class="Gui::InputField" name="if_ref_node_x">
-         <property name="text">
-          <string>0 mm</string>
+        <widget class="Gui::QuantitySpinBox" name="qsb_ref_node_x">
+         <property name="singleStep">
+          <double>1.0</double>
+         </property>
+         <property name="maximum">
+          <double>1000000000.0</double>
          </property>
          <property name="unit" stdset="0">
           <string notr="true">mm</string>
          </property>
-         <property name="quantity" stdset="0">
-          <double>0.000000000000000</double>
+         <property name="value" stdset="0">
+          <double>0.0</double>
          </property>
         </widget>
        </item>
@@ -99,15 +102,18 @@
         </widget>
        </item>
        <item row="1" column="1">
-        <widget class="Gui::InputField" name="if_ref_node_y">
-         <property name="text">
-          <string>0 mm</string>
+        <widget class="Gui::QuantitySpinBox" name="qsb_ref_node_y">
+         <property name="singleStep">
+          <double>1.0</double>
+         </property>
+         <property name="maximum">
+          <double>1000000000.0</double>
          </property>
          <property name="unit" stdset="0">
           <string notr="true">mm</string>
          </property>
-         <property name="quantity" stdset="0">
-          <double>0.000000000000000</double>
+         <property name="value" stdset="0">
+          <double>0.0</double>
          </property>
         </widget>
        </item>
@@ -119,15 +125,18 @@
         </widget>
        </item>
        <item row="2" column="1">
-        <widget class="Gui::InputField" name="if_ref_node_z">
-         <property name="text">
-          <string>0 mm</string>
+        <widget class="Gui::QuantitySpinBox" name="qsb_ref_node_z">
+         <property name="singleStep">
+          <double>1.0</double>
+         </property>
+         <property name="maximum">
+          <double>1000000000.0</double>
          </property>
          <property name="unit" stdset="0">
           <string notr="true">mm</string>
          </property>
-         <property name="quantity" stdset="0">
-          <double>0.000000000000000</double>
+         <property name="value" stdset="0">
+          <double>0.0</double>
          </property>
         </widget>
        </item>
@@ -163,15 +172,21 @@
         </widget>
        </item>
        <item row="0" column="1">
-        <widget class="Gui::InputField" name="if_ref_force_x">
-         <property name="text">
-          <string>0 N</string>
+        <widget class="Gui::DoubleSpinBox" name="spb_force_dir_x">
+         <property name="keyboardTracking">
+          <bool>false</bool>
+         </property>
+         <property name="minimum">
+          <double>-100.000000000000000</double>
+         </property>
+         <property name="maximum">
+          <double>100.000000000000000</double>
+         </property>
+         <property name="singleStep">
+          <double>0.100000000000000</double>
          </property>
          <property name="unit" stdset="0">
-          <string notr="true">N</string>
-         </property>
-         <property name="quantity" stdset="0">
-          <double>0.000000000000000</double>
+          <string notr="true"/>
          </property>
         </widget>
        </item>
@@ -183,15 +198,21 @@
         </widget>
        </item>
        <item row="1" column="1">
-        <widget class="Gui::InputField" name="if_ref_force_y">
-         <property name="text">
-          <string>0 N</string>
+        <widget class="Gui::DoubleSpinBox" name="spb_force_dir_y">
+         <property name="keyboardTracking">
+          <bool>false</bool>
+         </property>
+         <property name="minimum">
+          <double>-100.000000000000000</double>
+         </property>
+         <property name="maximum">
+          <double>100.000000000000000</double>
+         </property>
+         <property name="singleStep">
+          <double>0.100000000000000</double>
          </property>
          <property name="unit" stdset="0">
-          <string notr="true">N</string>
-         </property>
-         <property name="quantity" stdset="0">
-          <double>0.000000000000000</double>
+          <string notr="true"/>
          </property>
         </widget>
        </item>
@@ -203,22 +224,54 @@
         </widget>
        </item>
        <item row="2" column="1">
-        <widget class="Gui::InputField" name="if_ref_force_z">
+        <widget class="Gui::DoubleSpinBox" name="spb_force_dir_z">
+         <property name="keyboardTracking">
+          <bool>false</bool>
+         </property>
+         <property name="minimum">
+          <double>-100.000000000000000</double>
+         </property>
+         <property name="maximum">
+          <double>100.000000000000000</double>
+         </property>
+         <property name="singleStep">
+          <double>0.100000000000000</double>
+         </property>
+         <property name="unit" stdset="0">
+          <string notr="true"/>
+         </property>
+        </widget>
+       </item>
+       <item row="3" column="0">
+        <widget class="QLabel" name="lbl_force">
          <property name="text">
-          <string>0 N</string>
+          <string>Force:</string>
+         </property>
+        </widget>
+       </item>
+       <item row="3" column="1">
+        <widget class="Gui::QuantitySpinBox" name="qsb_force">
+         <property name="keyboardTracking">
+          <bool>false</bool>
+         </property>
+         <property name="minimum">
+          <double>-100000.000000000000</double>
+         </property>
+         <property name="maximum">
+          <double>100000.000000000000</double>
+         </property>
+         <property name="singleStep">
+          <double>1.000000000000000</double>
          </property>
          <property name="unit" stdset="0">
           <string notr="true">N</string>
-         </property>
-         <property name="quantity" stdset="0">
-          <double>0.000000000000000</double>
          </property>
         </widget>
        </item>
       </layout>
      </item>
      <item>
-      <spacer name="verticalSpacer">
+      <spacer name="verticalSpacer_1">
        <property name="orientation">
         <enum>Qt::Vertical</enum>
        </property>
@@ -238,66 +291,348 @@
       </widget>
      </item>
      <item>
-      <layout class="QFormLayout" name="f_layout_rot_force">
+      <layout class="QFormLayout" name="f_layout_moment">
        <item row="0" column="0">
-        <widget class="QLabel" name="lbl_rot_force_x">
+        <widget class="QLabel" name="lbl_moment_x">
          <property name="text">
           <string>X:</string>
          </property>
         </widget>
        </item>
        <item row="0" column="1">
-        <widget class="Gui::InputField" name="if_rot_force_x">
-         <property name="text">
-          <string>0 N*m</string>
+        <widget class="Gui::DoubleSpinBox" name="spb_moment_dir_x">
+         <property name="keyboardTracking">
+          <bool>false</bool>
+         </property>
+         <property name="minimum">
+          <double>-100.000000000000000</double>
+         </property>
+         <property name="maximum">
+          <double>100.000000000000000</double>
+         </property>
+         <property name="singleStep">
+          <double>0.100000000000000</double>
          </property>
          <property name="unit" stdset="0">
-          <string notr="true">N*m</string>
-         </property>
-         <property name="quantity" stdset="0">
-          <double>0.000000000000000</double>
+          <string notr="true"/>
          </property>
         </widget>
        </item>
        <item row="1" column="0">
-        <widget class="QLabel" name="lbl_rot_force_y">
+        <widget class="QLabel" name="lbl_moment_y">
          <property name="text">
           <string>Y:</string>
          </property>
         </widget>
        </item>
        <item row="1" column="1">
-        <widget class="Gui::InputField" name="if_rot_force_y">
-         <property name="text">
-          <string>0 N*m</string>
+        <widget class="Gui::DoubleSpinBox" name="spb_moment_dir_y">
+         <property name="keyboardTracking">
+          <bool>false</bool>
+         </property>
+         <property name="minimum">
+          <double>-100.000000000000000</double>
+         </property>
+         <property name="maximum">
+          <double>100.000000000000000</double>
+         </property>
+         <property name="singleStep">
+          <double>0.100000000000000</double>
          </property>
          <property name="unit" stdset="0">
-          <string notr="true">N*m</string>
-         </property>
-         <property name="quantity" stdset="0">
-          <double>0.000000000000000</double>
+          <string notr="true"/>
          </property>
         </widget>
        </item>
        <item row="2" column="0">
-        <widget class="QLabel" name="lbl_rot_force_z">
+        <widget class="QLabel" name="lbl_moment_z">
          <property name="text">
           <string>Z:</string>
          </property>
         </widget>
        </item>
        <item row="2" column="1">
-        <widget class="Gui::InputField" name="if_rot_force_z">
+        <widget class="Gui::DoubleSpinBox" name="spb_moment_dir_z">
+         <property name="keyboardTracking">
+          <bool>false</bool>
+         </property>
+         <property name="minimum">
+          <double>-100.000000000000000</double>
+         </property>
+         <property name="maximum">
+          <double>100.000000000000000</double>
+         </property>
+         <property name="singleStep">
+          <double>0.100000000000000</double>
+         </property>
+         <property name="unit" stdset="0">
+          <string notr="true"/>
+         </property>
+        </widget>
+       </item>
+       <item row="3" column="0">
+        <widget class="QLabel" name="lbl_moment">
          <property name="text">
-          <string>0 N*m</string>
+          <string>Moment:</string>
+         </property>
+        </widget>
+       </item>
+       <item row="3" column="1">
+        <widget class="Gui::QuantitySpinBox" name="qsb_moment">
+         <property name="keyboardTracking">
+          <bool>false</bool>
+         </property>
+         <property name="singleStep">
+          <double>1.000000000000000</double>
+         </property>
+         <property name="minimum">
+          <double>-1000000000000000.000000000000</double>
+         </property>
+         <property name="maximum">
+          <double>1000000000000000.000000000000</double>
          </property>
          <property name="unit" stdset="0">
           <string notr="true">N*m</string>
          </property>
-         <property name="quantity" stdset="0">
-          <double>0.000000000000000</double>
+        </widget>
+       </item>
+      </layout>
+     </item>
+     <item>
+      <widget class="QLabel" name="lbl_disp">
+       <property name="text">
+        <string>Displacement on Reference Node</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <layout class="QFormLayout" name="f_layout_disp">
+       <item row="0" column="0">
+        <widget class="QLabel" name="lbl_disp_x">
+         <property name="text">
+          <string>X:</string>
          </property>
         </widget>
+       </item>
+       <item row="0" column="1">
+        <widget class="Gui::QuantitySpinBox" name="qsb_disp_x">
+         <property name="keyboardTracking">
+          <bool>false</bool>
+         </property>
+         <property name="minimum">
+          <double>-100000.000000000000</double>
+         </property>
+         <property name="maximum">
+          <double>100000.000000000000</double>
+         </property>
+         <property name="singleStep">
+          <double>1.00000000000000</double>
+         </property>
+         <property name="unit" stdset="0">
+          <string notr="true">mm</string>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="0">
+        <widget class="QLabel" name="lbl_disp_y">
+         <property name="text">
+          <string>Y:</string>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="1">
+        <widget class="Gui::QuantitySpinBox" name="qsb_disp_y">
+         <property name="keyboardTracking">
+          <bool>false</bool>
+         </property>
+         <property name="minimum">
+          <double>-100000.000000000000</double>
+         </property>
+         <property name="maximum">
+          <double>100000.000000000000</double>
+         </property>
+         <property name="singleStep">
+          <double>1.00000000000000</double>
+         </property>
+         <property name="unit" stdset="0">
+          <string notr="true">mm</string>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="0">
+        <widget class="QLabel" name="lbl_disp_z">
+         <property name="text">
+          <string>Z:</string>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="1">
+        <widget class="Gui::QuantitySpinBox" name="qsb_disp_z">
+         <property name="keyboardTracking">
+          <bool>false</bool>
+         </property>
+         <property name="minimum">
+          <double>-100000.000000000000</double>
+         </property>
+         <property name="maximum">
+          <double>100000.000000000000</double>
+         </property>
+         <property name="singleStep">
+          <double>1.00000000000000</double>
+         </property>
+         <property name="unit" stdset="0">
+          <string notr="true">mm</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </item>
+     <item>
+      <widget class="QLabel" name="lbl_rot">
+       <property name="text">
+        <string>Rotation on Reference Node</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <layout class="QFormLayout" name="f_layout_rot">
+       <item row="0" column="0">
+        <widget class="QLabel" name="lbl_rot_x">
+         <property name="text">
+          <string>X:</string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="1">
+        <widget class="Gui::DoubleSpinBox" name="spb_rot_axis_x">
+         <property name="keyboardTracking">
+          <bool>false</bool>
+         </property>
+         <property name="minimum">
+          <double>-100.000000000000000</double>
+         </property>
+         <property name="maximum">
+          <double>100.000000000000000</double>
+         </property>
+         <property name="singleStep">
+          <double>0.100000000000000</double>
+         </property>
+         <property name="unit" stdset="0">
+          <string notr="true"/>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="0">
+        <widget class="QLabel" name="lbl_rot_y">
+         <property name="text">
+          <string>Y:</string>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="1">
+        <widget class="Gui::DoubleSpinBox" name="spb_rot_axis_y">
+         <property name="keyboardTracking">
+          <bool>false</bool>
+         </property>
+         <property name="minimum">
+          <double>-100.000000000000000</double>
+         </property>
+         <property name="maximum">
+          <double>100.000000000000000</double>
+         </property>
+         <property name="singleStep">
+          <double>0.100000000000000</double>
+         </property>
+         <property name="unit" stdset="0">
+          <string notr="true"/>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="0">
+        <widget class="QLabel" name="lbl_rot_z">
+         <property name="text">
+          <string>Z:</string>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="1">
+        <widget class="Gui::DoubleSpinBox" name="spb_rot_axis_z">
+         <property name="keyboardTracking">
+          <bool>false</bool>
+         </property>
+         <property name="minimum">
+          <double>-100.000000000000000</double>
+         </property>
+         <property name="maximum">
+          <double>100.000000000000000</double>
+         </property>
+         <property name="singleStep">
+          <double>0.100000000000000</double>
+         </property>
+         <property name="unit" stdset="0">
+          <string notr="true"/>
+         </property>
+        </widget>
+       </item>
+       <item row="3" column="0">
+        <widget class="QLabel" name="lbl_rot_angle">
+         <property name="text">
+          <string>Angle:</string>
+         </property>
+        </widget>
+       </item>
+       <item row="3" column="1">
+        <widget class="Gui::QuantitySpinBox" name="qsb_rot_angle">
+         <property name="keyboardTracking">
+          <bool>false</bool>
+         </property>
+         <property name="minimum">
+          <double>-100000.000000000000</double>
+         </property>
+         <property name="maximum">
+          <double>100000.000000000000</double>
+         </property>
+         <property name="singleStep">
+          <double>1.000000000000000</double>
+         </property>
+         <property name="unit" stdset="0">
+          <string notr="true">deg</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </item>
+     <item>
+      <layout class="QFormLayout" name="f_layout_mode">
+       <item row="0" column="0">
+        <widget class="QLabel" name="lbl_trans_mode">
+         <property name="text">
+          <string>Free Translational Mode:</string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="1">
+        <widget class="QComboBox" name="cb_trans_mode"/>
+       </item>
+       <item row="1" column="0">
+        <widget class="QLabel" name="lbl_rotation_mode">
+         <property name="text">
+          <string>Free Rotational Mode:</string>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="1">
+        <widget class="QComboBox" name="cb_rotation_mode"/>
+       </item>
+       <item row="2" column="0">
+        <widget class="QLabel" name="lbl_load_mode">
+         <property name="text">
+          <string>Load Mode:</string>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="1">
+        <widget class="QComboBox" name="cb_load_mode"/>
        </item>
       </layout>
      </item>
@@ -307,9 +642,14 @@
  </widget>
  <customwidgets>
   <customwidget>
-   <class>Gui::InputField</class>
-   <extends>QLineEdit</extends>
-   <header>Gui/InputField.h</header>
+   <class>Gui::QuantitySpinBox</class>
+   <extends>QWidget</extends>
+   <header>Gui/QuantitySpinBox.h</header>
+  </customwidget>
+  <customwidget>
+   <class>Gui::DoubleSpinBox</class>
+   <extends>QWidget</extends>
+   <header>Gui/SpinBox.h</header>
   </customwidget>
  </customwidgets>
  <resources/>
