@@ -29,14 +29,7 @@ using namespace Fem;
 
 PROPERTY_SOURCE(Fem::ConstraintRigidBody, Fem::Constraint)
 
-const char* ConstraintRigidBody::loadModeEnum[] = {"Displacement-Rotation",
-                                                   "Force-Moment",
-                                                   "Displacement-Moment",
-                                                   "Force-Rotation",
-                                                   nullptr};
-
-const char* ConstraintRigidBody::freeModeEnum[] =
-    {"None", "X", "Y", "Z", "XY", "XZ", "YZ", "All", nullptr};
+const char* ConstraintRigidBody::boundaryModeEnum[] = {"Free", "Constraint", "Load", nullptr};
 
 ConstraintRigidBody::ConstraintRigidBody()
 {
@@ -45,47 +38,101 @@ ConstraintRigidBody::ConstraintRigidBody()
                       "ConstraintRigidBody",
                       App::Prop_Output,
                       "Reference node position");
-    ADD_PROPERTY_TYPE(Displacement,
-                      (0.0, 0.0, 0.0),
+//    ADD_PROPERTY_TYPE(Displacement,
+//                      (0.0, 0.0, 0.0),
+//                      "ConstraintRigidBody",
+//                      App::Prop_Output,
+//                      "Reference node displacement");
+    ADD_PROPERTY_TYPE(ConstraintPlacement,
+                      (Base::Placement()),
                       "ConstraintRigidBody",
                       App::Prop_Output,
-                      "Reference node displacement");
-    ADD_PROPERTY_TYPE(Rotation,
-                      (Base::Rotation(0.0, 0.0, 0.0, 0.0)),
+                      "Reference node applied placement");
+//    ADD_PROPERTY_TYPE(Rotation,
+//                      (Base::Rotation(0.0, 0.0, 0.0, 1.0)),
+//                      "ConstraintRigidBody",
+//                      App::Prop_Output,
+//                      "Reference node rotation");
+//    ADD_PROPERTY_TYPE(Force, (0.0), "ConstraintRigidBody", App::Prop_Output, "Applied force");
+//    ADD_PROPERTY_TYPE(ForceDirection,
+//                      (0.0, 0.0, 0.0),
+//                      "ConstraintRigidBody",
+//                      App::Prop_Output,
+//                      "Direction of applied force");
+//    ADD_PROPERTY_TYPE(Moment, (0.0), "ConstraintRigidBody", App::Prop_Output, "Applied moment");
+    ADD_PROPERTY_TYPE(ForceX,
+                      (0.0),
                       "ConstraintRigidBody",
                       App::Prop_Output,
-                      "Reference node rotation");
-    ADD_PROPERTY_TYPE(Force, (0.0), "ConstraintRigidBody", App::Prop_Output, "Applied force");
-    ADD_PROPERTY_TYPE(ForceDirection,
-                      (0.0, 0.0, 0.0),
+                      "Applied force in X direction");
+    ADD_PROPERTY_TYPE(ForceY,
+                      (0.0),
                       "ConstraintRigidBody",
                       App::Prop_Output,
-                      "Direction of applied force");
-    ADD_PROPERTY_TYPE(Moment, (0.0), "ConstraintRigidBody", App::Prop_Output, "Applied moment");
-    ADD_PROPERTY_TYPE(MomentDirection,
-                      (0.0, 0.0, 0.0),
+                      "Applied force in Y direction");
+    ADD_PROPERTY_TYPE(ForceZ,
+                      (0.0),
                       "ConstraintRigidBody",
                       App::Prop_Output,
-                      "Direction of applied moment");
-    ADD_PROPERTY_TYPE(FreeTranslationalMode,
+                      "Applied force in Z direction");
+    ADD_PROPERTY_TYPE(MomentX,
+                      (0.0),
+                      "ConstraintRigidBody",
+                      App::Prop_Output,
+                      "Applied moment in X direction");
+    ADD_PROPERTY_TYPE(MomentY,
+                      (0.0),
+                      "ConstraintRigidBody",
+                      App::Prop_Output,
+                      "Applied moment in Y direction");
+    ADD_PROPERTY_TYPE(MomentZ,
+                      (0.0),
+                      "ConstraintRigidBody",
+                      App::Prop_Output,
+                      "Applied moment in Z direction");
+//    ADD_PROPERTY_TYPE(Moment, (0.0), "ConstraintRigidBody", App::Prop_Output, "Applied moment");
+//    ADD_PROPERTY_TYPE(MomentDirection,
+//                      (0.0, 0.0, 0.0),
+//                      "ConstraintRigidBody",
+//                      App::Prop_Output,
+//                      "Direction of applied moment");
+    ADD_PROPERTY_TYPE(XTranslationalMode,
+                      ("Free"),
+                      "ConstraintRigidBody",
+                      App::Prop_Output,
+                      "X-direction displacement/force  mode");
+    ADD_PROPERTY_TYPE(YTranslationalMode,
+                      ("Free"),
+                      "ConstraintRigidBody",
+                      App::Prop_Output,
+                      "Y-direction displacement/force  mode");
+    ADD_PROPERTY_TYPE(ZTranslationalMode,
+                      ("Free"),
+                      "ConstraintRigidBody",
+                      App::Prop_Output,
+                      "Z-direction displacement/force  mode");
+    ADD_PROPERTY_TYPE(XRotationalMode,
                       ("None"),
                       "ConstraintRigidBody",
                       App::Prop_Output,
-                      "Free displacement/force  mode");
-    ADD_PROPERTY_TYPE(FreeRotationalMode,
+                      "X-direction rotation/moment mode");
+    ADD_PROPERTY_TYPE(YRotationalMode,
                       ("None"),
                       "ConstraintRigidBody",
                       App::Prop_Output,
-                      "Free rotation/moment mode");
-    ADD_PROPERTY_TYPE(LoadMode,
-                      ("Displacement-Rotation"),
+                      "Y-direction rotation/moment mode");
+    ADD_PROPERTY_TYPE(ZRotationalMode,
+                      ("None"),
                       "ConstraintRigidBody",
                       App::Prop_Output,
-                      "Load/boundary condition mode");
+                      "Z-direction rotation/moment mode");
 
-    FreeTranslationalMode.setEnums(freeModeEnum);
-    FreeRotationalMode.setEnums(freeModeEnum);
-    LoadMode.setEnums(loadModeEnum);
+    XTranslationalMode.setEnums(boundaryModeEnum);
+    YTranslationalMode.setEnums(boundaryModeEnum);
+    ZTranslationalMode.setEnums(boundaryModeEnum);
+    XRotationalMode.setEnums(boundaryModeEnum);
+    YRotationalMode.setEnums(boundaryModeEnum);
+    ZRotationalMode.setEnums(boundaryModeEnum);
 }
 
 App::DocumentObjectExecReturn* ConstraintRigidBody::execute()

@@ -39,15 +39,23 @@ public:
 
     // Rigid Body parameters
     App::PropertyPosition ReferenceNode;
-    App::PropertyPosition Displacement;
-    App::PropertyRotation Rotation;
-    App::PropertyForce Force;
-    App::PropertyVector ForceDirection;
-    App::PropertyMoment Moment;
-    App::PropertyVector MomentDirection;
-    App::PropertyEnumeration FreeTranslationalMode;
-    App::PropertyEnumeration FreeRotationalMode;
-    App::PropertyEnumeration LoadMode;
+//    App::PropertyPosition Displacement;
+    App::PropertyPlacement ConstraintPlacement;
+//    App::PropertyRotation Rotation;
+    App::PropertyForce ForceX;
+    App::PropertyForce ForceY;
+    App::PropertyForce ForceZ;
+//    App::PropertyVector ForceDirection;
+    App::PropertyMoment MomentX;
+    App::PropertyMoment MomentY;
+    App::PropertyMoment MomentZ;
+//    App::PropertyVector MomentDirection;
+    App::PropertyEnumeration XTranslationalMode;
+    App::PropertyEnumeration YTranslationalMode;
+    App::PropertyEnumeration ZTranslationalMode;
+    App::PropertyEnumeration XRotationalMode;
+    App::PropertyEnumeration YRotationalMode;
+    App::PropertyEnumeration ZRotationalMode;
 
     /// recalculate the object
     App::DocumentObjectExecReturn* execute() override;
@@ -62,8 +70,7 @@ protected:
     void onChanged(const App::Property* prop) override;
 
 private:
-    static const char* loadModeEnum[];
-    static const char* freeModeEnum[];
+    static const char* boundaryModeEnum[];
 };
 
 }  // namespace Fem

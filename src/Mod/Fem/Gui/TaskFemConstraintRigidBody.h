@@ -46,13 +46,12 @@ public:
     Base::Vector3d getReferenceNode() const;
     Base::Vector3d getDisplacement() const;
     Base::Rotation getRotation() const;
-    std::string getForce() const;
-    Base::Vector3d getForceDirection() const;
-    std::string getMoment() const;
-    Base::Vector3d getMomentDirection() const;
-    std::string getFreeTranslationalMode() const;
-    std::string getFreeRotationalMode() const;
-    std::string getLoadMode() const;
+//    std::string getForce() const;
+    std::vector<std::string> getForce() const;
+//    std::string getMoment() const;
+    std::vector<std::string> getMoment() const;
+    std::vector<std::string> getTranslationalMode() const;
+    std::vector<std::string> getRotationalMode() const;
 
 private Q_SLOTS:
     void onReferenceDeleted();
