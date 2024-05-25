@@ -114,17 +114,14 @@
           </widget>
          </item>
          <item>
-          <widget class="Gui::QuantitySpinBox" name="sp_X">
-           <property name="unit" stdset="0">
-            <string notr="true">deg</string>
-           </property>
-           <property name="minimum">
-            <double>-360.000000000000000</double>
-           </property>
-           <property name="maximum">
-            <double>360.000000000000000</double>
-           </property>
-          </widget>
+         <widget class="Gui::DoubleSpinBox" name="spb_rot_axis_x">
+          <property name="keyboardTracking">
+           <bool>false</bool>
+          </property>
+          <property name="singleStep">
+           <double>0.10000000000000</double>
+          </property>
+         </widget>
          </item>
         </layout>
        </item>
@@ -138,17 +135,14 @@
           </widget>
          </item>
          <item>
-          <widget class="Gui::QuantitySpinBox" name="sp_Y">
-           <property name="unit" stdset="0">
-            <string notr="true">deg</string>
-           </property>
-           <property name="minimum">
-            <double>-360.000000000000000</double>
-           </property>
-           <property name="maximum">
-            <double>360.000000000000000</double>
-           </property>
-          </widget>
+         <widget class="Gui::DoubleSpinBox" name="spb_rot_axis_y">
+          <property name="keyboardTracking">
+           <bool>false</bool>
+          </property>
+          <property name="singleStep">
+           <double>0.10000000000000</double>
+          </property>
+         </widget>
          </item>
         </layout>
        </item>
@@ -162,7 +156,17 @@
           </widget>
          </item>
          <item>
-          <widget class="Gui::QuantitySpinBox" name="sp_Z">
+         <widget class="Gui::DoubleSpinBox" name="spb_rot_axis_z">
+          <property name="keyboardTracking">
+           <bool>false</bool>
+          </property>
+          <property name="singleStep">
+           <double>0.10000000000000</double>
+          </property>
+         </widget>
+         </item>
+         <item>
+          <widget class="Gui::QuantitySpinBox" name="qsb_rot_angle">
            <property name="unit" stdset="0">
             <string notr="true">deg</string>
            </property>
@@ -221,6 +225,11 @@
    <class>Gui::QuantitySpinBox</class>
    <extends>QWidget</extends>
    <header>Gui/QuantitySpinBox.h</header>
+  </customwidget>
+  <customwidget>
+   <class>Gui::DoubleSpinBox</class>
+   <extends>QWidget</extends>
+   <header>Gui/SpinBox.h</header>
   </customwidget>
  </customwidgets>
  <resources/>

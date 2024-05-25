@@ -34,9 +34,14 @@ static const char* TransformTypes[] = {"Cylindrical", "Rectangular", nullptr};
 
 ConstraintTransform::ConstraintTransform()
 {
-    ADD_PROPERTY(X_rot, (0.0));
-    ADD_PROPERTY(Y_rot, (0.0));
-    ADD_PROPERTY(Z_rot, (0.0));
+    //    ADD_PROPERTY(X_rot, (0.0));
+    //    ADD_PROPERTY(Y_rot, (0.0));
+    //    ADD_PROPERTY(Z_rot, (0.0));
+    ADD_PROPERTY_TYPE(RectangularTransform,
+                      (Base::Rotation(0.0, 0.0, 0.0, 1.0)),
+                      "ConstraintTransform",
+                      App::Prop_Output,
+                      "Rectangular system transform");
     ADD_PROPERTY_TYPE(TransformType,
                       (1),
                       "ConstraintTransform",
@@ -78,28 +83,113 @@ const char* ConstraintTransform::getViewProviderName() const
     return "FemGui::ViewProviderFemConstraintTransform";
 }
 
-void ConstraintTransform::handleChangedPropertyType(Base::XMLReader& reader,
-                                                    const char* TypeName,
-                                                    App::Property* prop)
+
+namespace
 {
-    // properties _rot had App::PropertyFloat and were changed to App::PropertyAngle
-    if (prop == &X_rot && strcmp(TypeName, "App::PropertyFloat") == 0) {
-        App::PropertyFloat X_rotProperty;
-        X_rotProperty.Restore(reader);
-        X_rot.setValue(X_rotProperty.getValue());
+
+Base::Rotation anglesToRotation(double xAngle, double yAngle, double zAngle)
+{
+    static Base::Vector3d a(1, 0, 0);
+    static Base::Vector3d b(0, 1, 0);
+    static int count = 0;
+    double xRad = xAngle * D_PI / 180.0;
+    double yRad = yAngle * D_PI / 180.0;
+    double zRad = zAngle * D_PI / 180.0;
+    if (xAngle != 0) {
+        a[1] = 0;
+        a[2] = 0;
+        b[1] = std::cos(xRad);
+        b[2] = -std::sin(xRad);
     }
-    else if (prop == &Y_rot && strcmp(TypeName, "App::PropertyFloat") == 0) {
-        App::PropertyFloat Y_rotProperty;
-        Y_rotProperty.Restore(reader);
-        Y_rot.setValue(Y_rotProperty.getValue());
+    if (yAngle != 0) {
+        a[0] = std::cos(yRad);
+        a[2] = std::sin(yRad);
+        b[0] = 0;
+        b[2] = 0;
     }
-    else if (prop == &Z_rot && strcmp(TypeName, "App::PropertyFloat") == 0) {
-        App::PropertyFloat Z_rotProperty;
-        Z_rotProperty.Restore(reader);
-        Z_rot.setValue(Z_rotProperty.getValue());
+    if (zAngle != 0) {
+        a[0] = std::cos(zRad);
+        a[1] = -std::sin(zRad);
+        b[0] = 0;
+        b[1] = 0;
+    }
+
+    ++count;
+    count %= 3;
+    if (!count) {
+        Base::Vector3d X = a.Normalize();
+        Base::Vector3d Y = b.Normalize();
+        Base::Vector3d Z = X.Cross(Y);
+        Y = Z.Cross(X);
+
+        a.x = 1;
+        a.y = 0;
+        a.z = 0;
+        b.x = 0;
+        b.y = 1;
+        b.z = 0;
+
+        Base::Matrix4D m;
+        m.setCol(0, X);
+        m.setCol(1, Y);
+        m.setCol(2, Z);
+
+        return Base::Rotation(m);
+    }
+    return Base::Rotation();
+}
+
+}  // namespace
+
+
+void ConstraintTransform::handleChangedPropertyName(Base::XMLReader& reader,
+                                                    const char* typeName,
+                                                    const char* propName)
+{
+    if (strcmp(propName, "X_rot") == 0) {
+        double xAngle;
+        if (strcmp(typeName, "App::PropertyFloat") == 0) {
+            App::PropertyFloat X_rotProperty;
+            X_rotProperty.Restore(reader);
+            xAngle = X_rotProperty.getValue();
+        }
+        else if (strcmp(typeName, "App::PropertyAngle") == 0) {
+            App::PropertyAngle X_rotProperty;
+            X_rotProperty.Restore(reader);
+            xAngle = X_rotProperty.getValue();
+        }
+        anglesToRotation(xAngle, 0, 0);
+    }
+    else if (strcmp(propName, "Y_rot") == 0) {
+        double yAngle;
+        if (strcmp(typeName, "App::PropertyFloat") == 0) {
+            App::PropertyFloat Y_rotProperty;
+            Y_rotProperty.Restore(reader);
+            yAngle = Y_rotProperty.getValue();
+        }
+        else if (strcmp(typeName, "App::PropertyAngle") == 0) {
+            App::PropertyAngle Y_rotProperty;
+            Y_rotProperty.Restore(reader);
+            yAngle = Y_rotProperty.getValue();
+        }
+        anglesToRotation(0, yAngle, 0);
+    }
+    else if (strcmp(propName, "Z_rot") == 0) {
+        double zAngle;
+        if (strcmp(typeName, "App::PropertyFloat") == 0) {
+            App::PropertyFloat Z_rotProperty;
+            Z_rotProperty.Restore(reader);
+            zAngle = Z_rotProperty.getValue();
+        }
+        else if (strcmp(typeName, "App::PropertyAngle") == 0) {
+            App::PropertyAngle Z_rotProperty;
+            Z_rotProperty.Restore(reader);
+            zAngle = Z_rotProperty.getValue();
+        }
+        RectangularTransform.setValue(anglesToRotation(0, 0, zAngle));
     }
     else {
-        Constraint::handleChangedPropertyType(reader, TypeName, prop);
+        Constraint::handleChangedPropertyName(reader, typeName, propName);
     }
 }
 

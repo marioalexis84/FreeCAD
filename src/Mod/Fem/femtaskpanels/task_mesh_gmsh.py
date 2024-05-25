@@ -126,7 +126,7 @@ class _TaskPanel:
         return True
 
     def clicked(self, button):
-        if button == QtGui.QDialogButtonBox.Apply:
+        if button == QtGui.QDialogButtonBox.Apply.value:
             self.set_mesh_params()
             self.run_gmsh()
 
