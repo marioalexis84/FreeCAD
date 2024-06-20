@@ -300,48 +300,42 @@ void TaskDlgFemConstraintPressure::open()
     // a transaction is already open at creation time of the panel
     if (!Gui::Command::hasPendingCommand()) {
         QString msg = QObject::tr("Pressure load");
-        Gui::Command::openCommand((const char*)msg.toUtf8());
+        Gui::Command::openCommand(msg.toUtf8().constData());
         ConstraintView->setVisible(true);
-        Gui::Command::doCommand(
-            Gui::Command::Doc,
-            ViewProviderFemConstraint::gethideMeshShowPartStr(
-                (static_cast<Fem::Constraint*>(ConstraintView->getObject()))->getNameInDocument())
-                .c_str());  // OvG: Hide meshes and show parts
     }
-}
 
-bool TaskDlgFemConstraintPressure::accept()
-{
-    /* Note: */
-    std::string name = ConstraintView->getObject()->getNameInDocument();
-    const TaskFemConstraintPressure* parameterPressure =
-        static_cast<const TaskFemConstraintPressure*>(parameter);
+    bool TaskDlgFemConstraintPressure::accept()
+    {
+        /* Note: */
+        std::string name = ConstraintView->getObject()->getNameInDocument();
+        const TaskFemConstraintPressure* parameterPressure =
+            static_cast<const TaskFemConstraintPressure*>(parameter);
 
-    try {
-        Gui::Command::doCommand(Gui::Command::Doc,
-                                "App.ActiveDocument.%s.Pressure = \"%s\"",
-                                name.c_str(),
-                                parameterPressure->getPressure().c_str());
-        Gui::Command::doCommand(Gui::Command::Doc,
-                                "App.ActiveDocument.%s.Reversed = %s",
-                                name.c_str(),
-                                parameterPressure->getReverse() ? "True" : "False");
+        try {
+            Gui::Command::doCommand(Gui::Command::Doc,
+                                    "App.ActiveDocument.%s.Pressure = \"%s\"",
+                                    name.c_str(),
+                                    parameterPressure->getPressure().c_str());
+            Gui::Command::doCommand(Gui::Command::Doc,
+                                    "App.ActiveDocument.%s.Reversed = %s",
+                                    name.c_str(),
+                                    parameterPressure->getReverse() ? "True" : "False");
+        }
+        catch (const Base::Exception& e) {
+            QMessageBox::warning(parameter, tr("Input error"), QString::fromLatin1(e.what()));
+            return false;
+        }
+        /* */
+        return TaskDlgFemConstraint::accept();
     }
-    catch (const Base::Exception& e) {
-        QMessageBox::warning(parameter, tr("Input error"), QString::fromLatin1(e.what()));
-        return false;
+
+    bool TaskDlgFemConstraintPressure::reject()
+    {
+        Gui::Command::abortCommand();
+        Gui::Command::doCommand(Gui::Command::Gui, "Gui.activeDocument().resetEdit()");
+        Gui::Command::updateActive();
+
+        return true;
     }
-    /* */
-    return TaskDlgFemConstraint::accept();
-}
-
-bool TaskDlgFemConstraintPressure::reject()
-{
-    Gui::Command::abortCommand();
-    Gui::Command::doCommand(Gui::Command::Gui, "Gui.activeDocument().resetEdit()");
-    Gui::Command::updateActive();
-
-    return true;
-}
 
 #include "moc_TaskFemConstraintPressure.cpp"

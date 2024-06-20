@@ -195,62 +195,62 @@ bool TaskFemConstraint::KeyEvent(QEvent* e)
 
 void TaskDlgFemConstraint::open()
 {
-    ConstraintView->setVisible(true);
-    Gui::Command::runCommand(
-        Gui::Command::Doc,
-        ViewProviderFemConstraint::gethideMeshShowPartStr(
-            (static_cast<Fem::Constraint*>(ConstraintView->getObject()))->getNameInDocument())
-            .c_str());  // OvG: Hide meshes and show parts
-}
+    // a transaction is already open at creation time of the panel
+    if (!Gui::Command::hasPendingCommand()) {
+        const char* typeName = ConstraintView->getObject()->getTypeId().getName();
+        Gui::Command::openCommand(typeName);
+        ConstraintView->setVisible(true);
+    }
 
-bool TaskDlgFemConstraint::accept()
-{
-    std::string name = ConstraintView->getObject()->getNameInDocument();
+    bool TaskDlgFemConstraint::accept()
+    {
+        std::string name = ConstraintView->getObject()->getNameInDocument();
 
-    try {
-        std::string refs = parameter->getReferences();
+        try {
+            std::string refs = parameter->getReferences();
 
-        if (!refs.empty()) {
+            if (!refs.empty()) {
+                Gui::Command::doCommand(Gui::Command::Doc,
+                                        "App.ActiveDocument.%s.References = [%s]",
+                                        name.c_str(),
+                                        refs.c_str());
+            }
+            else {
+                QMessageBox::warning(parameter,
+                                     tr("Input error"),
+                                     tr("You must specify at least one reference"));
+                return false;
+            }
+
+            std::string scale = parameter->getScale();
             Gui::Command::doCommand(Gui::Command::Doc,
-                                    "App.ActiveDocument.%s.References = [%s]",
+                                    "App.ActiveDocument.%s.Scale = %s",
                                     name.c_str(),
-                                    refs.c_str());
+                                    scale.c_str());
+            Gui::Command::doCommand(Gui::Command::Doc, "App.ActiveDocument.recompute()");
+            if (!ConstraintView->getObject()->isValid()) {
+                throw Base::RuntimeError(ConstraintView->getObject()->getStatusString());
+            }
+            Gui::Command::doCommand(Gui::Command::Gui, "Gui.activeDocument().resetEdit()");
+            Gui::Command::commitCommand();
         }
-        else {
-            QMessageBox::warning(parameter,
-                                 tr("Input error"),
-                                 tr("You must specify at least one reference"));
+        catch (const Base::Exception& e) {
+            QMessageBox::warning(parameter, tr("Input error"), QString::fromLatin1(e.what()));
             return false;
         }
 
-        std::string scale = parameter->getScale();
-        Gui::Command::doCommand(Gui::Command::Doc,
-                                "App.ActiveDocument.%s.Scale = %s",
-                                name.c_str(),
-                                scale.c_str());
-        Gui::Command::doCommand(Gui::Command::Doc, "App.ActiveDocument.recompute()");
-        if (!ConstraintView->getObject()->isValid()) {
-            throw Base::RuntimeError(ConstraintView->getObject()->getStatusString());
-        }
+        return true;
+    }
+
+    bool TaskDlgFemConstraint::reject()
+    {
+        // roll back the changes
+        Gui::Command::abortCommand();
         Gui::Command::doCommand(Gui::Command::Gui, "Gui.activeDocument().resetEdit()");
-        Gui::Command::commitCommand();
+        Gui::Command::updateActive();
+
+        return true;
     }
-    catch (const Base::Exception& e) {
-        QMessageBox::warning(parameter, tr("Input error"), QString::fromLatin1(e.what()));
-        return false;
-    }
-
-    return true;
-}
-
-bool TaskDlgFemConstraint::reject()
-{
-    // roll back the changes
-    Gui::Command::abortCommand();
-    Gui::Command::doCommand(Gui::Command::Gui, "Gui.activeDocument().resetEdit()");
-
-    return true;
-}
 
 
 #include "moc_TaskFemConstraint.cpp"
