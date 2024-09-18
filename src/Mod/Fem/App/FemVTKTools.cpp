@@ -438,7 +438,8 @@ void exportFemMeshCells(vtkSmartPointer<vtkCellArray>& elemArray,
 
 void FemVTKTools::exportVTKMesh(const FemMesh* mesh,
                                 vtkSmartPointer<vtkUnstructuredGrid> grid,
-                                float scale)
+                                float scale,
+                                bool highDimOnly)
 {
 
     Base::Console().Log("Start: VTK mesh builder ======================\n");
@@ -478,9 +479,20 @@ void FemVTKTools::exportVTKMesh(const FemMesh* mesh,
     SMDS_EdgeIteratorPtr aEdgeIter = meshDS->edgesIterator();
     exportFemMeshEdges(elemArray, types, aEdgeIter);
 
+    if (highDimOnly && elemArray->GetNumberOfCells() > 0) {
+        grid->SetCells(types.data(), elemArray);
+        elemArray->Initialize();
+        types.clear();
+    }
+
     // faces
     SMDS_FaceIteratorPtr aFaceIter = meshDS->facesIterator();
     exportFemMeshFaces(elemArray, types, aFaceIter);
+    if (highDimOnly && elemArray->GetNumberOfCells() > 0) {
+        grid->SetCells(types.data(), elemArray);
+        elemArray->Initialize();
+        types.clear();
+    }
 
     // volumes
     SMDS_VolumeIteratorPtr aVolIter = meshDS->volumesIterator();
@@ -493,15 +505,15 @@ void FemVTKTools::exportVTKMesh(const FemMesh* mesh,
     Base::Console().Log("End: VTK mesh builder ======================\n");
 }
 
-void FemVTKTools::writeVTKMesh(const char* filename, const FemMesh* mesh)
+void FemVTKTools::writeVTKMesh(const char* filename, const FemMesh* mesh, bool highDimOnly)
 {
 
     Base::TimeElapsed Start;
-    Base::Console().Log("Start: write FemMesh from VTK unstructuredGrid ======================\n");
+    Base::Console().Log("Start: write VTK from FemMesh ======================\n");
     Base::FileInfo f(filename);
 
     vtkSmartPointer<vtkUnstructuredGrid> grid = vtkSmartPointer<vtkUnstructuredGrid>::New();
-    exportVTKMesh(mesh, grid);
+    exportVTKMesh(mesh, grid, highDimOnly);
     Base::Console().Log("Start: writing mesh data ======================\n");
     if (f.hasExtension("vtu")) {
         writeVTKFile<vtkXMLUnstructuredGridWriter>(filename, grid);

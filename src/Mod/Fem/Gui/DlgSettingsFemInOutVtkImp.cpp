@@ -48,21 +48,29 @@ void DlgSettingsFemInOutVtkImp::saveSettings()
 {
     ParameterGrp::handle hGrp = App::GetApplication().GetParameterGroupByPath(
         "User parameter:BaseApp/Preferences/Mod/Fem/InOutVtk");
-    hGrp->SetInt("ImportObject", ui->comboBoxVtkImportObject->currentIndex());
+    hGrp->SetInt("ImportObject", ui->cb_import_vtk->currentIndex());
+    hGrp->SetInt("ExportFemMesh", ui->cb_export_fem_mesh->currentIndex());
 
-    ui->comboBoxVtkImportObject->onSave();
+    ui->cb_import_vtk->onSave();
+    ui->cb_export_fem_mesh->onSave();
 }
 
 void DlgSettingsFemInOutVtkImp::loadSettings()
 {
-    ui->comboBoxVtkImportObject->onRestore();
+    ui->cb_import_vtk->onRestore();
+    ui->cb_export_fem_mesh->onRestore();
 
     ParameterGrp::handle hGrp = App::GetApplication().GetParameterGroupByPath(
         "User parameter:BaseApp/Preferences/Mod/Fem/InOutVtk");
     int index = hGrp->GetInt("ImportObject", 0);
     // 0 is standard on first initialize, 0 .. vtk res obj, 1 .. FEM mesh obj, 2 .. FreeCAD res obj
     if (index > -1) {
-        ui->comboBoxVtkImportObject->setCurrentIndex(index);
+        ui->cb_import_vtk->setCurrentIndex(index);
+    }
+
+    index = hGrp->GetInt("ExportFemMesh", 0);
+    if (index > -1) {
+        ui->cb_export_fem_mesh->setCurrentIndex(index);
     }
 }
 
@@ -72,9 +80,11 @@ void DlgSettingsFemInOutVtkImp::loadSettings()
 void DlgSettingsFemInOutVtkImp::changeEvent(QEvent* e)
 {
     if (e->type() == QEvent::LanguageChange) {
-        int c_index = ui->comboBoxVtkImportObject->currentIndex();
+        int c_index = ui->cb_import_vtk->currentIndex();
         ui->retranslateUi(this);
-        ui->comboBoxVtkImportObject->setCurrentIndex(c_index);
+        ui->cb_export_fem_mesh->setCurrentIndex(c_index);
+        c_index = ui->cb_export_fem_mesh->currentIndex();
+        ui->cb_export_fem_mesh->setCurrentIndex(c_index);
     }
     else {
         QWidget::changeEvent(e);

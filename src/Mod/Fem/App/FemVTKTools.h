@@ -45,7 +45,8 @@ public:
     // extract data from FreCAD FEM mesh and fill a vtkUnstructuredGrid instance with that data
     static void exportVTKMesh(const FemMesh* mesh,
                               vtkSmartPointer<vtkUnstructuredGrid> grid,
-                              float scale = 1.0);
+                              float scale = 1.0,
+                              bool highDimOnly = true);
 
     // extract data from vtkUnstructuredGrid object and fill a FreeCAD FEM result object with that
     // data (needed by readResult)
@@ -61,7 +62,7 @@ public:
     static FemMesh* readVTKMesh(const char* filename, FemMesh* mesh);
 
     // FemMesh write to vtkUnstructuredGrid data file
-    static void writeVTKMesh(const char* Filename, const FemMesh* mesh);
+    static void writeVTKMesh(const char* Filename, const FemMesh* mesh, bool highDimOnly = true);
 
     // FemResult (activeObject or created if res= NULL) read from vtkUnstructuredGrid dataset file
     static App::DocumentObject* readResult(const char* Filename,
