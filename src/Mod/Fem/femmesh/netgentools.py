@@ -35,7 +35,8 @@ import FreeCAD
 import Fem
 
 try:
-    from netgen import occ, config as ng_config
+    from netgen import occ, meshing, config as ng_config
+    import pyngcore as ngcore
 except ModuleNotFoundError:
     FreeCAD.Console.PrintError("To use FemMesh Netgen objects, install the Netgen Python bindings")
 
@@ -100,6 +101,7 @@ NetgenTools.run_netgen(**{params})
             "fineness": self.obj.Fineness,
             "params": self.get_meshing_parameters(),
             "second_order": self.obj.SecondOrder,
+            "second_order_linear": self.obj.SecondOrderLinear,
             "result_file": self.result_file,
             "mesh_region": self.get_mesh_region(),
         }
@@ -120,11 +122,16 @@ NetgenTools.run_netgen(**{params})
 
     @staticmethod
     def run_netgen(
-        brep_file, threads, heal, fineness, params, second_order, result_file, mesh_region
+        brep_file,
+        threads,
+        heal,
+        fineness,
+        params,
+        second_order,
+        second_order_linear,
+        result_file,
+        mesh_region,
     ):
-        import pyngcore as ngcore
-        from netgen import meshing
-
         geom = occ.OCCGeometry(brep_file)
         ngcore.SetNumThreads(threads)
 
@@ -160,6 +167,8 @@ NetgenTools.run_netgen(**{params})
             mesh = geom.GenerateMesh(mp=mp)
 
         if second_order:
+            if second_order_linear:
+                mesh.SetGeometry(None)
             mesh.SecondOrder()
 
         coords = mesh.Coordinates()
@@ -299,20 +308,20 @@ NetgenTools.run_netgen(**{params})
         return params
 
     def get_mesh_region(self):
-        import Part
+        from Part import Shape as PartShape
 
-        d = []
+        result = []
         for reg in self.obj.MeshRegionList:
             for s, sub_list in reg.References:
                 if s.isDerivedFrom("App::GeoFeature") and isinstance(
-                    s.getPropertyOfGeometry(), Part.Shape
+                    s.getPropertyOfGeometry(), PartShape
                 ):
                     geom = s.getPropertyOfGeometry()
-                    sub_sh = [s.getSubObject(_) for _ in sub_list]
-                    res = geom.findSubShape(sub_sh)
+                    sub_obj = [s.getSubObject(_) for _ in sub_list]
+                    sub_sh = geom.findSubShape(sub_obj)
                     l = reg.CharacteristicLength.getValueAs("mm").Value
-                    d.append((res, l))
-        return d
+                    result.append((sub_sh, l))
+        return result
 
     @staticmethod
     def version():
