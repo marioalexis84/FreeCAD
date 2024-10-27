@@ -26,6 +26,8 @@
 #include <Gui/ViewProviderFeaturePython.h>
 #include <Mod/Fem/FemGlobal.h>
 
+#include "ViewProviderAnalysisFeatureExtension.h"
+
 
 class SoCoordinate3;
 class SoDrawStyle;
@@ -37,9 +39,10 @@ class SoMaterialBinding;
 namespace FemGui
 {
 
-class FemGuiExport ViewProviderSolver: public Gui::ViewProviderDocumentObject
+class FemGuiExport ViewProviderSolver: public Gui::ViewProviderDocumentObject,
+                                       public ViewProviderFemAnalysisFeatureExtension
 {
-    PROPERTY_HEADER_WITH_OVERRIDE(FemGui::ViewProviderSolver);
+    PROPERTY_HEADER_WITH_EXTENSIONS(FemGui::ViewProviderSolver);
 
 public:
     /// constructor

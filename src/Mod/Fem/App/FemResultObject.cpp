@@ -31,7 +31,7 @@
 using namespace Fem;
 using namespace App;
 
-PROPERTY_SOURCE(Fem::FemResultObject, App::DocumentObject)
+PROPERTY_SOURCE_WITH_EXTENSIONS(Fem::FemResultObject, App::DocumentObject)
 
 
 FemResultObject::FemResultObject()
@@ -45,6 +45,8 @@ FemResultObject::FemResultObject()
     NodeNumbers.setStatus(App::Property::ReadOnly, true);
     Stats.setStatus(App::Property::ReadOnly, true);
     Time.setStatus(App::Property::ReadOnly, true);
+
+    FemAnalysisFeatureExtension::initExtension(this);
 }
 
 FemResultObject::~FemResultObject() = default;

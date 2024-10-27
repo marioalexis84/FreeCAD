@@ -77,7 +77,7 @@ using BRepAdaptor_HSurface = BRepAdaptor_Surface;
 
 static const App::PropertyFloatConstraint::Constraints scaleConstraint = {0.0, DBL_MAX, 0.1};
 
-PROPERTY_SOURCE(Fem::Constraint, App::DocumentObject)
+PROPERTY_SOURCE_WITH_EXTENSIONS(Fem::Constraint, App::DocumentObject)
 
 Constraint::Constraint()
     : sizeFactor {1}
@@ -116,6 +116,7 @@ Constraint::Constraint()
     References.setScope(App::LinkScope::Global);
 
     App::SuppressibleExtension::initExtension(this);
+    FemAnalysisFeatureExtension::initExtension(this);
 }
 
 Constraint::~Constraint()

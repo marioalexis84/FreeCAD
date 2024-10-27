@@ -27,11 +27,13 @@
 
 using namespace FemGui;
 
-PROPERTY_SOURCE(FemGui::ViewProviderResult, Gui::ViewProviderDocumentObject)
+PROPERTY_SOURCE_WITH_EXTENSIONS(FemGui::ViewProviderResult, Gui::ViewProviderDocumentObject)
 
 ViewProviderResult::ViewProviderResult()
 {
     sPixmap = "FEM_ResultShow";
+
+    ViewProviderFemAnalysisFeatureExtension::initExtension(this);
 }
 
 ViewProviderResult::~ViewProviderResult() = default;

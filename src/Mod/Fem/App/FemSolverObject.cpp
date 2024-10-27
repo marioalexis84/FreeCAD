@@ -32,10 +32,13 @@
 using namespace Fem;
 using namespace App;
 
-PROPERTY_SOURCE(Fem::FemSolverObject, App::DocumentObject)
+PROPERTY_SOURCE_WITH_EXTENSIONS(Fem::FemSolverObject, App::DocumentObject)
 
 
-FemSolverObject::FemSolverObject() = default;
+FemSolverObject::FemSolverObject()
+{
+    FemAnalysisFeatureExtension::initExtension(this);
+}
 
 FemSolverObject::~FemSolverObject() = default;
 

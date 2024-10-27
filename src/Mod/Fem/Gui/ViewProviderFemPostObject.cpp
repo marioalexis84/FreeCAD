@@ -146,7 +146,7 @@ private:
 
 App::PropertyFloatConstraint::Constraints ViewProviderFemPostObject::sizeRange = {1.0, 64.0, 1.0};
 
-PROPERTY_SOURCE(FemGui::ViewProviderFemPostObject, Gui::ViewProviderDocumentObject)
+PROPERTY_SOURCE_WITH_EXTENSIONS(FemGui::ViewProviderFemPostObject, Gui::ViewProviderDocumentObject)
 
 ViewProviderFemPostObject::ViewProviderFemPostObject()
 {
@@ -255,6 +255,8 @@ ViewProviderFemPostObject::ViewProviderFemPostObject()
     updateProperties();  // initialize the enums
 
     FemPostObjectSelectionObserver::instance().registerFemPostObject(this);
+
+    ViewProviderFemAnalysisFeatureExtension::initExtension(this);
 }
 
 ViewProviderFemPostObject::~ViewProviderFemPostObject()

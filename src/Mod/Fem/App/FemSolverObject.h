@@ -28,12 +28,15 @@
 #include <App/FeaturePython.h>
 #include <Mod/Fem/FemGlobal.h>
 
+#include "FemAnalysisFeatureExtension.h"
+
+
 namespace Fem
 {
 /// Father of all result data in a Fem Analysis
-class FemExport FemSolverObject: public App::DocumentObject
+class FemExport FemSolverObject: public App::DocumentObject, public FemAnalysisFeatureExtension
 {
-    PROPERTY_HEADER_WITH_OVERRIDE(Fem::FemSolverObject);
+    PROPERTY_HEADER_WITH_EXTENSIONS(Fem::FemSolverObject);
 
 public:
     /// Constructor

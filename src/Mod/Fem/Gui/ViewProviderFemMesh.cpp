@@ -182,7 +182,7 @@ const char* ViewProviderFemMesh::Private::dm_face = "Faces";
 const char* ViewProviderFemMesh::Private::dm_node = "Nodes";
 const char* ViewProviderFemMesh::Private::dm_wire = "Wireframe";
 
-PROPERTY_SOURCE(FemGui::ViewProviderFemMesh, Gui::ViewProviderGeometryObject)
+PROPERTY_SOURCE_WITH_EXTENSIONS(FemGui::ViewProviderFemMesh, Gui::ViewProviderGeometryObject)
 
 App::PropertyFloatConstraint::Constraints ViewProviderFemMesh::floatRange = {1.0, 64.0, 1.0};
 
@@ -260,6 +260,8 @@ ViewProviderFemMesh::ViewProviderFemMesh()
     // PointMaterial.touch();
 
     DisplacementFactor = 0;
+
+    ViewProviderFemAnalysisFeatureExtension::initExtension(this);
 }
 
 ViewProviderFemMesh::~ViewProviderFemMesh()

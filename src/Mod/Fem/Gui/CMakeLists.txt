@@ -197,6 +197,8 @@ SET(FemGui_SRCS_ViewProvider
     ViewProviderAnalysis.cpp
     ViewProviderAnalysis.h
     ViewProviderSolver.cpp
+    ViewProviderAnalysisFeatureExtension.cpp
+    ViewProviderAnalysisFeatureExtension.h
     ViewProviderSolver.h
     ViewProviderSetNodes.cpp
     ViewProviderSetNodes.h

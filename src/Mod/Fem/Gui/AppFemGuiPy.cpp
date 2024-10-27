@@ -83,22 +83,22 @@ private:
         }
 
         PyObject* object = nullptr;
-        if (PyArg_ParseTuple(args.ptr(), "|O!", &(App::DocumentObjectPy::Type), &object)
-            && object) {
-            App::DocumentObject* obj =
-                static_cast<App::DocumentObjectPy*>(object)->getDocumentObjectPtr();
-            if (!obj || !obj->isDerivedFrom<Fem::FemAnalysis>()) {
-                throw Py::Exception(Base::PyExc_FC_GeneralError,
-                                    "Active Analysis object have to be of type Fem::FemAnalysis!");
-            }
-
-            // get the gui document of the Analysis Item
-            FemGui::ActiveAnalysisObserver::instance()->setActiveObject(
-                static_cast<Fem::FemAnalysis*>(obj));
-            FemGui::ActiveAnalysisObserver::instance()->highlightActiveObject(
-                Gui::HighlightMode::UserDefined,
-                true);
+        if (!PyArg_ParseTuple(args.ptr(), "|O!", &(App::DocumentObjectPy::Type), &object)) {
+            throw Py::Exception();
         }
+
+        App::DocumentObject* obj =
+            static_cast<App::DocumentObjectPy*>(object)->getDocumentObjectPtr();
+        if (!obj->isDerivedFrom<Fem::FemAnalysis>()) {
+            throw Py::TypeError("Active Analysis object have to be of type Fem::FemAnalysis!");
+        }
+
+        // get the gui document of the Analysis Item
+        FemGui::ActiveAnalysisObserver::instance()->setActiveObject(
+            static_cast<Fem::FemAnalysis*>(obj));
+        FemGui::ActiveAnalysisObserver::instance()->highlightActiveObject(
+            Gui::HighlightMode::UserDefined,
+            true);
 
         return Py::None();
     }

@@ -28,12 +28,16 @@
 #include <Gui/ViewProviderFeaturePython.h>
 #include <Mod/Fem/FemGlobal.h>
 
+#include "ViewProviderAnalysisFeatureExtension.h"
+
+
 namespace FemGui
 {
 
-class FemGuiExport ViewProviderResult: public Gui::ViewProviderDocumentObject
+class FemGuiExport ViewProviderResult: public Gui::ViewProviderDocumentObject,
+                                       public ViewProviderFemAnalysisFeatureExtension
 {
-    PROPERTY_HEADER_WITH_OVERRIDE(FemGui::ViewProviderResult);
+    PROPERTY_HEADER_WITH_EXTENSIONS(FemGui::ViewProviderResult);
 
 public:
     /// constructor

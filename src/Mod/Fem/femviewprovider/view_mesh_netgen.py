@@ -67,82 +67,10 @@ class VPMeshNetgen(view_base_femobject.VPBaseFemObject):
         # we should make sure the analysis the mesh belongs too is active
         gui_doc = FreeCADGui.getDocument(vobj.Object.Document)
         if not gui_doc.getInEdit():
-            # may be go the other way around and just activate the
-            # analysis the user has doubleClicked on ?!
-            # not a fast one, we need to iterate over all member of all
-            # analysis to know to which analysis the object belongs too!!!
-            # first check if there is an analysis in the active document
-            found_an_analysis = False
-            for o in gui_doc.Document.Objects:
-                if o.isDerivedFrom("Fem::FemAnalysisPython"):
-                    found_an_analysis = True
-                    break
-            if found_an_analysis:
-                if FemGui.getActiveAnalysis() is not None:
-                    if FemGui.getActiveAnalysis().Document is FreeCAD.ActiveDocument:
-                        if self.Object in FemGui.getActiveAnalysis().Group:
-                            if not gui_doc.getInEdit():
-                                gui_doc.setEdit(vobj.Object.Name)
-                            else:
-                                FreeCAD.Console.PrintError(
-                                    "Activate the analysis this Netgen FEM "
-                                    "mesh object belongs too!\n"
-                                )
-                        else:
-                            FreeCAD.Console.PrintMessage(
-                                "Netgen FEM mesh object does not belong to the active analysis.\n"
-                            )
-                            found_mesh_analysis = False
-                            for o in gui_doc.Document.Objects:
-                                if o.isDerivedFrom("Fem::FemAnalysisPython"):
-                                    for m in o.Group:
-                                        if m == self.Object:
-                                            found_mesh_analysis = True
-                                            FemGui.setActiveAnalysis(o)
-                                            FreeCAD.Console.PrintMessage(
-                                                "The analysis the Netgen FEM mesh object "
-                                                "belongs to was found and activated: {}\n".format(
-                                                    o.Name
-                                                )
-                                            )
-                                            gui_doc.setEdit(vobj.Object.Name)
-                                            break
-                            if not found_mesh_analysis:
-                                FreeCAD.Console.PrintLog(
-                                    "Netgen FEM mesh object does not belong to an analysis. "
-                                    "Analysis group meshing can not be used.\n"
-                                )
-                                gui_doc.setEdit(vobj.Object.Name)
-                    else:
-                        FreeCAD.Console.PrintError("Active analysis is not in active document.\n")
-                else:
-                    FreeCAD.Console.PrintLog(
-                        "No active analysis in active document, "
-                        "we are going to have a look if the Netgen FEM mesh object "
-                        "belongs to a non active analysis.\n"
-                    )
-                    found_mesh_analysis = False
-                    for o in gui_doc.Document.Objects:
-                        if o.isDerivedFrom("Fem::FemAnalysisPython"):
-                            for m in o.Group:
-                                if m == self.Object:
-                                    found_mesh_analysis = True
-                                    FemGui.setActiveAnalysis(o)
-                                    FreeCAD.Console.PrintMessage(
-                                        "The analysis the Netgen FEM mesh object "
-                                        "belongs to was found and activated: {}\n".format(o.Name)
-                                    )
-                                    gui_doc.setEdit(vobj.Object.Name)
-                                    break
-                    if not found_mesh_analysis:
-                        FreeCAD.Console.PrintLog(
-                            "Netgen FEM mesh object does not belong to an analysis. "
-                            "Analysis group meshing can not be used.\n"
-                        )
-                        gui_doc.setEdit(vobj.Object.Name)
-            else:
-                FreeCAD.Console.PrintLog("No analysis in the active document.\n")
-                gui_doc.setEdit(vobj.Object.Name)
+            analysis = vobj.Object.Analysis
+            if analysis:
+                FemGui.setActiveAnalysis(analysis)
+            gui_doc.setEdit(vobj.Object.Name)
         else:
             from PySide.QtGui import QMessageBox
 

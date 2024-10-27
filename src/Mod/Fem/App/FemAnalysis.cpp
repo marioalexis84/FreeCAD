@@ -27,6 +27,7 @@
 #include <Base/Uuid.h>
 
 #include "FemAnalysis.h"
+#include "FemAnalysisFeatureExtension.h"
 
 
 using namespace Fem;
@@ -39,6 +40,15 @@ FemAnalysis::FemAnalysis()
 {
     Base::Uuid id;
     ADD_PROPERTY_TYPE(Uid, (id), 0, App::Prop_None, "UUID of the Analysis");
+}
+
+bool FemAnalysis::allowObject(App::DocumentObject* obj)
+{
+    if (obj->hasExtension(FemAnalysisFeatureExtension::getExtensionClassTypeId())) {
+        obj->getExtension<FemAnalysisFeatureExtension>()->Analysis.setValue(this);
+    }
+
+    return true;
 }
 
 FemAnalysis::~FemAnalysis() = default;

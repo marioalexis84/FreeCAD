@@ -1861,7 +1861,11 @@ void setupFilter(Gui::Command* cmd, std::string Name)
                    "App.ActiveDocument.%s.Filter = __list__",
                    pipeline->getNameInDocument());
     cmd->doCommand(Gui::Command::Doc, "del __list__");
-
+    if (pipeline->Analysis.getValue()) {
+        cmd->doCommand(Gui::Command::Doc,
+                       "App.ActiveDocument.%s.Analysis.addObject(App.ActiveDocument.ActiveObject)",
+                       pipeline->getNameInDocument());
+    }
     // set display to assure the user sees the new object
     cmd->doCommand(Gui::Command::Doc,
                    "App.activeDocument().ActiveObject.ViewObject.DisplayMode = \"Surface\"");

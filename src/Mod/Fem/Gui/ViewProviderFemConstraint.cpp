@@ -48,7 +48,7 @@
 
 using namespace FemGui;
 
-PROPERTY_SOURCE(FemGui::ViewProviderFemConstraint, Gui::ViewProviderGeometryObject)
+PROPERTY_SOURCE_WITH_EXTENSIONS(FemGui::ViewProviderFemConstraint, Gui::ViewProviderGeometryObject)
 
 
 ViewProviderFemConstraint::ViewProviderFemConstraint()
@@ -69,6 +69,7 @@ ViewProviderFemConstraint::ViewProviderFemConstraint()
     ShapeAppearance.setSpecularColor(0.0f, 0.0f, 0.0f);
 
     Gui::ViewProviderSuppressibleExtension::initExtension(this);
+    ViewProviderFemAnalysisFeatureExtension::initExtension(this);
 }
 
 ViewProviderFemConstraint::~ViewProviderFemConstraint()

@@ -37,11 +37,13 @@
 
 using namespace FemGui;
 
-PROPERTY_SOURCE(FemGui::ViewProviderSolver, Gui::ViewProviderDocumentObject)
+PROPERTY_SOURCE_WITH_EXTENSIONS(FemGui::ViewProviderSolver, Gui::ViewProviderDocumentObject)
 
 ViewProviderSolver::ViewProviderSolver()
 {
     sPixmap = "FEM_SolverStandard";
+
+    ViewProviderFemAnalysisFeatureExtension::initExtension(this);
 }
 
 ViewProviderSolver::~ViewProviderSolver() = default;

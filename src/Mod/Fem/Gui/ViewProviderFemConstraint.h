@@ -27,9 +27,10 @@
 
 #include <Gui/ViewProviderGeometryObject.h>
 #include <Gui/ViewProviderFeaturePython.h>
+#include <Gui/ViewProviderSuppressibleExtension.h>
 #include <Mod/Fem/FemGlobal.h>
 
-#include <Gui/ViewProviderSuppressibleExtension.h>
+#include "ViewProviderAnalysisFeatureExtension.h"
 
 
 class QMenu;
@@ -42,9 +43,10 @@ namespace FemGui
 {
 
 class FemGuiExport ViewProviderFemConstraint: public Gui::ViewProviderGeometryObject,
-                                              public Gui::ViewProviderSuppressibleExtension
+                                              public Gui::ViewProviderSuppressibleExtension,
+                                              public ViewProviderFemAnalysisFeatureExtension
 {
-    PROPERTY_HEADER_WITH_OVERRIDE(FemGui::ViewProviderFemConstraint);
+    PROPERTY_HEADER_WITH_EXTENSIONS(FemGui::ViewProviderFemConstraint);
 
 public:
     /// Constructor

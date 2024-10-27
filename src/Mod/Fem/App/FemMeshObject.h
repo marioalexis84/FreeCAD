@@ -26,6 +26,7 @@
 #include <App/FeaturePython.h>
 #include <App/GeoFeature.h>
 
+#include "FemAnalysisFeatureExtension.h"
 #include "FemMesh.h"
 #include "FemMeshProperty.h"
 
@@ -33,9 +34,9 @@
 namespace Fem
 {
 
-class FemExport FemMeshObject: public App::GeoFeature
+class FemExport FemMeshObject: public App::GeoFeature, public FemAnalysisFeatureExtension
 {
-    PROPERTY_HEADER_WITH_OVERRIDE(Fem::FemMeshObject);
+    PROPERTY_HEADER_WITH_EXTENSIONS(Fem::FemMeshObject);
 
 public:
     /// Constructor

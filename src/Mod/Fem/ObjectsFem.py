@@ -480,6 +480,7 @@ def makeMeshBoundaryLayer(doc, base_mesh, name="MeshBoundaryLayer"):
     tmplist = base_mesh.MeshBoundaryLayerList
     tmplist.append(obj)
     base_mesh.MeshBoundaryLayerList = tmplist
+    obj.Analysis = base_mesh.Analysis
     if FreeCAD.GuiUp:
         from femviewprovider import view_mesh_boundarylayer
 
@@ -516,6 +517,7 @@ def makeMeshGroup(doc, base_mesh, use_label=False, name="MeshGroup"):
     tmplist = base_mesh.MeshGroupList
     tmplist.append(obj)
     base_mesh.MeshGroupList = tmplist
+    obj.Analysis = base_mesh.Analysis
     if FreeCAD.GuiUp:
         from femviewprovider import view_mesh_group
 
@@ -559,6 +561,7 @@ def makeMeshRegion(doc, base_mesh, element_length=0.0, name="MeshRegion"):
     tmplist = base_mesh.MeshRegionList
     tmplist.append(obj)
     base_mesh.MeshRegionList = tmplist
+    obj.Analysis = base_mesh.Analysis
     if FreeCAD.GuiUp:
         from femviewprovider import view_mesh_region
 

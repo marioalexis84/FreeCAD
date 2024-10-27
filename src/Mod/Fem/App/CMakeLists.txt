@@ -114,6 +114,8 @@ SET(FemBase_SRCS
     FemMeshShapeNetgenObject.h
     FemAnalysis.cpp
     FemAnalysis.h
+    FemAnalysisFeatureExtension.cpp
+    FemAnalysisFeatureExtension.h
     FemMesh.cpp
     FemMesh.h
     FemResultObject.cpp

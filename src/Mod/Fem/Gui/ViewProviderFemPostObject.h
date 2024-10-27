@@ -35,6 +35,9 @@
 #include <vtkSmartPointer.h>
 #include <vtkVertexGlyphFilter.h>
 
+#include "ViewProviderAnalysisFeatureExtension.h"
+
+
 class SoIndexedPointSet;
 class vtkUnsignedCharArray;
 class vtkDataArray;
@@ -69,9 +72,10 @@ namespace FemGui
 class TaskDlgPost;
 
 class FemGuiExport ViewProviderFemPostObject: public Gui::ViewProviderDocumentObject,
+                                              public ViewProviderFemAnalysisFeatureExtension,
                                               public Base::Observer<int>
 {
-    PROPERTY_HEADER_WITH_OVERRIDE(FemGui::ViewProviderFemPostObject);
+    PROPERTY_HEADER_WITH_EXTENSIONS(FemGui::ViewProviderFemPostObject);
 
 public:
     /// constructor.

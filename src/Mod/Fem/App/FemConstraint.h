@@ -32,6 +32,8 @@
 #include <Mod/Fem/FemGlobal.h>
 #include <App/SuppressibleExtension.h>
 
+#include "FemAnalysisFeatureExtension.h"
+
 
 namespace Fem
 {
@@ -58,9 +60,11 @@ namespace Fem
  *  and @ref Scale and the protected method @ref getPoints(points&, normals&,
  *  scale&).
  */
-class FemExport Constraint: public App::DocumentObject, public App::SuppressibleExtension
+class FemExport Constraint: public App::DocumentObject,
+                            public App::SuppressibleExtension,
+                            public FemAnalysisFeatureExtension
 {
-    PROPERTY_HEADER_WITH_OVERRIDE(Fem::Constraint);
+    PROPERTY_HEADER_WITH_EXTENSIONS(Fem::Constraint);
 
 public:
     Constraint();

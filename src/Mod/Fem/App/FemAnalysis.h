@@ -75,6 +75,8 @@ public:
         return "FemGui::ViewProviderFemAnalysis";
     }
 
+    bool allowObject(App::DocumentObject* obj) override;
+
 protected:
     /**
      * @brief Retain compatibility with old "Member" property.

@@ -28,6 +28,9 @@
 #include <Gui/ViewProviderFeaturePython.h>
 #include <Mod/Fem/FemGlobal.h>
 
+#include "ViewProviderAnalysisFeatureExtension.h"
+
+
 class SoCoordinate3;
 class SoDrawStyle;
 class SoIndexedFaceSet;
@@ -55,9 +58,10 @@ public:
                     int MaxFacesShowInner) const;
 };
 
-class FemGuiExport ViewProviderFemMesh: public Gui::ViewProviderGeometryObject
+class FemGuiExport ViewProviderFemMesh: public Gui::ViewProviderGeometryObject,
+                                        public ViewProviderFemAnalysisFeatureExtension
 {
-    PROPERTY_HEADER_WITH_OVERRIDE(FemGui::ViewProviderFemMesh);
+    PROPERTY_HEADER_WITH_EXTENSIONS(FemGui::ViewProviderFemMesh);
 
 public:
     /// constructor.

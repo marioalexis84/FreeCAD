@@ -39,6 +39,7 @@
 #include "DlgSettingsFemZ88Imp.h"
 #include "PropertyFemMeshItem.h"
 #include "ViewProviderAnalysis.h"
+#include "ViewProviderAnalysisFeatureExtension.h"
 #include "ViewProviderFemMesh.h"
 #include "ViewProviderFemMeshShape.h"
 #include "ViewProviderFemMeshShapeNetgen.h"
@@ -111,6 +112,9 @@ PyMOD_INIT_FUNC(FemGui)
     // clang-format off
     // addition objects
     FemGui::Workbench                                           ::init();
+
+    FemGui::ViewProviderFemAnalysisFeatureExtension             ::init();
+    FemGui::ViewProviderFemAnalysisFeatureExtensionPython       ::init();
 
     FemGui::ViewProviderFemAnalysis                             ::init();
     FemGui::ViewProviderFemAnalysisPython                       ::init();

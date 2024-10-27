@@ -335,8 +335,10 @@ class CommandManager:
         FreeCAD.ActiveDocument.openTransaction(f"Create Fem{objtype}")
         FreeCADGui.addModule("ObjectsFem")
         FreeCADGui.doCommand(
-            "ObjectsFem.make{}("
-            "FreeCAD.ActiveDocument, FreeCAD.ActiveDocument.{})".format(objtype, self.selobj.Name)
+            "FemGui.getActiveAnalysis().addObject(ObjectsFem."
+            "make{}(FreeCAD.ActiveDocument, FreeCAD.ActiveDocument.{}))".format(
+                objtype, self.selobj.Name
+            )
         )
         FreeCADGui.Selection.clearSelection()
         FreeCADGui.doCommand(
