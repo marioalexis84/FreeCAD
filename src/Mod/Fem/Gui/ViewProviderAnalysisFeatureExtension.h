@@ -44,10 +44,8 @@ public:
     ViewProviderFemAnalysisFeatureExtension();
     ~ViewProviderFemAnalysisFeatureExtension() override;
 
-    std::vector<App::DocumentObject*> extensionClaimChildren() const override;
-    //
-    // protected:
-    //    void onExtendedDocumentRestored() override;
+    //    std::vector<App::DocumentObject*> extensionClaimChildren() const override;
+    void extensionUpdateData(const App::Property* prop) override;
 };
 
 using ViewProviderFemAnalysisFeatureExtensionPython =

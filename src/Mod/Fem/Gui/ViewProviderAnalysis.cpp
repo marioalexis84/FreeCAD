@@ -144,29 +144,32 @@ bool ViewProviderFemAnalysis::doubleClicked()
 
 std::vector<App::DocumentObject*> ViewProviderFemAnalysis::claimChildren() const
 {
-    auto group = Gui::ViewProviderDocumentObjectGroup::claimChildren();
-    // remove objects claimed by childs
-    std::vector<App::DocumentObject*> claimed;
-    for (auto item : group) {
-        Gui::ViewProvider* vp = Gui::Application::Instance->getViewProvider(item);
-        if (vp) {
-            auto childs = vp->claimChildren();
-            std::remove_copy(childs.begin(),
-                             childs.end(),
-                             std::inserter(claimed, claimed.begin()),
-                             nullptr);
-        }
-    }
-
-    std::vector<App::DocumentObject*> result;
-    std::remove_copy_if(group.begin(),
-                        group.end(),
-                        std::inserter(result, result.begin()),
-                        [&](App::DocumentObject* obj) {
-                            return std::find(claimed.begin(), claimed.end(), obj) != claimed.end();
-                        });
-
-    return result;
+    return Gui::ViewProviderDocumentObjectGroup::claimChildren();
+    //    auto group = Gui::ViewProviderDocumentObjectGroup::claimChildren();
+    //    // remove objects claimed by childs
+    //    std::vector<App::DocumentObject*> claimed;
+    //    for (auto item : group) {
+    //        printf("ana claim: %s\n", item->getNameInDocument());
+    //        Gui::ViewProvider* vp = Gui::Application::Instance->getViewProvider(item);
+    //        if (vp) {
+    //            auto childs = vp->claimChildren();
+    //            std::remove_copy(childs.begin(),
+    //                             childs.end(),
+    //                             std::inserter(claimed, claimed.begin()),
+    //                             nullptr);
+    //        }
+    //    }
+    //
+    //    std::vector<App::DocumentObject*> result;
+    //    std::remove_copy_if(group.begin(),
+    //                        group.end(),
+    //                        std::inserter(result, result.begin()),
+    //                        [&](App::DocumentObject* obj) {
+    //                            return std::find(claimed.begin(), claimed.end(), obj) !=
+    //                            claimed.end();
+    //                        });
+    // for (auto i : result) {printf("res claim: %s\n", i->getNameInDocument());}
+    //    return result;
 }
 
 std::vector<std::string> ViewProviderFemAnalysis::getDisplayModes() const

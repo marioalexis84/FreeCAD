@@ -39,28 +39,46 @@ ViewProviderFemAnalysisFeatureExtension::ViewProviderFemAnalysisFeatureExtension
 
 ViewProviderFemAnalysisFeatureExtension::~ViewProviderFemAnalysisFeatureExtension() = default;
 
-std::vector<App::DocumentObject*>
-ViewProviderFemAnalysisFeatureExtension::extensionClaimChildren() const
+// std::vector<App::DocumentObject*>
+// ViewProviderFemAnalysisFeatureExtension::extensionClaimChildren() const
+//{
+//         App::DocumentObject* objExt = getExtendedViewProvider()->getObject();
+//         App::DocumentObject* analysis = nullptr;
+//         if (objExt->hasExtension(Fem::FemAnalysisFeatureExtension::getExtensionClassTypeId())) {
+//             analysis =
+//             objExt->getExtension<Fem::FemAnalysisFeatureExtension>()->Analysis.getValue();
+//         }
+//
+//     printf("aca1: %s\n", objExt->getNameInDocument());
+////    auto vpClaimed = getExtendedViewProvider()->claimChildren();
+//    printf("aca2\n");
+//
+//    //    for (auto obj : vpClaimed) {
+//    //        if (obj->hasExtension(Fem::FemAnalysisFeatureExtension::getExtensionClassTypeId()))
+//    {
+//    // obj->getExtension<Fem::FemAnalysisFeatureExtension>()->Analysis.setValue(analysis);
+//    //        }
+//    //    }
+//    return std::vector<App::DocumentObject*> {};
+////    return vpClaimed;
+//}
+
+void ViewProviderFemAnalysisFeatureExtension::extensionUpdateData(const App::Property* prop)
 {
-    //    App::DocumentObject* objExt = getExtendedViewProvider()->getObject();
-    //    App::DocumentObject* analysis = nullptr;
-    //    if (objExt->hasExtension(Fem::FemAnalysisFeatureExtension::getExtensionClassTypeId())) {
-    //        analysis =
-    //        objExt->getExtension<Fem::FemAnalysisFeatureExtension>()->Analysis.getValue();
-    //    }
-    //
-    printf("aca1\n");
-    auto vpClaimed = getExtendedViewProvider()->claimChildren();
-    printf("aca2\n");
+    auto vp = getExtendedViewProvider();
 
-    //    for (auto obj : vpClaimed) {
-    //        if (obj->hasExtension(Fem::FemAnalysisFeatureExtension::getExtensionClassTypeId())) {
-    //            obj->getExtension<Fem::FemAnalysisFeatureExtension>()->Analysis.setValue(analysis);
-    //        }
-    //    }
-
-    return vpClaimed;
+    if (prop == &(vp->getObject()->getExtension<Fem::FemAnalysisFeatureExtension>()->Analysis)) {
+        auto childs = vp->claimChildren();
+        for (auto item : childs) {
+            if (item->hasExtension(Fem::FemAnalysisFeatureExtension::getExtensionClassTypeId())) {
+                item->getExtension<Fem::FemAnalysisFeatureExtension>()->Analysis.setValue(
+                    static_cast<const App::PropertyLink*>(prop)->getValue());
+            }
+        }
+    }
+    printf("prop: %s\n", prop->getName());
 }
+
 
 namespace Gui
 {

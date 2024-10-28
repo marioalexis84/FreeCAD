@@ -49,6 +49,7 @@ public:
 
 protected:
     void onExtendedDocumentRestored() override;
+    void extensionOnChanged(const App::Property* prop) override;
 };
 
 template<typename ExtensionT>

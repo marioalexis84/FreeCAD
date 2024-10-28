@@ -57,6 +57,11 @@ void FemAnalysisFeatureExtension::onExtendedDocumentRestored()
     }
 }
 
+void FemAnalysisFeatureExtension::extensionOnChanged(const App::Property* prop)
+{
+    App::DocumentObjectExtension::extensionOnChanged(prop);
+}
+
 namespace App
 {
 
