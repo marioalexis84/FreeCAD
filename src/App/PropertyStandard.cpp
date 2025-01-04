@@ -1926,14 +1926,17 @@ PyObject* PropertyMap::getPyObject()
 
 void PropertyMap::setPyObject(PyObject* value)
 {
-    if (PyDict_Check(value)) {
-
+    if (PyMapping_Check(value)) {
+printf("aca\n");
         std::map<std::string, std::string> values;
         // get key and item list
-        PyObject* keyList = PyDict_Keys(value);
+        PyObject* keyList = PyMapping_Keys(value);
+printf("aca2\n");
 
-        PyObject* itemList = PyDict_Values(value);
+        PyObject* itemList = PyMapping_Values(value);
+printf("type: %s\n",Py_TYPE(keyList)->tp_name);
         Py_ssize_t nSize = PyList_Size(keyList);
+printf("aca3\n");
 
         for (Py_ssize_t i = 0; i < nSize; ++i) {
 
@@ -1944,7 +1947,7 @@ void PropertyMap::setPyObject(PyObject* value)
                 keyStr = PyUnicode_AsUTF8(key);
             }
             else {
-                std::string error("type of the key need to be unicode or string, not");
+                std::string error("type of the key need to be unicode or string, not ");
                 error += key->ob_type->tp_name;
                 throw Base::TypeError(error);
             }

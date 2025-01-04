@@ -30,6 +30,7 @@ __url__ = "https://www.freecad.org"
 #  \brief reinforced object
 
 from . import material_common
+from .base_fempythonobject import _PropHelper
 
 
 class MaterialReinforced(material_common.MaterialCommon):
@@ -42,10 +43,39 @@ class MaterialReinforced(material_common.MaterialCommon):
     def __init__(self, obj):
         super().__init__(obj)
 
-        obj.addProperty(
-            "App::PropertyMap", "Reinforcement", "Composites", "Reinforcement material properties"
-        )
-        obj.setPropertyStatus("Reinforcement", "LockDynamic")
-
         # overwrite Category enumeration
         obj.Category = ["Solid"]
+
+    def _get_properties(self):
+        prop = super()._get_properties()
+
+        prop.append(
+            _PropHelper(
+                type="App::PropertyMap",
+                name="Reinforcement",
+                group="Composites",
+                doc="Reinforcement material properties",
+                value={},
+            )
+        )
+        prop.append(
+            _PropHelper(
+                type="App::PropertyString",
+                name="ReinforcementUUID",
+                group="Composites",
+                doc="Reinforcement material UUID",
+                hidden=True,
+                value="",
+            )
+        )
+
+        return prop
+
+    def onDocumentRestored(self, obj):
+        super().onDocumentRestored(obj)
+
+        # try update Reinforcement UUID from reinforcement
+        if not obj.ReinforcementUUID:
+            obj.ReinforcementUUID = self._get_material_uuid(
+                obj.Reinforcement, obj.ReinforcementUUID
+            )

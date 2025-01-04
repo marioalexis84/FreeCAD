@@ -210,5 +210,11 @@
         <UserDocu>Set the value associated with the property</UserDocu>
       </Documentation>
     </Methode>
+    <Sequence
+        sq_length="true"
+        sq_item="true"
+        sq_contains="true"
+        mp_subscript="true">
+    </Sequence>
   </PythonExport>
 </GenerateModel>

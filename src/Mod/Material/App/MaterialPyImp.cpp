@@ -553,3 +553,28 @@ PyObject* MaterialPy::setAppearanceValue(PyObject* args)
     Py_INCREF(Py_None);
     return Py_None;
 }
+
+Py_ssize_t MaterialPy::sequence_length(PyObject *self)
+{
+    return static_cast<MaterialPy*>(self)->getProperties().size();
+}
+
+PyObject* MaterialPy::sequence_item(PyObject* self, Py_ssize_t item)
+{
+    Py::List list = static_cast<MaterialPy*>(self)->getProperties().keys();
+
+    return Py::new_reference_to(list.getItem(item));
+}
+
+int MaterialPy::sequence_contains(PyObject* self, PyObject* key)
+{
+    return PyDict_Contains(static_cast<MaterialPy*>(self)->getProperties().ptr(), key);
+}
+
+PyObject* MaterialPy::mapping_subscript(PyObject* self, PyObject* key)
+{
+    Py::Dict dict = static_cast<MaterialPy*>(self)->getProperties();
+
+    return Py::new_reference_to(dict.getItem(Py::Object(key)));
+}
+

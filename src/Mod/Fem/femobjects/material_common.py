@@ -30,7 +30,9 @@ __url__ = "https://www.freecad.org"
 #  \ingroup FEM
 #  \brief material common object
 
-from FreeCAD import Base
+from FreeCAD import Base, Units
+import Materials
+
 from . import base_fempythonobject
 
 _PropHelper = base_fempythonobject._PropHelper
@@ -94,6 +96,45 @@ class MaterialCommon(base_fempythonobject.BaseFemPythonObject):
             if prop.name == "References":
                 # change References to App::PropertyLinkSubListGlobal
                 prop.handle_change_type(obj, old_type="App::PropertyLinkSubList")
+
+        # try update UUID from material
+        if not obj.UUID:
+            obj.UUID = self._get_material_uuid(obj.Material, obj.UUID)
+
+    def _get_material_uuid(self, material, uuid):
+        material_manager = Materials.MaterialManager()
+        if uuid:
+            try:
+                material_manager.getMaterial(uuid)
+                return uuid
+            except:
+                return ""
+
+        if not material:
+            return ""
+
+        for a_mat in material_manager.Materials:
+            unmatched_item = True
+            a_mat_prop = material_manager.getMaterial(a_mat).Properties
+            for it in material:
+                if it in a_mat_prop:
+                    # first try to compare quantities
+                    try:
+                        unmatched_item = Units.Quantity(material[it]) != Units.Quantity(
+                            a_mat_prop[it]
+                        )
+                    except ValueError:
+                        # if there is no quantity, compare values directly
+                        unmatched_item = material[it] != a_mat_prop[it]
+
+                if unmatched_item:
+                    break
+
+            if not unmatched_item:
+                # all material items are found in a_mat
+                return a_mat
+
+        return ""
 
         """
         Some remarks to the category. Not finished, thus to be continued.
