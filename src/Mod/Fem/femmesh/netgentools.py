@@ -162,12 +162,21 @@ def run_netgen(
             elif t == "Solid":
                 shape.solids.solids[n - 1].maxh = l
 
+    if params["autozrefine"]:
+        for sol in shape.solids:
+            bottom = sol.faces.Min(occ.Z)
+            top = sol.faces.Max(occ.Z)
+            bottom.Identify(top, "bot-top", type=occ.IdentificationType.CLOSESURFACES)
+
     with ngcore.TaskManager():
         meshing.SetMessageImportance(verbosity)
         geom = occ.OCCGeometry(shape)
         if heal:
             geom.Heal()
         mesh = geom.GenerateMesh(mp=meshing.MeshingParameters(**params))
+
+        if params["autozrefine"]:
+            mesh.ZRefine("bot-top", [0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9])
 
     result = {{
         "coords": [],
