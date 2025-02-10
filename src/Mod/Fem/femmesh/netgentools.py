@@ -112,6 +112,9 @@ class NetgenTools:
             "result_file": self.result_file,
             "mesh_region": self.get_mesh_region(),
             "verbosity": self.param_grp.GetInt("LogVerbosity", 2),
+            "zrefine": self.obj.ZRefine,
+            "zrefine_size": self.obj.ZRefineSize,
+            "zrefine_direction": tuple(self.obj.ZRefineDirection),
         }
 
         with open(self.script_file, "w") as file:
@@ -146,6 +149,9 @@ def run_netgen(
     result_file,
     mesh_region,
     verbosity,
+    zrefine,
+    zrefine_size,
+    zrefine_direction,
 ):
     geom = occ.OCCGeometry(brep_file)
     ngcore.SetNumThreads(threads)
@@ -162,10 +168,10 @@ def run_netgen(
             elif t == "Solid":
                 shape.solids.solids[n - 1].maxh = l
 
-    if params["autozrefine"]:
+    if zrefine in ["Custom", "Regular"]:
         for sol in shape.solids:
-            bottom = sol.faces.Min(occ.Z)
-            top = sol.faces.Max(occ.Z)
+            bottom = sol.faces.Min(zrefine_direction)
+            top = sol.faces.Max(zrefine_direction)
             bottom.Identify(top, "bot-top", type=occ.IdentificationType.CLOSESURFACES)
 
     with ngcore.TaskManager():
@@ -175,8 +181,10 @@ def run_netgen(
             geom.Heal()
         mesh = geom.GenerateMesh(mp=meshing.MeshingParameters(**params))
 
-        if params["autozrefine"]:
-            mesh.ZRefine("bot-top", [0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9])
+        if zrefine == "Regular":
+            mesh.ZRefine("bot-top", np.arange(zrefine_size[0], 1, zrefine_size[0]))
+        elif zrefine == "Custom":
+            mesh.ZRefine("bot-top", zrefine_size)
 
     result = {{
         "coords": [],
@@ -326,7 +334,6 @@ run_netgen(**{kwds})
             "try_hexes": self.obj.TryHexes,
             "inverttets": self.obj.InvertTets,
             "inverttrigs": self.obj.InvertTrigs,
-            "autozrefine": self.obj.AutoZRefine,
             "parallel_meshing": self.obj.ParallelMeshing,
             "nthreads": self.param_grp.GetInt("NumOfThreads", QThread.idealThreadCount()),
             "closeedgefac": self.obj.CloseEdgeFactor,
