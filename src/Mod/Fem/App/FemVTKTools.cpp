@@ -1036,20 +1036,54 @@ void FemVTKTools::exportFreeCADResult(const App::DocumentObject* result,
 namespace FRDReader
 {
 
+enum class ElementType
+{
+    Edge = 11,
+    QuadEdge = 12,
+    Triangle = 7,
+    QuadTriangle = 8,
+    Quadrangle = 9,
+    QuadQuadrangle = 10,
+    Tetra = 3,
+    QuadTetra = 6,
+    Hexa = 1,
+    QuadHexa = 4,
+    Penta = 2,
+    QuadPenta = 5
+};
+
+enum class AnalysisType
+{
+    Static = 0,
+    TimeStep = 1,
+    Frequency = 2,
+    LoadStep = 3,
+    UserNamed = 4
+};
+
+// value format indicator
+enum class Indicator
+{
+    Short = 0,
+    Long = 1,
+    // BinaryFloat = 2, not used
+    // BinaryDouble = 3 not used
+};
+
 // number of nodes per CalculiX element type: {type, nodes}
-std::map<int, unsigned int> mapCcxTypeNodes = {
-    {11, 2},
-    {12, 3},
-    {7, 3},
-    {8, 6},
-    {9, 4},
-    {10, 8},
-    {3, 4},
-    {6, 10},
-    {1, 8},
-    {4, 20},
-    {2, 6},
-    {5, 15},
+std::map<ElementType, unsigned int> mapCcxTypeNodes = {
+    {ElementType::Edge, 2},
+    {ElementType::QuadEdge, 3},
+    {ElementType::Triangle, 3},
+    {ElementType::QuadTriangle, 6},
+    {ElementType::Quadrangle, 4},
+    {ElementType::QuadQuadrangle, 8},
+    {ElementType::Tetra, 4},
+    {ElementType::QuadTetra, 10},
+    {ElementType::Hexa, 8},
+    {ElementType::QuadHexa, 20},
+    {ElementType::Penta, 6},
+    {ElementType::QuadPenta, 15},
 };
 
 // map CalculiX nodes order to Vtk order
@@ -1118,54 +1152,54 @@ void addCell(vtkSmartPointer<vtkCellArray>& cellArray, const std::vector<int>& t
 void fillCell(vtkSmartPointer<vtkCellArray>& cellArray,
               std::vector<int>& topoElem,
               std::vector<int>& vtkType,
-              int elemType)
+              ElementType elemType)
 {
     switch (elemType) {
-        case 1:
+        case ElementType::Hexa:
             addCell<vtkHexahedron>(cellArray, topoElem);
             vtkType.emplace_back(VTK_HEXAHEDRON);
             break;
-        case 2:
+        case ElementType::Penta:
             addCell<vtkWedge>(cellArray, topoElem);
             vtkType.emplace_back(VTK_WEDGE);
             break;
-        case 3:
+        case ElementType::Tetra:
             addCell<vtkTetra>(cellArray, topoElem);
             vtkType.emplace_back(VTK_TETRA);
             break;
-        case 4:
+        case ElementType::QuadHexa:
             addCell<vtkQuadraticHexahedron>(cellArray, topoElem);
             vtkType.emplace_back(VTK_QUADRATIC_HEXAHEDRON);
             break;
-        case 5:
+        case ElementType::QuadPenta:
             addCell<vtkQuadraticWedge>(cellArray, topoElem);
             vtkType.emplace_back(VTK_QUADRATIC_WEDGE);
             break;
-        case 6:
+        case ElementType::QuadTetra:
             addCell<vtkQuadraticTetra>(cellArray, topoElem);
             vtkType.emplace_back(VTK_QUADRATIC_TETRA);
             break;
-        case 7:
+        case ElementType::Triangle:
             addCell<vtkTriangle>(cellArray, topoElem);
             vtkType.emplace_back(VTK_TRIANGLE);
             break;
-        case 8:
+        case ElementType::QuadTriangle:
             addCell<vtkQuadraticTriangle>(cellArray, topoElem);
             vtkType.emplace_back(VTK_QUADRATIC_TRIANGLE);
             break;
-        case 9:
+        case ElementType::Quadrangle:
             addCell<vtkQuad>(cellArray, topoElem);
             vtkType.emplace_back(VTK_QUAD);
             break;
-        case 10:
+        case ElementType::QuadQuadrangle:
             addCell<vtkQuadraticQuad>(cellArray, topoElem);
             vtkType.emplace_back(VTK_QUADRATIC_QUAD);
             break;
-        case 11:
+        case ElementType::Edge:
             addCell<vtkLine>(cellArray, topoElem);
             vtkType.emplace_back(VTK_LINE);
             break;
-        case 12:
+        case ElementType::QuadEdge:
             addCell<vtkQuadraticEdge>(cellArray, topoElem);
             vtkType.emplace_back(VTK_QUADRATIC_EDGE);
             break;
@@ -1176,22 +1210,42 @@ struct FRDResultInfo
 {
     double value;
     long numNodes;
-    int analysisType;
+    AnalysisType analysisType;
     int step;
-    int indicator;
+    Indicator indicator;
+
+    bool operator==(const FRDResultInfo& other) const
+    {
+        return (this->step == other.step) && (this->analysisType == other.analysisType);
+    }
+    bool operator<(const FRDResultInfo& other) const
+    {
+        if (this->step < other.step) {
+            return true;
+        }
+        else if (this->step > other.step) {
+            return false;
+        }
+        else if (static_cast<int>(this->analysisType) < static_cast<int>(other.analysisType)) {
+            return true;
+        }
+        else {
+            return false;
+        }
+    }
 };
 
 // get number of digits from format indicator
-int getDigits(int indicator)
+int getDigits(Indicator indicator)
 {
     int digits = 0;
-    if (indicator == 0) {
-        // short
-        digits = 5;
-    }
-    else if (indicator == 1) {
-        // long
-        digits = 10;
+    switch (indicator) {
+        case Indicator::Short:
+            digits = 5;
+            break;
+        case Indicator::Long:
+            digits = 10;
+            break;
     }
 
     return digits;
@@ -1232,7 +1286,7 @@ readNodes(std::ifstream& ifstr, const std::string& lines, vtkSmartPointer<vtkPoi
 
     sub = sub.substr(12 + 37);
     valueFromLine(sub.begin(), 1, indicator);
-    int digits = getDigits(indicator);
+    int digits = getDigits(static_cast<Indicator>(indicator));
 
     points->SetNumberOfPoints(numNodes);
 
@@ -1286,7 +1340,7 @@ std::vector<int> readElements(std::ifstream& ifstr,
 
     sub = sub.substr(12 + 37);
     valueFromLine(sub.begin(), 1, indicator);
-    int digits = getDigits(indicator);
+    int digits = getDigits(static_cast<Indicator>(indicator));
     while (elemID < numElem && std::getline(ifstr, line)) {
         std::string_view view {line};
         if (view.rfind(keyCodeType, 0) == 0) {
@@ -1309,8 +1363,8 @@ std::vector<int> readElements(std::ifstream& ifstr,
             }
 
             // add cell to cellArray
-            if (topoElem.size() == mapCcxTypeNodes[info[0]]) {
-                fillCell(cellArray, topoElem, vtkType, info[0]);
+            if (topoElem.size() == mapCcxTypeNodes[static_cast<ElementType>(info[0])]) {
+                fillCell(cellArray, topoElem, vtkType, static_cast<ElementType>(info[0]));
                 topoElem.clear();
                 mapElem[elem] = elemID++;
             }
@@ -1342,13 +1396,17 @@ void readResultInfo(std::ifstream& ifstr, const std::string& lines, FRDResultInf
     valueFromLine(sub.begin(), 12, info.numNodes);
 
     sub = sub.substr(12 + 20);
-    valueFromLine(sub.begin(), 2, info.analysisType);
+    int anType;
+    valueFromLine(sub.begin(), 2, anType);
+    info.analysisType = static_cast<AnalysisType>(anType);
 
     sub = sub.substr(2);
     valueFromLine(sub.begin(), 5, info.step);
 
     sub = sub.substr(5 + 10);
-    valueFromLine(sub.begin(), 2, info.indicator);
+    int ind;
+    valueFromLine(sub.begin(), 2, ind);
+    info.indicator = static_cast<Indicator>(ind);
 }
 
 // read result from nodal result block and add result array to grid
@@ -1477,7 +1535,7 @@ void readResults(std::ifstream& ifstr,
                 }
             }
             catch (const std::out_of_range& ex) {
-                Base::Console().Warning("Invalid node: %d\n", node);
+                //        Base::Console().Warning("Invalid node: %d\n", node);
             }
             ++countNodes;
         }
@@ -1526,7 +1584,8 @@ vtkSmartPointer<vtkMultiBlockDataSet> readFRD(std::ifstream& ifstr)
     auto cells = vtkSmartPointer<vtkCellArray>::New();
     auto multiBlock = vtkSmartPointer<vtkMultiBlockDataSet>::New();
     vtkSmartPointer<vtkUnstructuredGrid> grid;
-    std::map<std::pair<int, int>, vtkSmartPointer<vtkUnstructuredGrid>> grids;
+    //    std::map<std::pair<int, AnalysisType>, vtkSmartPointer<vtkUnstructuredGrid>> grids;
+    std::map<FRDResultInfo, vtkSmartPointer<vtkUnstructuredGrid>> grids;
     std::string line;
     std::map<int, int> mapNodes;
     std::vector<int> cellTypes;
@@ -1554,12 +1613,12 @@ vtkSmartPointer<vtkMultiBlockDataSet> readFRD(std::ifstream& ifstr)
             // read result info block
             FRDResultInfo info;
             readResultInfo(ifstr, line, info);
-            auto it = grids.find(std::pair<int, int>(info.step, info.analysisType));
+            auto it = grids.find(info);
             if (it == grids.end()) {
                 grid = vtkSmartPointer<vtkUnstructuredGrid>::New();
                 grid->SetPoints(points);
                 grid->SetCells(cellTypes.data(), cells);
-                grids[std::pair<int, int>(info.step, info.analysisType)] = grid;
+                grids[info] = grid;
             }
             else {
                 grid = (*it).second;
@@ -1574,6 +1633,9 @@ vtkSmartPointer<vtkMultiBlockDataSet> readFRD(std::ifstream& ifstr)
     for (const auto& g : grids) {
         multiBlock->SetBlock(i, g.second);
         ++i;
+        printf("tuples: %lld\tcomponents:%d\n",
+               g.second->GetFieldData()->GetNumberOfTuples(),
+               g.second->GetFieldData()->GetNumberOfComponents());
     }
 
     // save points and elements even without results
