@@ -1061,6 +1061,12 @@ enum class AnalysisType
     UserNamed = 4
 };
 
+std::map<AnalysisType, std::string> mapAnalysisTypeToStr = {{AnlysisType::Static, "Static"},
+                                                            {AnlysisType::TimeStep, "TimeStep"},
+                                                            {AnlysisType::Frequency, "Frequency"},
+                                                            {AnlysisType::LoadStep, "LoadStep"},
+                                                            {AnlysisType::UserNamed, "User"}};
+
 // value format indicator
 enum class Indicator
 {
@@ -1584,8 +1590,10 @@ vtkSmartPointer<vtkMultiBlockDataSet> readFRD(std::ifstream& ifstr)
     auto cells = vtkSmartPointer<vtkCellArray>::New();
     auto multiBlock = vtkSmartPointer<vtkMultiBlockDataSet>::New();
     vtkSmartPointer<vtkUnstructuredGrid> grid;
+    vtkSmartPointer<vtkMultiBlockDataSet> block;
     //    std::map<std::pair<int, AnalysisType>, vtkSmartPointer<vtkUnstructuredGrid>> grids;
-    std::map<FRDResultInfo, vtkSmartPointer<vtkUnstructuredGrid>> grids;
+    std::map<int, std::map<FRDResultInfo, vtkSmartPointer<vtkUnstructuredGrid>>> grids;
+    std::map<AnalysisType, vtkSmartPointer<vtkMultiBlockDataSet>> blocks;
     std::string line;
     std::map<int, int> mapNodes;
     std::vector<int> cellTypes;
@@ -1613,15 +1621,18 @@ vtkSmartPointer<vtkMultiBlockDataSet> readFRD(std::ifstream& ifstr)
             // read result info block
             FRDResultInfo info;
             readResultInfo(ifstr, line, info);
-            auto it = grids.find(info);
+            auto it = grids.find(info.step);
             if (it == grids.end()) {
+                block = vtkSmartPointer<vtkMultiBlockDataSet>::New();
                 grid = vtkSmartPointer<vtkUnstructuredGrid>::New();
                 grid->SetPoints(points);
                 grid->SetCells(cellTypes.data(), cells);
-                grids[info] = grid;
+                grids[info.step] = std::pair(info, grid);
+                blocks[info.analysisType] = block;
             }
             else {
-                grid = (*it).second;
+                grid = (*it).second.second;
+                block = blocks[info.analysisType];
             }
             // read result entries and node results
             readResults(ifstr, line, mapNodes, info, grid);
