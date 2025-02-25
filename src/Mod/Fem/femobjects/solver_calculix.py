@@ -41,6 +41,8 @@ class SolverCalculiX(base_fempythonobject.BaseFemPythonObject, _BaseSolverCalcul
     def __init__(self, obj):
         super().__init__(obj)
         self.add_attributes(obj)
+        obj.addProperty("App::PropertyEnumeration", "ElectromagneticMode", "Fem")
+        obj.ElectromagneticMode = ["electrostatic"]
 
     def onDocumentRestored(self, obj):
         self.on_restore_of_document(obj)
