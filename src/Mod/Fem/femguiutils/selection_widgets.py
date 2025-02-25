@@ -594,6 +594,7 @@ class FemSelectionObserver:
         # FreeCAD.Console.PrintMessage(print_message + "!\n")
 
     def addSelection(self, docName, objName, sub, pos):
+        print("AGREGAR", objName, sub)
         selected_object = FreeCAD.getDocument(docName).getObject(objName)  # get the obj objName
         self.added_obj = (selected_object, sub)
         # on double click on a vertex of a solid sub is None and obj is the solid

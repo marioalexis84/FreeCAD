@@ -282,6 +282,7 @@ class AnalysisMember:
         self.cons_temperature = self.get_several_member("Fem::ConstraintTemperature")
         self.cons_tie = self.get_several_member("Fem::ConstraintTie")
         self.cons_transform = self.get_several_member("Fem::ConstraintTransform")
+        self.cons_electrostatic = self.get_several_member("Fem::ConstraintElectrostaticPotential")
 
     def get_several_member(self, t):
         return get_several_member(self.analysis, t)
