@@ -69,20 +69,15 @@ def write_constraint(f, femobj, pot_obj, ccxwriter):
     NumberOfNodes = len(femobj["Nodes"])
     if pot_obj.BoundaryCondition == "Dirichlet":
         f.write("*BOUNDARY\n")
-        f.write(
-            "{},11,11,{:.13G}\n".format(
-                pot_obj.Name, FreeCAD.Units.Quantity(pot_obj.Potential.getValueAs("mV").Value)
-            )
-        )
+        f.write("{},11,11,{:.13G}\n".format(pot_obj.Name, pot_obj.Potential.getValueAs("mV").Value))
         f.write("\n")
     elif pot_obj.BoundaryCondition == "Neumann":
         f.write("*CFLUX\n")
         # CFLUX has to be specified in mW
         f.write(
-            "{},11,{:13G}\n".format(
+            "{},11,{:.13G}\n".format(
                 pot_obj.Name,
-                FreeCAD.Units.Quantity(pot_obj.SurfaceChargeDensity.getValueAs("A*s/mm^2").Value)
-                / NumberOfNodes,
+                pot_obj.SurfaceChargeDensity.getValueAs("A*s/mm^2").Value / NumberOfNodes,
             )
         )
         f.write("\n")
