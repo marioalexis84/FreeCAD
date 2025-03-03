@@ -776,7 +776,7 @@ FemPostContoursFilter::FemPostContoursFilter()
     m_contours->ComputeScalarsOn();
     smoothExtension.getFilter()->SetInputConnection(m_contours->GetOutputPort());
     contours.source = m_contours;
-    contours.target = m_contours;  // smoothExtension.getFilter();
+    contours.target = smoothExtension.getFilter();
     addFilterPipeline(contours, "contours");
     setActiveFilterPipeline("contours");
 
@@ -794,20 +794,20 @@ DocumentObjectExecReturn* FemPostContoursFilter::execute()
     }
 
     // recalculate the filter
-    auto returnObject = Fem::FemPostFilter::execute();
+    //    auto returnObject = Fem::FemPostFilter::execute();
 
-    // delete contour field
-    vtkDataSet* dset = getInputData();
-    if (!dset) {
-        return returnObject;
-    }
-    dset->GetPointData()->RemoveArray(contourFieldName.c_str());
-    // refresh fields to reflect the deletion
-    if (!m_blockPropertyChanges) {
-        refreshFields();
-    }
+    //    // delete contour field
+    //    vtkDataSet* dset = getInputData();
+    //    if (!dset) {
+    //        return StdReturn;
+    //    }
+    //    dset->GetPointData()->RemoveArray(contourFieldName.c_str());
+    //    // refresh fields to reflect the deletion
+    //    if (!m_blockPropertyChanges) {
+    //        refreshFields();
+    //    }
 
-    return returnObject;
+    return Fem::FemPostFilter::execute();  // returnObject;
 }
 
 void FemPostContoursFilter::onChanged(const Property* prop)
@@ -968,8 +968,10 @@ void FemPostContoursFilter::refreshFields()
     else {
         m_blockPropertyChanges = false;
         // select the first field
-        Field.setValue(long(0));
-        fieldName = Field.getValueAsString();
+        if (Field.isValid()) {
+            Field.setValue(long(0));
+            fieldName = Field.getValueAsString();
+        }
     }
 
     m_blockPropertyChanges = false;
@@ -985,7 +987,11 @@ void FemPostContoursFilter::refreshVectors()
         m_blockPropertyChanges = false;
         return;
     }
-    vtkDataArray* fieldArray = dset->GetPointData()->GetArray(Field.getValueAsString());
+    vtkDataArray* fieldArray = nullptr;
+
+    if (Field.isValid()) {
+        fieldArray = dset->GetPointData()->GetArray(Field.getValueAsString());
+    }
     if (!fieldArray) {
         m_blockPropertyChanges = false;
         return;
