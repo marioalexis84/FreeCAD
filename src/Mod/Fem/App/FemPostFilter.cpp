@@ -776,7 +776,7 @@ FemPostContoursFilter::FemPostContoursFilter()
     m_contours->ComputeScalarsOn();
     smoothExtension.getFilter()->SetInputConnection(m_contours->GetOutputPort());
     contours.source = m_contours;
-    contours.target = smoothExtension.getFilter();
+    contours.target = m_contours;  // smoothExtension.getFilter();
     addFilterPipeline(contours, "contours");
     setActiveFilterPipeline("contours");
 
