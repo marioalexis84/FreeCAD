@@ -92,6 +92,9 @@ def write_femelement_material(f, ccxwriter):
                 KV = FreeCAD.Units.Quantity(mat_obj.Material["KinematicViscosity"])
                 KV_in_mm2s = KV.getValueAs("mm^2/s").Value
                 DV_in_tmms = KV_in_mm2s * density_in_tonne_per_mm3
+        if ccxwriter.analysis_type == "electrostatic":
+            TC = FreeCAD.Units.Quantity(mat_obj.Material["ThermalConductivity"])
+            TC_in_WmK = TC.getValueAs("W/m/K").Value
 
         # write material properties
         f.write(f"** FreeCAD material name: {mat_info_name}\n")
@@ -114,6 +117,9 @@ def write_femelement_material(f, ccxwriter):
             elif mat_obj.Category == "Fluid":
                 f.write("*FLUID CONSTANTS\n")
                 f.write(f"{SH_in_JkgK:.13G},{DV_in_tmms:.13G}\n")
+        if ccxwriter.analysis_type == "electrostatic":
+            f.write("*CONDUCTIVITY\n")
+            f.write(f"{TC_in_WmK:.13G}\n")
 
         # nonlinear material properties
         if ccxwriter.solver_obj.MaterialNonlinearity == "nonlinear":

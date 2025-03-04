@@ -41,7 +41,7 @@ from femtools import femutils
 if FreeCAD.GuiUp:
     import FemGui
 
-ANALYSIS_TYPES = ["static", "frequency", "thermomech", "check", "buckling"]
+ANALYSIS_TYPES = ["static", "frequency", "thermomech", "check", "buckling", "electrostatic"]
 
 
 def create(doc, name="SolverCalculiX"):

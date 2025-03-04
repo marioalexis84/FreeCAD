@@ -29,7 +29,7 @@ import FreeCAD
 
 
 def get_analysis_types():
-    return ["thermomech"]
+    return ["electrostatic"]
 
 
 def get_sets_name():

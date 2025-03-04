@@ -34,6 +34,7 @@ import os.path
 import subprocess
 
 import FreeCAD
+import Fem
 
 from . import writer
 from .. import run
@@ -120,6 +121,7 @@ class Solve(run.Solve):
             self.fail()
             return
 
+        print("DIRECTORIO:", self.directory)
         # run solver
         self._process = subprocess.Popen(
             [binary, "-i", _inputFileName],
@@ -134,6 +136,16 @@ class Solve(run.Solve):
         # if not self.aborted:
         #     self._updateOutput(output)
         # del output   # get flake8 quiet
+
+    def clean_result_files(self):
+        files = os.listdir(self.directory)
+        for f in files:
+            if f.endswith(".vtm"):
+                os.remove(f)
+                # remove dir with .vtu files
+                d = f.rstrip(".vtm")
+                [os.remove(d + "/" + i.name) for i in os.scandir(d)]
+                os.rmdir(d)
 
 
 class Results(run.Results):
@@ -165,7 +177,7 @@ class Results(run.Results):
     def load_ccxfrd_results(self):
         frd_result_file = os.path.join(self.directory, _inputFileName + ".frd")
         if os.path.isfile(frd_result_file):
-            result_name_prefix = "CalculiX_" + self.solver.AnalysisType + "_"
+            result_name_prefix = "SolverCalculiX" + self.solver.AnalysisType + "_"
             importCcxFrdResults.importFrd(frd_result_file, self.analysis, result_name_prefix)
         else:
             # TODO: use solver framework status message system
