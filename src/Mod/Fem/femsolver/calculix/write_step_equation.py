@@ -79,7 +79,7 @@ def write_step_equation(f, ccxwriter):
     elif ccxwriter.analysis_type == "buckling":
         analysis_type = "*BUCKLE"
     elif ccxwriter.analysis_type == "electrostatic":
-        analysis_type = "*HEAT TRANSFER, STEADY STATE, MATRIXSTORAGE"
+        analysis_type = "*HEAT TRANSFER, STEADY STATE"
     # analysis line --> solver type
     # https://forum.freecad.org/viewtopic.php?f=18&t=43178
     if ccxwriter.solver_obj.MatrixSolverType == "default":

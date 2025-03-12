@@ -150,6 +150,7 @@ class MeshSetsGetter:
         self.get_constraints_force_nodeloads()
         self.get_constraints_pressure_faces()
         self.get_constraints_heatflux_faces()
+        self.get_constraints_electrostatic_faces()
 
         setstime = round((time.process_time() - time_start), 3)
         FreeCAD.Console.PrintMessage(f"Getting mesh data time: {setstime} seconds.\n")
@@ -258,8 +259,11 @@ class MeshSetsGetter:
         # get nodes
         for femobj in self.member.cons_electrostatic:
             # femobj --> dict, FreeCAD document object is femobj["Object"]
-            print_obj_info(femobj["Object"])
-            femobj["Nodes"] = meshtools.get_femnodes_by_femobj_with_references(self.femmesh, femobj)
+            if femobj["Object"].BoundaryCondition == "Dirichlet":
+                print_obj_info(femobj["Object"])
+                femobj["Nodes"] = meshtools.get_femnodes_by_femobj_with_references(
+                    self.femmesh, femobj
+                )
 
     def get_constraints_force_nodeloads(self):
         if not self.member.cons_force:
@@ -364,6 +368,34 @@ class MeshSetsGetter:
             some_string = "{}: face load".format(femobj["Object"].Name)
             femobj["PressureFaces"] = [(some_string, pressure_faces)]
             FreeCAD.Console.PrintLog("{}\n".format(femobj["PressureFaces"]))
+
+    def get_constraints_electrostatic_faces(self):
+        if not self.member.cons_electrostatic:
+            return
+        if not self.femnodes_mesh:
+            self.femnodes_mesh = self.femmesh.Nodes
+        if not self.femelement_table:
+            self.femelement_table = meshtools.get_femelement_table(self.femmesh)
+        if not self.femnodes_ele_table:
+            self.femnodes_ele_table = meshtools.get_femnodes_ele_table(
+                self.femnodes_mesh, self.femelement_table
+            )
+
+        for femobj in self.member.cons_electrostatic:
+            # femobj --> dict, FreeCAD document object is femobj["Object"]
+            if femobj["Object"].BoundaryCondition == "Neumann":
+                print_obj_info(femobj["Object"])
+
+                pressure_faces = meshtools.get_pressure_obj_faces(
+                    self.femmesh, self.femelement_table, self.femnodes_ele_table, femobj
+                )
+            # the data model is for compatibility reason with deprecated version
+            # get_pressure_obj_faces_depreciated returns the face ids in a tuple per ref_shape
+            # some_string was the reference_shape_element_string in deprecated method
+            # [(some_string, [ele_id, ele_face_id], [ele_id, ele_face_id], ...])]
+            some_string = "{}: face electric flux".format(femobj["Object"].Name)
+            femobj["ElectricFluxFaces"] = [(some_string, pressure_faces)]
+            FreeCAD.Console.PrintLog("{}\n".format(femobj["ElectricFluxFaces"]))
 
     def get_constraints_contact_faces(self):
         if not self.member.cons_contact:

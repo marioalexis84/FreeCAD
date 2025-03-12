@@ -93,9 +93,9 @@ def write_femelement_material(f, ccxwriter):
                 KV_in_mm2s = KV.getValueAs("mm^2/s").Value
                 DV_in_tmms = KV_in_mm2s * density_in_tonne_per_mm3
         if ccxwriter.analysis_type == "electrostatic":
-            TC = FreeCAD.Units.Quantity(mat_obj.Material["ThermalConductivity"])
-            TC_in_WmK = TC.getValueAs("W/m/K").Value
-
+            rel_perm = FreeCAD.Units.Quantity(mat_obj.Material["RelativePermittivity"]).Value
+            vacuum_perm = FreeCAD.Units.Quantity("8.85419e-12 F/m").getValueAs("C/(mV*mm)").Value
+            abs_perm = vacuum_perm * rel_perm
         # write material properties
         f.write(f"** FreeCAD material name: {mat_info_name}\n")
         f.write(f"** {mat_label}\n")
@@ -119,7 +119,7 @@ def write_femelement_material(f, ccxwriter):
                 f.write(f"{SH_in_JkgK:.13G},{DV_in_tmms:.13G}\n")
         if ccxwriter.analysis_type == "electrostatic":
             f.write("*CONDUCTIVITY\n")
-            f.write(f"{TC_in_WmK:.13G}\n")
+            f.write(f"{abs_perm:.13G}\n")
 
         # nonlinear material properties
         if ccxwriter.solver_obj.MaterialNonlinearity == "nonlinear":
