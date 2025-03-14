@@ -31,8 +31,11 @@
 #include <sstream>
 
 #include <QApplication>
+#include <QCompleter>
 #include <QMessageBox>
 #include <QMetaMethod>
+#include <QStringList>
+#include <QStringListModel>
 #include <QToolTip>
 #endif
 
@@ -51,6 +54,7 @@
 #include <Mod/Fem/App/FemPostFilter.h>
 #include <Mod/Fem/App/FemPostPipeline.h>
 
+#include "ui_TaskPostCalculator.h"
 #include "ui_TaskPostClip.h"
 #include "ui_TaskPostContours.h"
 #include "ui_TaskPostCut.h"
@@ -2013,6 +2017,75 @@ void TaskPostWarpVector::onMinValueChanged(double)
     ui->Slider->setValue((ui->Value->value() - ui->Min->value())
                          / (ui->Max->value() - ui->Min->value()) * 100.);
     ui->Slider->blockSignals(false);
+}
+
+
+// ***************************************************************************
+// calculator filter
+TaskPostCalculator::TaskPostCalculator(ViewProviderFemPostCalculator* view, QWidget* parent)
+    : TaskPostBox(view,
+                  Gui::BitmapFactory().pixmap("FEM_PostFilterCalculator"),
+                  tr("Calculator options"),
+                  parent)
+    , ui(new Ui_TaskPostCalculator)
+{
+    // we load the views widget
+    proxy = new QWidget(this);
+    ui->setupUi(proxy);
+    setupConnections();
+    this->groupLayout()->addWidget(proxy);
+
+    // load the default values
+    auto obj = getObject<Fem::FemPostCalculatorFilter>();
+    ui->let_field_name->blockSignals(true);
+    ui->let_field_name->setText(QString::fromUtf8(obj->FieldName.getValue()));
+    ui->let_field_name->blockSignals(false);
+
+    ui->let_function->blockSignals(true);
+    ui->let_function->setText(QString::fromUtf8(obj->Function.getValue()));
+    ui->let_function->blockSignals(false);
+
+    QCompleter* completer = new QCompleter(this);
+    auto fields = view->Field.getEnumVector();
+    QStringList qlist;
+    for (const auto& f : fields) {
+        qlist << QString::fromStdString(f);
+    }
+
+    QStringListModel* model = new QStringListModel(this);
+    model->setStringList(qlist);
+    completer->setModel(model);
+    completer->setCaseSensitivity(Qt::CaseInsensitive);
+    completer->setFilterMode(Qt::MatchContains);
+    ui->let_function->setCompleter(completer);
+}
+
+TaskPostCalculator::~TaskPostCalculator() = default;
+
+void TaskPostCalculator::setupConnections()
+{
+    connect(ui->let_field_name,
+            &QLineEdit::editingFinished,
+            this,
+            &TaskPostCalculator::onFieldNameChanged);
+    connect(ui->let_function,
+            &QLineEdit::editingFinished,
+            this,
+            &TaskPostCalculator::onFunctionChanged);
+}
+
+void TaskPostCalculator::onFieldNameChanged()
+{
+    std::string name = ui->let_field_name->text().toStdString();
+    auto obj = getObject<Fem::FemPostCalculatorFilter>();
+    obj->FieldName.setValue(name);
+}
+
+void TaskPostCalculator::onFunctionChanged()
+{
+    std::string function = ui->let_function->text().toStdString();
+    auto obj = getObject<Fem::FemPostCalculatorFilter>();
+    obj->Function.setValue(function);
 }
 
 

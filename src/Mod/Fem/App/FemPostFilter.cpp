@@ -1158,3 +1158,96 @@ short int FemPostWarpVectorFilter::mustExecute() const
         return App::DocumentObject::mustExecute();
     }
 }
+
+
+// ***************************************************************************
+// calculator filter
+PROPERTY_SOURCE(Fem::FemPostCalculatorFilter, Fem::FemPostFilter)
+
+FemPostCalculatorFilter::FemPostCalculatorFilter()
+    : FemPostFilter()
+{
+    ADD_PROPERTY_TYPE(FieldName,
+                      (""),
+                      "Calculator",
+                      App::Prop_None,
+                      "Name of the calculated field");
+    ADD_PROPERTY_TYPE(Function,
+                      (""),
+                      "Calculator",
+                      App::Prop_None,
+                      "Expression of the unction to evaluate");
+
+    FilterPipeline calculator;
+    m_calculator = vtkSmartPointer<vtkArrayCalculator>::New();
+    calculator.source = m_calculator;
+    calculator.target = m_calculator;
+    addFilterPipeline(calculator, "calculator");
+    setActiveFilterPipeline("calculator");
+}
+
+FemPostCalculatorFilter::~FemPostCalculatorFilter() = default;
+
+DocumentObjectExecReturn* FemPostCalculatorFilter::execute()
+{
+    printf("EXECITER\n");
+    m_calculator->AddCoordinateScalarVariable("X", 0);
+    m_calculator->AddCoordinateScalarVariable("Y", 1);
+    m_calculator->AddCoordinateScalarVariable("Z", 2);
+    //    std::string val;
+    //    if (Vector.getValue() >= 0) {
+    //        val = Vector.getValueAsString();
+    //    }
+    //
+    //    std::vector<std::string> VectorArray;
+    //
+    //    vtkSmartPointer<vtkDataObject> data = getInputData();
+    //    vtkDataSet* dset = vtkDataSet::SafeDownCast(data);
+    //    if (!dset) {
+    //        return StdReturn;
+    //    }
+    //    vtkPointData* pd = dset->GetPointData();
+    //
+    //    // get all vector fields
+    //    for (int i = 0; i < pd->GetNumberOfArrays(); ++i) {
+    //        if (pd->GetArray(i)->GetNumberOfComponents() == 3) {
+    //            VectorArray.emplace_back(pd->GetArrayName(i));
+    //        }
+    //    }
+    //
+    //    App::Enumeration empty;
+    //    Vector.setValue(empty);
+    //    m_vectorFields.setEnums(VectorArray);
+    //    Vector.setValue(m_vectorFields);
+    //
+    //    // search if the current field is in the available ones and set it
+    //    std::vector<std::string>::iterator it = std::find(VectorArray.begin(), VectorArray.end(),
+    //    val); if (!val.empty() && it != VectorArray.end()) {
+    //        Vector.setValue(val.c_str());
+    //    }
+    //
+    // recalculate the filter
+    return FemPostFilter::execute();
+}
+
+void FemPostCalculatorFilter::onChanged(const Property* prop)
+{
+    if (prop == &Function) {
+        m_calculator->SetFunction(Function.getValue());
+    }
+    else if (prop == &FieldName) {
+        m_calculator->SetResultArrayName(FieldName.getValue());
+    }
+    printf("FUNCION: %s\n", m_calculator->GetFunction());
+    Fem::FemPostFilter::onChanged(prop);
+}
+
+short int FemPostCalculatorFilter::mustExecute() const
+{
+    if (Function.isTouched() || FieldName.isTouched()) {
+        return 1;
+    }
+    else {
+        return FemPostFilter::mustExecute();
+    }
+}

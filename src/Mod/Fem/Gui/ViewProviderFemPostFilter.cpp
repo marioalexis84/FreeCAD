@@ -215,3 +215,22 @@ void ViewProviderFemPostWarpVector::setupTaskDialog(TaskDlgPost* dlg)
     // add the display options
     FemGui::ViewProviderFemPostObject::setupTaskDialog(dlg);
 }
+
+
+// ***************************************************************************
+// calculator filter
+PROPERTY_SOURCE(FemGui::ViewProviderFemPostCalculator, FemGui::ViewProviderFemPostObject)
+
+ViewProviderFemPostCalculator::ViewProviderFemPostCalculator()
+{
+    sPixmap = "FEM_PostFilterCalculator";
+}
+
+ViewProviderFemPostCalculator::~ViewProviderFemPostCalculator() = default;
+
+void ViewProviderFemPostCalculator::setupTaskDialog(TaskDlgPost* dlg)
+{
+    // add the function box
+    assert(dlg->getView() == this);
+    dlg->appendBox(new TaskPostCalculator(this));
+}

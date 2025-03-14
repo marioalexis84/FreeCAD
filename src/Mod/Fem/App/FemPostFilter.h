@@ -23,6 +23,7 @@
 #ifndef Fem_FemPostFilter_H
 #define Fem_FemPostFilter_H
 
+#include <vtkArrayCalculator.h>
 #include <vtkContourFilter.h>
 #include <vtkSmoothPolyDataFilter.h>
 #include <vtkCutter.h>
@@ -350,6 +351,34 @@ protected:
 private:
     vtkSmartPointer<vtkWarpVector> m_warp;
     App::Enumeration m_vectorFields;
+};
+
+// ***************************************************************************
+// calculator filter
+class FemExport FemPostCalculatorFilter: public FemPostFilter
+{
+
+    PROPERTY_HEADER_WITH_OVERRIDE(Fem::FemPostCalculatorFilter);
+
+public:
+    FemPostCalculatorFilter();
+    ~FemPostCalculatorFilter() override;
+
+    App::PropertyString FieldName;
+    App::PropertyString Function;
+
+    const char* getViewProviderName() const override
+    {
+        return "FemGui::ViewProviderFemPostCalculator";
+    }
+    short int mustExecute() const override;
+
+protected:
+    App::DocumentObjectExecReturn* execute() override;
+    void onChanged(const App::Property* prop) override;
+
+private:
+    vtkSmartPointer<vtkArrayCalculator> m_calculator;
 };
 
 }  // namespace Fem
