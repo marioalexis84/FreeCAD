@@ -1428,6 +1428,41 @@ def get_ref_shape_node_sum_geom_table(node_geom_table):
 # ************************************************************************************************
 # ***** methods for retrieving element face sets *************************************************
 # ***** pressure faces ***************************************************************************
+def get_charge_density_obj_faces(femmesh, femelement_table, femnodes_ele_table, femobj):
+    node_set = []
+    if femmesh.GroupCount:
+        node_set = get_femmesh_groupdata_sets_by_name(femmesh, femobj, "Node")
+        # FreeCAD.Console.PrintMessage("node_set_group: {}\n".format(node_set))
+        if node_set:
+            FreeCAD.Console.PrintLog(
+                "    Finite element mesh nodes where retrieved "
+                "from existent finite element mesh group data.\n"
+            )
+    if not node_set:
+        FreeCAD.Console.PrintLog(
+            "    Finite element mesh nodes will be retrieved "
+            "by searching the appropriate nodes in the finite element mesh.\n"
+        )
+        res = []
+        for ref in femobj["Object"].References:
+            for sub_ref in ref[1]:
+                sub = (ref[0], (sub_ref,))
+                node_set = get_femnodes_by_references(femmesh, [sub])
+                # FreeCAD.Console.PrintMessage("node_set_nogroup: {}\n".format(node_set))
+
+                # use set for node sets to be sure all nodes are unique
+                # use sorted to be sure the order is the same on different runs
+                # be aware a sorted set returns a list, because set are not sorted by default
+                charged_face_node_set = sorted(set(node_set))
+
+                bit_pattern_dict = get_bit_pattern_dict(
+                    femelement_table, femnodes_ele_table, charged_face_node_set
+                )
+                charged_faces = get_ccxelement_faces_from_binary_search(bit_pattern_dict)
+                res.append((sub, charged_faces))
+    return res
+
+
 def get_pressure_obj_faces(femmesh, femelement_table, femnodes_ele_table, femobj):
     # see get_ccxelement_faces_from_binary_search for more information
     if is_solid_femmesh(femmesh):

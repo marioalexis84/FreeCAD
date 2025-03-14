@@ -75,15 +75,39 @@ def write_constraint(f, femobj, pot_obj, ccxwriter):
     elif pot_obj.BoundaryCondition == "Neumann":
         charge_density = pot_obj.SurfaceChargeDensity.getValueAs("A*s/mm^2").Value
 
+        # check internal face
+        internal = []
+        for o, faces in pot_obj.References:
+            for fa in faces:
+                found = []
+                f_i = o.getSubObject(fa)
+                for s in o.Shape.Solids:
+                    found.append(any([q.isSame(f_i) for q in s.Faces]))
+                if sum(found) > 1:
+                    internal.append((o, (fa,)))
+        print("INTERNAL", internal)
         f.write("*DFLUX\n")
         for ref_shape in femobj["ElectricFluxFaces"]:
             # the loop is needed for compatibility reason
             # in deprecated method get_pressure_obj_faces_depreciated
             # the face ids where per ref_shape
             f.write("** " + ref_shape[0] + "\n")
-            for face, fno in ref_shape[1]:
-                if fno > 0:  # solid mesh face
-                    f.write(f"{face},S{fno},{charge_density}\n")
+            for ref in ref_shape[1]:
+                # print("REF", ref)
+                #                for q in ref:
+                #                    print("QQQQQQ:", q)
+                c = charge_density
+                print("REF 0", ref[0])
+                if ref[0] in internal:
+                    print("ESTA EN INTERNAL")
+                    c = charge_density / 2
+                for face, fno in ref[1]:
+                    if fno > 0:  # solid mesh face
+                        f.write(f"{face},S{fno},{c}\n")
+
+        #            for face, fno in ref_shape[1]:
+        #                if fno > 0:  # solid mesh face
+        #                    f.write(f"{face},S{fno},{charge_density}\n")
         #                # on shell mesh face: fno == 0
         #                # normal of element face == face normal
         #                elif fno == 0:

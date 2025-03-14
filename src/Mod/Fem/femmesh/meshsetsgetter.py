@@ -386,16 +386,16 @@ class MeshSetsGetter:
             if femobj["Object"].BoundaryCondition == "Neumann":
                 print_obj_info(femobj["Object"])
 
-                pressure_faces = meshtools.get_pressure_obj_faces(
+                charged_faces = meshtools.get_charge_density_obj_faces(
                     self.femmesh, self.femelement_table, self.femnodes_ele_table, femobj
                 )
-            # the data model is for compatibility reason with deprecated version
-            # get_pressure_obj_faces_depreciated returns the face ids in a tuple per ref_shape
-            # some_string was the reference_shape_element_string in deprecated method
-            # [(some_string, [ele_id, ele_face_id], [ele_id, ele_face_id], ...])]
-            some_string = "{}: face electric flux".format(femobj["Object"].Name)
-            femobj["ElectricFluxFaces"] = [(some_string, pressure_faces)]
-            FreeCAD.Console.PrintLog("{}\n".format(femobj["ElectricFluxFaces"]))
+                # the data model is for compatibility reason with deprecated version
+                # get_pressure_obj_faces_depreciated returns the face ids in a tuple per ref_shape
+                # some_string was the reference_shape_element_string in deprecated method
+                # [(some_string, [ele_id, ele_face_id], [ele_id, ele_face_id], ...])]
+                some_string = "{}: face electric flux".format(femobj["Object"].Name)
+                femobj["ElectricFluxFaces"] = [(some_string, charged_faces)]
+                FreeCAD.Console.PrintLog("{}\n".format(femobj["ElectricFluxFaces"]))
 
     def get_constraints_contact_faces(self):
         if not self.member.cons_contact:
