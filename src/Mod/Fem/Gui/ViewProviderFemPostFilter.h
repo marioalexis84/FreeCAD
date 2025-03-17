@@ -166,6 +166,8 @@ public:
     ViewProviderFemPostCalculator();
     ~ViewProviderFemPostCalculator() override;
 
+    void updateData(const App::Property* prop) override;
+
 protected:
     void setupTaskDialog(TaskDlgPost* dlg) override;
 };

@@ -228,6 +228,19 @@ ViewProviderFemPostCalculator::ViewProviderFemPostCalculator()
 
 ViewProviderFemPostCalculator::~ViewProviderFemPostCalculator() = default;
 
+void ViewProviderFemPostCalculator::updateData(const App::Property* prop)
+{
+    auto obj = getObject<Fem::FemPostCalculatorFilter>();
+    if (prop == &obj->Data) {
+        printf("updata Material\n");
+        // update color bar
+        updateMaterial();
+        Field.touch();
+    }
+
+    return ViewProviderFemPostObject::updateData(prop);
+}
+
 void ViewProviderFemPostCalculator::setupTaskDialog(TaskDlgPost* dlg)
 {
     // add the function box

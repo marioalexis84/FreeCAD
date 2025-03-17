@@ -1190,10 +1190,11 @@ FemPostCalculatorFilter::~FemPostCalculatorFilter() = default;
 
 DocumentObjectExecReturn* FemPostCalculatorFilter::execute()
 {
-    printf("EXECITER\n");
-    m_calculator->AddCoordinateScalarVariable("X", 0);
-    m_calculator->AddCoordinateScalarVariable("Y", 1);
-    m_calculator->AddCoordinateScalarVariable("Z", 2);
+    if (!m_calculator->GetFunction()) {
+        return StdReturn;
+    }
+    updateAvailableFields();
+
     //    std::string val;
     //    if (Vector.getValue() >= 0) {
     //        val = Vector.getValueAsString();
@@ -1238,7 +1239,10 @@ void FemPostCalculatorFilter::onChanged(const Property* prop)
     else if (prop == &FieldName) {
         m_calculator->SetResultArrayName(FieldName.getValue());
     }
-    printf("FUNCION: %s\n", m_calculator->GetFunction());
+    else if (prop == &Data) {
+        updateAvailableFields();
+    }
+    printf("FUNCION: %s\t%s\n", m_calculator->GetFunction(), prop->getName());
     Fem::FemPostFilter::onChanged(prop);
 }
 
@@ -1249,5 +1253,45 @@ short int FemPostCalculatorFilter::mustExecute() const
     }
     else {
         return FemPostFilter::mustExecute();
+    }
+}
+
+void FemPostCalculatorFilter::updateAvailableFields()
+{
+    printf("EXECITER\n");
+    // clear all variables
+    m_calculator->RemoveAllVariables();
+    m_calculator->AddCoordinateScalarVariable("X", 0);
+    m_calculator->AddCoordinateScalarVariable("Y", 1);
+    m_calculator->AddCoordinateScalarVariable("Z", 2);
+
+    std::vector<std::string> scalars;
+    std::vector<std::string> vectors;
+    //    std::vector<std::string> tensors;
+
+    vtkSmartPointer<vtkDataObject> data = getInputData();
+    vtkDataSet* dset = vtkDataSet::SafeDownCast(data);
+    if (!dset) {
+        return;
+    }
+    vtkPointData* pd = dset->GetPointData();
+
+    // get all vector fields
+    for (int i = 0; i < pd->GetNumberOfArrays(); ++i) {
+        std::string name1 = pd->GetArrayName(i);
+        std::string name2 = name1;
+        std::replace(name2.begin(), name2.end(), ' ', '_');
+        if (pd->GetArray(i)->GetNumberOfComponents() == 3) {
+            //            printf("NOMBRE: %s\n", name2.c_str());
+            m_calculator->AddVectorVariable(name2.c_str(), name1.c_str());
+            // add components as scalar variable
+            m_calculator->AddScalarVariable((name2 + "_X").c_str(), name1.c_str(), 0);
+            m_calculator->AddScalarVariable((name2 + "_Y").c_str(), name1.c_str(), 1);
+            m_calculator->AddScalarVariable((name2 + "_Z").c_str(), name1.c_str(), 2);
+        }
+        else if (pd->GetArray(i)->GetNumberOfComponents() == 1) {
+            //            printf("NOMBRE SCA: %s\n", name2.c_str());
+            m_calculator->AddScalarVariable(name2.c_str(), name1.c_str());
+        }
     }
 }

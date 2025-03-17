@@ -655,11 +655,15 @@ void ViewProviderFemPostObject::updateMaterial()
 
 void ViewProviderFemPostObject::WriteColorData(bool ResetColorBarRange)
 {
+    printf("colordata1\n");
     if (!setupPipeline()) {
+        printf("colordata2\n");
         return;
     }
 
+    printf("colordata3\n");
     if (Field.getEnumVector().empty() || Field.getValue() == 0) {
+        printf("colordata3.1\n");
         m_material->diffuseColor.setValue(SbColor(0.8, 0.8, 0.8));
         float trans = Base::fromPercent(Transparency.getValue());
         m_material->transparency.setValue(trans);
@@ -675,6 +679,7 @@ void ViewProviderFemPostObject::WriteColorData(bool ResetColorBarRange)
     vtkPolyData* pd = m_currentAlgorithm->GetOutput();
     vtkDataArray* data = pd->GetPointData()->GetArray(array);
     if (!data) {
+        printf("colordata3.2\n");
         return;
     }
 
@@ -687,10 +692,12 @@ void ViewProviderFemPostObject::WriteColorData(bool ResetColorBarRange)
 
     // build the lookuptable
     if (ResetColorBarRange) {
+        printf("colordata4\n");
         double range[2];
         data->GetRange(range, component);
         setRangeOfColorBar(static_cast<float>(range[0]), static_cast<float>(range[1]));
     }
+    printf("colordata5\n");
 
     vtkIdType numPts = pd->GetNumberOfPoints();
     m_material->diffuseColor.setNum(numPts);
@@ -914,6 +921,7 @@ void ViewProviderFemPostObject::onChanged(const App::Property* prop)
     }
 
     if (prop == &Field && setupPipeline()) {
+        printf("RECOMPUTE FIELD\n");
         updateProperties();
         WriteColorData(ResetColorBarRange);
     }

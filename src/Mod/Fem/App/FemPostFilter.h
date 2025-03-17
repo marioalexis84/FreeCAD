@@ -377,6 +377,8 @@ protected:
     App::DocumentObjectExecReturn* execute() override;
     void onChanged(const App::Property* prop) override;
 
+    void updateAvailableFields();
+
 private:
     vtkSmartPointer<vtkArrayCalculator> m_calculator;
 };

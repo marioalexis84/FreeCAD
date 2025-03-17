@@ -2079,6 +2079,8 @@ void TaskPostCalculator::onFieldNameChanged()
     std::string name = ui->let_field_name->text().toStdString();
     auto obj = getObject<Fem::FemPostCalculatorFilter>();
     obj->FieldName.setValue(name);
+    recompute();
+    getTypedView<ViewProviderFemPostCalculator>()->Field.setValue(name.c_str());
 }
 
 void TaskPostCalculator::onFunctionChanged()
@@ -2086,6 +2088,9 @@ void TaskPostCalculator::onFunctionChanged()
     std::string function = ui->let_function->text().toStdString();
     auto obj = getObject<Fem::FemPostCalculatorFilter>();
     obj->Function.setValue(function);
+    auto view = getTypedView<ViewProviderFemPostCalculator>();
+    recompute();
+    view->updateMaterial();
 }
 
 
