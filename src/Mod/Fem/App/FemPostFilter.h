@@ -366,12 +366,18 @@ public:
 
     App::PropertyString FieldName;
     App::PropertyString Function;
+    App::PropertyFloat ReplacementValue;
+    App::PropertyBool ReplaceInvalid;
 
     const char* getViewProviderName() const override
     {
         return "FemGui::ViewProviderFemPostCalculator";
     }
     short int mustExecute() const override;
+
+    const std::vector<std::string>& getScalarVariables();
+    const std::vector<std::string>& getVectorVariables();
+
 
 protected:
     App::DocumentObjectExecReturn* execute() override;

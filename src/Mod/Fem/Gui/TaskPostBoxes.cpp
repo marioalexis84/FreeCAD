@@ -2045,10 +2045,20 @@ TaskPostCalculator::TaskPostCalculator(ViewProviderFemPostCalculator* view, QWid
     ui->let_function->setText(QString::fromUtf8(obj->Function.getValue()));
     ui->let_function->blockSignals(false);
 
+    ui->ckb_replace_invalid->setChecked(obj->ReplaceInvalid.getValue());
+    ui->dsb_replacement_value->setEnabled(obj->ReplaceInvalid.getValue());
+    ui->dsb_replacement_value->setValue(obj->ReplacementValue.getValue());
+    ui->dsb_replacement_value->setMaximum(FLOAT_MAX);
+    ui->dsb_replacement_value->setMinimum(FLOAT_MIN);
+
+    // fill completer with available fields
     QCompleter* completer = new QCompleter(this);
     auto fields = view->Field.getEnumVector();
     QStringList qlist;
-    for (const auto& f : fields) {
+    for (const auto& f : obj->getScalarVariables()) {
+        qlist << QString::fromStdString(f);
+    }
+    for (const auto& f : obj->getVectorVariables()) {
         qlist << QString::fromStdString(f);
     }
 
@@ -2072,6 +2082,14 @@ void TaskPostCalculator::setupConnections()
             &QLineEdit::editingFinished,
             this,
             &TaskPostCalculator::onFunctionChanged);
+    connect(ui->dsb_replacement_value,
+            qOverload<double>(&QDoubleSpinBox::valueChanged),
+            this,
+            &TaskPostCalculator::onReplacementValueChanged);
+    connect(ui->ckb_replace_invalid,
+            &QCheckBox::toggled,
+            this,
+            &TaskPostCalculator::onReplaceInvalidChanged);
 }
 
 void TaskPostCalculator::onFieldNameChanged()
@@ -2090,8 +2108,22 @@ void TaskPostCalculator::onFunctionChanged()
     obj->Function.setValue(function);
     auto view = getTypedView<ViewProviderFemPostCalculator>();
     recompute();
-    view->updateMaterial();
+    //    view->updateMaterial();
 }
 
+void TaskPostCalculator::onReplaceInvalidChanged(bool state)
+{
+    auto obj = static_cast<Fem::FemPostCalculatorFilter*>(getObject());
+    obj->ReplaceInvalid.setValue(state);
+    ui->dsb_replacement_value->setEnabled(state);
+    recompute();
+}
+
+void TaskPostCalculator::onReplacementValueChanged(double value)
+{
+    auto obj = static_cast<Fem::FemPostCalculatorFilter*>(getObject());
+    obj->ReplacementValue.setValue(value);
+    recompute();
+}
 
 #include "moc_TaskPostBoxes.cpp"

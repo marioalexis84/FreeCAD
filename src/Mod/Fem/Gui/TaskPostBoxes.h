@@ -529,6 +529,8 @@ private:
     void setupConnections();
     void onFieldNameChanged();
     void onFunctionChanged();
+    void onReplaceInvalidChanged(bool state);
+    void onReplacementValueChanged(double value);
 
 private:
     QWidget* proxy;

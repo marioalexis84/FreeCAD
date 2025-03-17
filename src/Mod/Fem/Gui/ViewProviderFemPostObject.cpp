@@ -690,6 +690,9 @@ void ViewProviderFemPostObject::WriteColorData(bool ResetColorBarRange)
         component = 0;
     }
 
+    double ranges[2];
+    data->GetRange(ranges, component);
+    printf("DATA: %s\t%f\t%f\n", data->GetName(), ranges[0], ranges[1]);
     // build the lookuptable
     if (ResetColorBarRange) {
         printf("colordata4\n");

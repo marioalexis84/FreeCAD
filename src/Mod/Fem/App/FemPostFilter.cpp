@@ -1177,6 +1177,16 @@ FemPostCalculatorFilter::FemPostCalculatorFilter()
                       "Calculator",
                       App::Prop_None,
                       "Expression of the unction to evaluate");
+    ADD_PROPERTY_TYPE(ReplacementValue,
+                      (0.0f),
+                      "Calculator",
+                      App::Prop_None,
+                      "Value used to replace invalid operations");
+    ADD_PROPERTY_TYPE(ReplaceInvalid,
+                      (false),
+                      "Calculator",
+                      App::Prop_None,
+                      "Replace invalid values");
 
     FilterPipeline calculator;
     m_calculator = vtkSmartPointer<vtkArrayCalculator>::New();
@@ -1239,6 +1249,12 @@ void FemPostCalculatorFilter::onChanged(const Property* prop)
     else if (prop == &FieldName) {
         m_calculator->SetResultArrayName(FieldName.getValue());
     }
+    else if (prop == &ReplaceInvalid) {
+        m_calculator->SetReplaceInvalidValues(ReplaceInvalid.getValue());
+    }
+    else if (prop == &ReplacementValue) {
+        m_calculator->SetReplacementValue(ReplacementValue.getValue());
+    }
     else if (prop == &Data) {
         updateAvailableFields();
     }
@@ -1294,4 +1310,14 @@ void FemPostCalculatorFilter::updateAvailableFields()
             m_calculator->AddScalarVariable(name2.c_str(), name1.c_str());
         }
     }
+}
+
+const std::vector<std::string>& FemPostCalculatorFilter::getScalarVariables()
+{
+    return m_calculator->GetScalarVariableNames();
+}
+
+const std::vector<std::string>& FemPostCalculatorFilter::getVectorVariables()
+{
+    return m_calculator->GetVectorVariableNames();
 }
