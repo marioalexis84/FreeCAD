@@ -1168,7 +1168,7 @@ FemPostCalculatorFilter::FemPostCalculatorFilter()
     : FemPostFilter()
 {
     ADD_PROPERTY_TYPE(FieldName,
-                      (""),
+                      ("Calculator"),
                       "Calculator",
                       App::Prop_None,
                       "Name of the calculated field");
@@ -1190,6 +1190,7 @@ FemPostCalculatorFilter::FemPostCalculatorFilter()
 
     FilterPipeline calculator;
     m_calculator = vtkSmartPointer<vtkArrayCalculator>::New();
+    m_calculator->SetResultArrayName(FieldName.getValue());
     calculator.source = m_calculator;
     calculator.target = m_calculator;
     addFilterPipeline(calculator, "calculator");

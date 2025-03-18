@@ -237,7 +237,6 @@ void ViewProviderFemPostCalculator::updateData(const App::Property* prop)
         // update color bar
         ViewProviderFemPostObject::updateData(prop);
         updateMaterial();
-        //        Field.touch();
     }
     else {
         return ViewProviderFemPostObject::updateData(prop);

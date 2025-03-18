@@ -322,6 +322,9 @@ void TaskDlgPost::open()
 void TaskDlgPost::clicked(int button)
 {
     if (button == QDialogButtonBox::Apply) {
+        for (auto box : m_boxes) {
+            box->apply();
+        }
         recompute();
     }
 }
@@ -2048,8 +2051,8 @@ TaskPostCalculator::TaskPostCalculator(ViewProviderFemPostCalculator* view, QWid
     ui->ckb_replace_invalid->setChecked(obj->ReplaceInvalid.getValue());
     ui->dsb_replacement_value->setEnabled(obj->ReplaceInvalid.getValue());
     ui->dsb_replacement_value->setValue(obj->ReplacementValue.getValue());
-    ui->dsb_replacement_value->setMaximum(FLOAT_MAX);
-    ui->dsb_replacement_value->setMinimum(FLOAT_MIN);
+    ui->dsb_replacement_value->setMaximum(std::numeric_limits<double>::max());
+    ui->dsb_replacement_value->setMinimum(std::numeric_limits<double>::lowest());
 
     // fill completer with available fields
     QCompleter* completer = new QCompleter(this);
@@ -2123,6 +2126,15 @@ void TaskPostCalculator::onReplacementValueChanged(double value)
 {
     auto obj = static_cast<Fem::FemPostCalculatorFilter*>(getObject());
     obj->ReplacementValue.setValue(value);
+    recompute();
+}
+
+void TaskPostCalculator::apply()
+{
+    auto obj = getObject<Fem::FemPostCalculatorFilter>();
+    auto view = getTypedView<ViewProviderFemPostCalculator>();
+    view->Field.setValue(obj->FieldName.getValue());
+
     recompute();
 }
 

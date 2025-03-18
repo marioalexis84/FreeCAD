@@ -147,6 +147,9 @@ public:
         return false;
     }  // return true if only gui properties are manipulated
 
+    // executed when the apply button is pressed in the task dialog
+    virtual void apply() {};
+
 protected:
     App::DocumentObject* getObject() const
     {
@@ -524,6 +527,9 @@ class TaskPostCalculator: public TaskPostBox
 public:
     explicit TaskPostCalculator(ViewProviderFemPostCalculator* view, QWidget* parent = nullptr);
     ~TaskPostCalculator() override;
+
+protected:
+    void apply() override;
 
 private:
     void setupConnections();
