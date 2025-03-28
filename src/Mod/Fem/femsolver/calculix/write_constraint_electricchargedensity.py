@@ -74,8 +74,8 @@ def write_constraint(f, femobj, den_obj, ccxwriter):
     elif pot_obj.BoundaryCondition == "Neumann":
         charge_density = pot_obj.ElectricFluxDensity.getValueAs("A*s/mm^2").Value
 
-        # check internal face
-        internal = _check_shared_face(pot_obj)
+        # check internal interface
+        internal = _check_shared_interface(pot_obj)
         for ref_shape in femobj["ElectricFluxFaces"]:
             f.write("** " + ref_shape[0] + "\n")
             f.write("*DFLUX\n")
@@ -90,19 +90,26 @@ def write_constraint(f, femobj, den_obj, ccxwriter):
         f.write("\n")
 
 
-def _check_shared_face(pot_obj):
+def _check_shared_interface(pot_obj):
     """
     Check if reference is internal shared subshape
     For example, shared face in compsolid
     """
     internal = []
-    for o, faces in pot_obj.References:
-        for fa in faces:
+    for o, sub in pot_obj.References:
+        for elem in sub:
             found = []
-            f_i = o.getSubObject(fa)
-            for s in o.Shape.Solids:
-                found.append(any([q.isSame(f_i) for q in s.Faces]))
-            if sum(found) > 1:
-                internal.append((o, (fa,)))
+            elem_i = o.getSubObject(elem)
+            if elem_i.ShapeType == "Face":
+                for s in o.Shape.Solids:
+                    found.append(any([q.isSame(elem_i) for q in s.Faces]))
+                if sum(found) > 1:
+                    internal.append((o, (elem,)))
+
+            if elem_i.ShapeType == "Edge":
+                for s in o.Shape.Faces:
+                    found.append(any([q.isSame(elem_i) for q in s.Edges]))
+                if sum(found) > 1:
+                    internal.append((o, (elem,)))
 
     return internal

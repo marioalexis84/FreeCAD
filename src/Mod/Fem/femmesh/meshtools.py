@@ -224,6 +224,7 @@ def get_bit_pattern_dict(femelement_table, femnodes_ele_table, node_set):
     The number in the ele_dict is organized as a bit array.
     The corresponding bit is set, if the node of the node_set is contained in the element.
     """
+    print("BIT PATTERN", femelement_table, femnodes_ele_table, node_set)
     FreeCAD.Console.PrintLog("len femnodes_ele_table: " + str(len(femnodes_ele_table)) + "\n")
     FreeCAD.Console.PrintLog("len node_set: " + str(len(node_set)) + "\n")
     FreeCAD.Console.PrintLog(f"node_set: {node_set}\n")
@@ -241,6 +242,29 @@ def get_bit_pattern_dict(femelement_table, femnodes_ele_table, node_set):
 
 
 # ************************************************************************************************
+def get_ccxelement_edges_from_binary_search(bit_pattern_dict):
+    tria3_mask = {0b011: 1, 0b110: 2, 0b101: 3}
+    tria6_mask = {0b001011: 1, 0b010110: 2, 0b100101: 3}
+    quad4_mask = {0b0011: 1, 0b0110: 2, 0b1100: 3, 0b1001: 4}
+    quad8_mask = {0b00010011: 1, 0b00100110: 2, 0b01001100: 3, 0b10001001: 4}
+    vol_dict = {
+        3: tria3_mask,
+        6: tria6_mask,
+        4: quad4_mask,
+        8: quad8_mask,
+    }
+    faces = []
+    for ele in bit_pattern_dict:
+        mask_dict = vol_dict[bit_pattern_dict[ele][0]]
+        for key in mask_dict:
+            if (key & bit_pattern_dict[ele][1]) == key:
+                faces.append([ele, mask_dict[key]])
+    print("EDGES:", faces)
+    FreeCAD.Console.PrintMessage(f"found Edges: {len(faces)}\n")
+
+    return faces
+
+
 def get_ccxelement_faces_from_binary_search(bit_pattern_dict):
     """get the CalculiX element face numbers"""
     # the forum topic discussion with ulrich1a and others ... Better mesh last instead of mesh first
@@ -268,6 +292,7 @@ def get_ccxelement_faces_from_binary_search(bit_pattern_dict):
         for key in mask_dict:
             if (key & bit_pattern_dict[ele][1]) == key:
                 faces.append([ele, mask_dict[key]])
+    print("FACES:", faces)
     FreeCAD.Console.PrintLog(f"found Faces: {len(faces)}\n")
     # FreeCAD.Console.PrintMessage("faces: {}\n".format(faces))
     return faces
@@ -1444,9 +1469,9 @@ def get_charge_density_obj_faces(femmesh, femelement_table, femnodes_ele_table, 
             "by searching the appropriate nodes in the finite element mesh.\n"
         )
         res = []
-        for ref in femobj["Object"].References:
-            for sub_ref in ref[1]:
-                sub = (ref[0], (sub_ref,))
+        for feat, ref in femobj["Object"].References:
+            for sub_ref in ref:
+                sub = (feat, (sub_ref,))
                 node_set = get_femnodes_by_references(femmesh, [sub])
                 # FreeCAD.Console.PrintMessage("node_set_nogroup: {}\n".format(node_set))
 
@@ -1459,7 +1484,12 @@ def get_charge_density_obj_faces(femmesh, femelement_table, femnodes_ele_table, 
                     femelement_table, femnodes_ele_table, charged_face_node_set
                 )
                 print("PATTERN: ", bit_pattern_dict)
-                charged_faces = get_ccxelement_faces_from_binary_search(bit_pattern_dict)
+                sh = feat.getSubObject(sub_ref)
+                if sh.ShapeType == "Face":
+                    charged_faces = get_ccxelement_faces_from_binary_search(bit_pattern_dict)
+                elif sh.ShapeType == "Edge":
+                    charged_faces = get_ccxelement_edges_from_binary_search(bit_pattern_dict)
+
                 res.append((sub, charged_faces))
     return res
 
