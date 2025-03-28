@@ -21,7 +21,7 @@
 # *                                                                         *
 # ***************************************************************************
 
-__title__ = "FreeCAD FEM calculix constraint electrostatic"
+__title__ = "FreeCAD FEM calculix constraint electric charge density"
 __author__ = "Mario Passaglia"
 __url__ = "https://www.freecad.org"
 
@@ -29,21 +29,18 @@ import FreeCAD
 
 
 def get_analysis_types():
-    return ["electromagnetic"]
+    return ["electrostatic"]
 
 
 def get_sets_name():
-    return "constraints_electrostaticpotential_node_sets"
+    return "constraints_electricchargedensity_node_sets"
 
 
 def get_constraint_title():
-    return "Fixed electrostatic constraint applied"
+    return "Electric charge density constraint applied"
 
 
 def write_meshdata_constraint(f, femobj, pot_obj, ccxwriter):
-
-    if ccxwriter.solver_obj.ElectromagneticMode != "electrostatic":
-        return
 
     if femobj["Object"].BoundaryCondition == "Dirichlet":
         f.write(f"*NSET,NSET={pot_obj.Name}\n")
@@ -67,10 +64,7 @@ def get_after_write_constraint():
     return ""
 
 
-def write_constraint(f, femobj, pot_obj, ccxwriter):
-
-    if ccxwriter.solver_obj.ElectromagneticMode != "electrostatic":
-        return
+def write_constraint(f, femobj, den_obj, ccxwriter):
 
     # floats read from ccx should use {:.13G}, see comment in writer module
     if pot_obj.BoundaryCondition == "Dirichlet":

@@ -1458,6 +1458,7 @@ def get_charge_density_obj_faces(femmesh, femelement_table, femnodes_ele_table, 
                 bit_pattern_dict = get_bit_pattern_dict(
                     femelement_table, femnodes_ele_table, charged_face_node_set
                 )
+                print("PATTERN: ", bit_pattern_dict)
                 charged_faces = get_ccxelement_faces_from_binary_search(bit_pattern_dict)
                 res.append((sub, charged_faces))
     return res
