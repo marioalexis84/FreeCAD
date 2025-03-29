@@ -224,7 +224,7 @@ def get_bit_pattern_dict(femelement_table, femnodes_ele_table, node_set):
     The number in the ele_dict is organized as a bit array.
     The corresponding bit is set, if the node of the node_set is contained in the element.
     """
-    print("BIT PATTERN", femelement_table, femnodes_ele_table, node_set)
+    # print("BIT PATTERN", femelement_table, femnodes_ele_table, node_set)
     FreeCAD.Console.PrintLog("len femnodes_ele_table: " + str(len(femnodes_ele_table)) + "\n")
     FreeCAD.Console.PrintLog("len node_set: " + str(len(node_set)) + "\n")
     FreeCAD.Console.PrintLog(f"node_set: {node_set}\n")
@@ -242,6 +242,55 @@ def get_bit_pattern_dict(femelement_table, femnodes_ele_table, node_set):
 
 
 # ************************************************************************************************
+def get_ccxelement_volumes_elements_from_binary_search(bit_pattern_dict):
+    tet10_mask = {0b1111111111: 1}
+    tet4_mask = {0b1111: 1}
+    hex8_mask = {0b11111111: 1}
+    hex20_mask = {0b11111111111111111111: 1}
+    pent6_mask = {0b111111: 1}
+    pent15_mask = {0b111111111111111: 1}
+    vol_dict = {
+        4: tet4_mask,
+        6: pent6_mask,
+        8: hex8_mask,
+        10: tet10_mask,
+        15: pent15_mask,
+        20: hex20_mask,
+    }
+    volumes = []
+    for ele in bit_pattern_dict:
+        mask_dict = vol_dict[bit_pattern_dict[ele][0]]
+        for key in mask_dict:
+            if (key & bit_pattern_dict[ele][1]) == key:
+                volumes.append(ele)
+    # print("VOLUMES:", volumes)
+    FreeCAD.Console.PrintLog(f"found Volumes: {len(volumes)}\n")
+    # FreeCAD.Console.PrintMessage("faces: {}\n".format(faces))
+    return volumes
+
+
+def get_ccxelement_faces_elements_from_binary_search(bit_pattern_dict):
+    tria3_mask = {0b111: 1}
+    tria6_mask = {0b111111: 1}
+    quad4_mask = {0b1111: 1}
+    quad8_mask = {0b11111111: 1}
+    vol_dict = {
+        3: tria3_mask,
+        6: tria6_mask,
+        4: quad4_mask,
+        8: quad8_mask,
+    }
+    faces = []
+    for ele in bit_pattern_dict:
+        mask_dict = vol_dict[bit_pattern_dict[ele][0]]
+        for key in mask_dict:
+            if (key & bit_pattern_dict[ele][1]) == key:
+                faces.append(ele)
+    # print("CARAS:", faces)
+    FreeCAD.Console.PrintMessage(f"found Edges: {len(faces)}\n")
+    return faces
+
+
 def get_ccxelement_edges_from_binary_search(bit_pattern_dict):
     tria3_mask = {0b011: 1, 0b110: 2, 0b101: 3}
     tria6_mask = {0b001011: 1, 0b010110: 2, 0b100101: 3}
@@ -259,7 +308,7 @@ def get_ccxelement_edges_from_binary_search(bit_pattern_dict):
         for key in mask_dict:
             if (key & bit_pattern_dict[ele][1]) == key:
                 faces.append([ele, mask_dict[key]])
-    print("EDGES:", faces)
+    # print("EDGES:", faces)
     FreeCAD.Console.PrintMessage(f"found Edges: {len(faces)}\n")
 
     return faces
@@ -292,7 +341,7 @@ def get_ccxelement_faces_from_binary_search(bit_pattern_dict):
         for key in mask_dict:
             if (key & bit_pattern_dict[ele][1]) == key:
                 faces.append([ele, mask_dict[key]])
-    print("FACES:", faces)
+    # print("FACES:", faces)
     FreeCAD.Console.PrintLog(f"found Faces: {len(faces)}\n")
     # FreeCAD.Console.PrintMessage("faces: {}\n".format(faces))
     return faces
@@ -1452,7 +1501,54 @@ def get_ref_shape_node_sum_geom_table(node_geom_table):
 
 # ************************************************************************************************
 # ***** methods for retrieving element face sets *************************************************
-# ***** pressure faces ***************************************************************************
+# ***** charged faces ****************************************************************************
+def get_charge_density_obj_elements(femmesh, femelement_table, femnodes_ele_table, femobj):
+    node_set = []
+    if femmesh.GroupCount:
+        node_set = get_femmesh_groupdata_sets_by_name(femmesh, femobj, "Node")
+        # FreeCAD.Console.PrintMessage("node_set_group: {}\n".format(node_set))
+        if node_set:
+            FreeCAD.Console.PrintLog(
+                "    Finite element mesh nodes where retrieved "
+                "from existent finite element mesh group data.\n"
+            )
+    if not node_set:
+        FreeCAD.Console.PrintLog(
+            "    Finite element mesh nodes will be retrieved "
+            "by searching the appropriate nodes in the finite element mesh.\n"
+        )
+        res = []
+        for feat, ref in femobj["Object"].References:
+            for sub_ref in ref:
+                sub = (feat, (sub_ref,))
+                node_set = get_femnodes_by_references(femmesh, [sub])
+                # FreeCAD.Console.PrintMessage("node_set_nogroup: {}\n".format(node_set))
+
+                # use set for node sets to be sure all nodes are unique
+                # use sorted to be sure the order is the same on different runs
+                # be aware a sorted set returns a list, because set are not sorted by default
+                charged_volume_node_set = sorted(set(node_set))
+
+                bit_pattern_dict = get_bit_pattern_dict(
+                    femelement_table, femnodes_ele_table, charged_volume_node_set
+                )
+                # print("PATTERN: ", bit_pattern_dict)
+                sh = feat.getSubObject(sub_ref)
+                if sh.ShapeType == "Solid":
+                    charged_elem = get_ccxelement_volumes_elements_from_binary_search(
+                        bit_pattern_dict
+                    )
+                elif sh.ShapeType == "Face":
+                    charged_elem = get_ccxelement_faces_elements_from_binary_search(
+                        bit_pattern_dict
+                    )
+                # elif sh.ShapeType == "Edge":
+                #    charged_elem = get_ccxelement_edges_from_binary_search(bit_pattern_dict)
+                res.append((sub, charged_elem))
+    # print("RESULT:", res)
+    return res
+
+
 def get_charge_density_obj_faces(femmesh, femelement_table, femnodes_ele_table, femobj):
     node_set = []
     if femmesh.GroupCount:
@@ -1483,7 +1579,7 @@ def get_charge_density_obj_faces(femmesh, femelement_table, femnodes_ele_table, 
                 bit_pattern_dict = get_bit_pattern_dict(
                     femelement_table, femnodes_ele_table, charged_face_node_set
                 )
-                print("PATTERN: ", bit_pattern_dict)
+                # print("PATTERN: ", bit_pattern_dict)
                 sh = feat.getSubObject(sub_ref)
                 if sh.ShapeType == "Face":
                     charged_faces = get_ccxelement_faces_from_binary_search(bit_pattern_dict)
@@ -1494,6 +1590,7 @@ def get_charge_density_obj_faces(femmesh, femelement_table, femnodes_ele_table, 
     return res
 
 
+# ***** pressure faces ***************************************************************************
 def get_pressure_obj_faces(femmesh, femelement_table, femnodes_ele_table, femobj):
     # see get_ccxelement_faces_from_binary_search for more information
     if is_solid_femmesh(femmesh):
