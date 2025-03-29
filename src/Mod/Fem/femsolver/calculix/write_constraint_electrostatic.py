@@ -76,24 +76,21 @@ def write_constraint(f, femobj, pot_obj, ccxwriter):
     if pot_obj.BoundaryCondition == "Dirichlet":
         f.write("*BOUNDARY\n")
         f.write("{},11,11,{:.13G}\n".format(pot_obj.Name, pot_obj.Potential.getValueAs("mV").Value))
-        f.write("\n")
     elif pot_obj.BoundaryCondition == "Neumann":
-        charge_density = pot_obj.ElectricFluxDensity.getValueAs("A*s/mm^2").Value
-
+        density = pot_obj.ElectricFluxDensity.getValueAs("C/mm^2").Value
         # check internal interface
         internal = _check_shared_interface(pot_obj)
-        for ref_shape in femobj["ElectricFluxFaces"]:
-            f.write("** " + ref_shape[0] + "\n")
+        for feat, refs in femobj["ElectricFluxFaces"]:
+            f.write("** " + feat + "\n")
             f.write("*DFLUX\n")
-            for ref in ref_shape[1]:
-                c = charge_density
+            for ref in refs:
+                d = density
                 if ref[0] in internal:
-                    c = charge_density / 2
+                    d = density / 2
                 for face, fno in ref[1]:
-                    if fno > 0:
-                        f.write("{},S{},{:.13G}\n".format(face, fno, c))
+                    f.write("{},S{},{:.13G}\n".format(face, fno, d))
 
-        f.write("\n")
+    f.write("\n")
 
 
 def _check_shared_interface(pot_obj):
