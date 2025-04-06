@@ -44,22 +44,6 @@ from femtools import membertools
 
 class CalculiXTools:
 
-    frd_var_conversion = {
-        "CONTACT": "Contact Displacement",
-        "PE": "Plastic Strain",
-        "CELS": "Contact Energy",
-        "ECD": "Current Density",
-        "EMFB": "Magnetic Field",
-        "EMFE": "Electric Field",
-        "ENER": "Internal Energy Density",
-        "FLUX": "Heat Flux",
-        "DISP": "Displacement",
-        "T": "Temperature",
-        "TOSTRAIN": "Strain",
-        "STRESS": "Stress",
-        "STR(%)": "Error",
-    }
-
     name = "CalculiX"
 
     def __init__(self, obj):
@@ -179,8 +163,33 @@ class CalculiXTools:
             if f.endswith(".vtm"):
                 res = os.path.join(self.obj.WorkingDirectory, f)
                 self.obj.Results[0].read(res)
-                self.obj.Results[0].renameArrays(self.frd_var_conversion)
+                self.obj.Results[0].renameArrays(self.frd_var_conversion(self.obj.AnalysisType))
                 break
+
+    def frd_var_conversion(self, analysis_type):
+        common = {
+            "CONTACT": "Contact Displacement",
+            "PE": "Plastic Strain",
+            "CELS": "Contact Energy",
+            "ECD": "Current Density",
+            "EMFB": "Magnetic Field",
+            "EMFE": "Electric Field",
+            "ENER": "Internal Energy Density",
+            "DISP": "Displacement",
+            "TOSTRAIN": "Strain",
+            "STRESS": "Stress",
+            "STR(%)": "Error",
+        }
+        thermo = {"FLUX": "Heat Flux", "T": "Temperature"}
+        electrostatic = {"T": "Potential", "FLUX": "Electric Flux Density"}
+
+        match analysis_type:
+            case "thermomech":
+                common.update(thermo)
+            case "electromagnetic":
+                common.update(electrostatic)
+
+        return common
 
     def version(self):
         p = QProcess()
