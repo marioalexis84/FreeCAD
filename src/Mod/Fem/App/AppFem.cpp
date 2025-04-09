@@ -66,6 +66,7 @@
 #include "FemPostFunction.h"
 #include "FemPostPipeline.h"
 #include "FemPostBranchFilter.h"
+#include "PostDataObjectPy.h"
 #include "PropertyPostDataObject.h"
 #endif
 
@@ -124,6 +125,8 @@ PyMOD_INIT_FUNC(Fem)
     Fem::StdMeshers_SegmentLengthAroundVertexPy ::init_type(femModule);
     Fem::StdMeshers_StartEndLengthPy            ::init_type(femModule);
     Fem::StdMeshers_Hexa_3DPy                   ::init_type(femModule);
+    Fem::PostDataObjectPy                       ::init_type();
+    Base::Interpreter().addType(Fem::PostDataObjectPy::type_object(), femModule, "PostDataObject");
 
     // Add Types to module
     Base::Interpreter().addType(&Fem::FemMeshPy::Type,femModule,"FemMesh");
