@@ -1121,15 +1121,7 @@ class _SolverElmer(CommandManager):
         FreeCADGui.doCommand(
             "FemGui.getActiveAnalysis().addObject(FreeCAD.ActiveDocument.ActiveObject)"
         )
-        elmer_prefs = FreeCAD.ParamGet("User parameter:BaseApp/Preferences/Mod/Fem/Elmer")
-        bin_out = elmer_prefs.GetBool("BinaryOutput", False)
-        save_id = elmer_prefs.GetBool("SaveGeometryIndex", False)
-        FreeCADGui.doCommand(
-            "FreeCAD.ActiveDocument.ActiveObject.BinaryOutput = {}".format(bin_out)
-        )
-        FreeCADGui.doCommand(
-            "FreeCAD.ActiveDocument.ActiveObject.SaveGeometryIndex = {}".format(save_id)
-        )
+        FreeCADGui.doCommand('FreeCAD.ActiveDocument.ActiveObject.SimulationType = "Steady State"')
 
         FreeCADGui.Selection.clearSelection()
         FreeCADGui.doCommand(
