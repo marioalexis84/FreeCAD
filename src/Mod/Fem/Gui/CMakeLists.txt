@@ -430,6 +430,7 @@ SET(FemGuiPythonUI_SRCS
     Resources/ui/ResultShow.ui
     Resources/ui/SolverCalculiX.ui
     Resources/ui/SolverCcxTools.ui
+    Resources/ui/SolverElmer.ui
 )
 
 ADD_CUSTOM_TARGET(FemPythonUi ALL
