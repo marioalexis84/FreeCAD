@@ -109,7 +109,7 @@ class ESwriter:
         permittivity = self.write.convert(
             self.write.constsdef["PermittivityOfVacuum"], "T^4*I^2/(L^3*M)"
         )
-        permittivity = round(permittivity, 20)  # to get rid of numerical artifacts
+        permittivity = f"{permittivity : .13g}"
         self.write.constant("Permittivity Of Vacuum", permittivity)
 
     def handleElectrostaticMaterial(self, bodies):
@@ -164,7 +164,9 @@ class ESwriter:
                 for name in sub_elem:
                     self.write.boundary(name, "! FreeCAD Name", obj.Label)
                     self.write.boundary(
-                        name, "Surface Charge Density", round(density.getValueAs("C/m^2").Value, 6)
+                        name,
+                        "Surface Charge Density",
+                        f"{density.getValueAs("C/m^2").Value : .13g}",
                     )
                     self.write.handled(obj)
 
@@ -182,7 +184,7 @@ class ESwriter:
                 for name in sub_elem:
                     self.write.bodyForce(name, "! FreeCAD Name", obj.Label)
                     self.write.bodyForce(
-                        name, "Charge Density", round(density.getValueAs("C/m^3").Value, 6)
+                        name, "Charge Density", f"{density.getValueAs("C/m^3").Value : .13g}"
                     )
                     self.write.handled(obj)
 
