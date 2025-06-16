@@ -1720,6 +1720,24 @@ PyObject* FemMeshPy::removeGroup(PyObject* args) const
     return PyBool_FromLong((long)(getFemMeshPtr()->removeGroup(theId)));
 }
 
+PyObject* FemMeshPy::renameGroup(PyObject* args) const
+{
+    int id;
+    const char* name = nullptr;
+    if (!PyArg_ParseTuple(args, "is", &id, &name)) {
+        return nullptr;
+    }
+
+    SMESH_Mesh* mesh = getFemMeshPtr()->getSMesh();
+    auto grp = mesh->GetGroup(id);
+
+    if (grp) {
+        grp->SetName(name);
+    }
+
+    Py_Return;
+}
+
 
 PyObject* FemMeshPy::getElementType(PyObject* args) const
 {

@@ -245,6 +245,16 @@
                 </UserDocu>
             </Documentation>
         </Methode>
+        <Methode Name="renameGroup" Const="true">
+            <Documentation>
+                <UserDocu>Reaname a group with a given group ID
+                    renameGroup(groupid, name)
+                    groupid: int
+                    name: str
+                    Returns None.
+                </UserDocu>
+            </Documentation>
+        </Methode>
         <Methode Name="getElementType" Const="true">
             <Documentation>
                 <UserDocu>Return the element type of a given ID</UserDocu>
