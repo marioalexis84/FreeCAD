@@ -505,6 +505,7 @@ SET(FemTestsZ88Ccxcantinl_SRCS
 
 SET(FemTools_SRCS
     femtools/__init__.py
+    femtools/base_objecttools.py
     femtools/ccxtools.py
     femtools/checksanalysis.py
     femtools/constants.py

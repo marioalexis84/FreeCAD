@@ -26,14 +26,12 @@ __author__ = "Mario Passaglia"
 __url__ = "https://www.freecad.org"
 
 import numpy as np
-import shutil
-import sys
-import tempfile
 from PySide.QtCore import QProcess, QThread
 
 import FreeCAD
 import Fem
 from freecad import utils
+from femtools.base_objecttools import BaseObjectTools
 
 try:
     from netgen import occ, meshing, config as ng_config
@@ -42,7 +40,7 @@ except ModuleNotFoundError:
     FreeCAD.Console.PrintError("To use FemMesh Netgen objects, install the Netgen Python bindings")
 
 
-class NetgenTools:
+class NetgenTools(BaseObjectTools):
 
     # to change order of nodes from netgen to smesh
     order_edge = {
@@ -78,26 +76,20 @@ class NetgenTools:
     name = "Netgen"
 
     def __init__(self, obj):
-        self.obj = obj
+        super().__init__(obj)
         self.fem_mesh = None
-        self.process = None
-        self.tmpdir = ""
-        self.process = QProcess()
         self.mesh_params = {}
-        self.param_grp = FreeCAD.ParamGet("User parameter:BaseApp/Preferences/Mod/Fem/Netgen")
+        self.param_grp = self.fem_param.GetGroup("Netgen")
 
     def write_geom(self):
-        if not self.tmpdir:
-            self.tmpdir = tempfile.mkdtemp(prefix="fem_")
-
         global_pla = self.obj.Shape.getGlobalPlacement()
         geom = self.obj.Shape.getPropertyOfGeometry()
         # get partner shape
         geom_trans = geom.transformed(FreeCAD.Placement().Matrix)
         geom_trans.Placement = global_pla
-        self.brep_file = self.tmpdir + "/shape.brep"
-        self.result_file = self.tmpdir + "/result.npy"
-        self.script_file = self.tmpdir + "/code.py"
+        self.brep_file = self.obj.WorkingDirectory + "/shape.brep"
+        self.result_file = self.obj.WorkingDirectory + "/result.npy"
+        self.script_file = self.obj.WorkingDirectory + "/code.py"
         geom_trans.exportBrep(self.brep_file)
 
     def prepare(self):
@@ -408,7 +400,3 @@ run_netgen(**{kwds})
             "Use MPI",
             ng_config.USE_MPI,
         )
-
-    def __del__(self):
-        if self.tmpdir:
-            shutil.rmtree(self.tmpdir)
