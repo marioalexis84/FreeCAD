@@ -50,11 +50,14 @@ endif()
 
 
 generate_from_xml(FemMeshPy)
+generate_from_xml(FemWorkerExtensionPy)
 
 
 SET(Python_SRCS
     FemMeshPy.xml
     FemMeshPyImp.cpp
+    FemWorkerExtensionPy.xml
+    FemWorkerExtensionPyImp.cpp
     HypothesisPy.cpp
     HypothesisPy.h
 )
@@ -133,6 +136,8 @@ SET(FemBase_SRCS
     FemConstraint.h
     FemMeshProperty.cpp
     FemMeshProperty.h
+    FemWorkerExtension.h
+    FemWorkerExtension.cpp
     )
 SOURCE_GROUP("Base types" FILES ${FemBase_SRCS})
 

@@ -48,6 +48,15 @@ class MeshNetgen(base_fempythonobject.BaseFemPythonObject):
         for prop in self._get_properties():
             prop.add_to_object(obj)
 
+        obj.addExtension("Fem::FemWorkerExtensionPython")
+
+    def computeWorker(self, obj):
+        obj.WorkerTool.run()
+        print("COMPUTE:", str(obj))
+        print("WD_obj:", obj.WorkingDirectory)
+
+        return None
+
     def _get_properties(self):
         prop = []
 
@@ -567,6 +576,10 @@ class MeshNetgen(base_fempythonobject.BaseFemPythonObject):
                 )
                 # update enum values
                 setattr(obj, prop.name, prop.value)
+
+        # update worker extension
+        if not obj.hasExtension("Fem::FemWorkerExtensionPython"):
+            obj.addExtension("Fem::FemWorkerExtensionPython")
 
     def get_predef_fineness_params(self, fineness):
         # set specific parameters by fineness

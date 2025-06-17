@@ -59,6 +59,7 @@
 #include "FemSetGeometryObject.h"
 #include "FemSetNodesObject.h"
 #include "FemSolverObject.h"
+#include "FemWorkerExtension.h"
 #include "HypothesisPy.h"
 
 #ifdef FC_USE_VTK
@@ -180,6 +181,9 @@ PyMOD_INIT_FUNC(Fem)
 
     Fem::FemSolverObject                      ::init();
     Fem::FemSolverObjectPython                ::init();
+
+    Fem::FemWorkerExtension                   ::init();
+    Fem::FemWorkerExtensionPython             ::init();
 
 #ifdef FC_USE_VTK
     Fem::FemPostSmoothFilterExtension         ::init();

@@ -41,6 +41,7 @@ class SolverCalculiX(base_fempythonobject.BaseFemPythonObject):
 
     def __init__(self, obj):
         super().__init__(obj)
+        obj.addExtension("Fem::FemWorkerExtensionPython")
 
         for prop in self._get_properties():
             prop.add_to_object(obj)
@@ -322,3 +323,8 @@ class SolverCalculiX(base_fempythonobject.BaseFemPythonObject):
         )
 
         return prop
+
+    def onDocumentRestored(self, obj):
+        # update extensions
+        if not obj.hasExtension("Fem::FemWorkerExtensionPython"):
+            obj.addExtension("Fem::FemWorkerExtensionPython")

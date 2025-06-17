@@ -42,11 +42,6 @@ FemSolverObject::FemSolverObject()
                       "Solver",
                       App::PropertyType(App::Prop_ReadOnly | App::Prop_Output),
                       "Solver results list");
-    ADD_PROPERTY_TYPE(WorkingDirectory,
-                      (""),
-                      "Solver",
-                      App::PropertyType(App::Prop_Transient | App::Prop_Hidden | App::Prop_Output),
-                      "Solver working directory");
 }
 
 FemSolverObject::~FemSolverObject() = default;

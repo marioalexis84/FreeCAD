@@ -26,7 +26,6 @@
 #define Fem_FemSolverObject_H
 
 #include <App/FeaturePython.h>
-#include <App/PropertyFile.h>
 #include <Mod/Fem/FemGlobal.h>
 
 namespace Fem
@@ -42,7 +41,6 @@ public:
     ~FemSolverObject() override;
 
     App::PropertyLinkList Results;
-    App::PropertyPath WorkingDirectory;
     // Attributes are implemented in the FemSolverObjectPython
 
     /// returns the type name of the ViewProvider

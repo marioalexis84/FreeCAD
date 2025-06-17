@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<GenerateModel xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="generateMetaModel_Module.xsd">
+    <PythonExport
+        Father="ExtensionPy"
+        Name="FemWorkerExtensionPy"
+        Twin="FemWorkerExtension"
+        TwinPointer="FemWorkerExtension"
+        Include="Mod/Fem/App/FemWorkerExtension.h"
+        Namespace="Fem"
+        FatherInclude="App/ExtensionPy.h"
+        FatherNamespace="App">
+        <Documentation>
+            <Author Licence="LGPL" Name="Mario Passaglia" EMail="mpassaglia@cbc.uba.ar" />
+            <UserDocu>Worker extension to manage meshers and solvers</UserDocu>
+        </Documentation>
+        <Methode Name="computeWorker">
+            <Documentation>
+                <UserDocu>computeWorker() -> None
+Run external worker</UserDocu>
+            </Documentation>
+        </Methode>
+    </PythonExport>
+</GenerateModel>
