@@ -215,10 +215,7 @@ class Writer:
     def _writeMesh(self):
         mesh = self.getSingleMember("Fem::FemMeshObject")
         unvPath = os.path.join(self.directory, "mesh.unv")
-        groups = []
-        groups.extend(self._builder.getBodyNames())
-        groups.extend(self._builder.getBoundaryNames())
-        self._exportToUnv(groups, mesh, unvPath)
+        mesh.FemMesh.write(unvPath)
         if self.testmode:
             Console.PrintMessage(
                 "Solver Elmer testmode, ElmerGrid will not be used. It might not be installed.\n"
