@@ -42,7 +42,7 @@ public:
     ~DlgSettingsFemMystranImp() override;
 
 protected Q_SLOTS:
-    void onfileNameChanged(QString FileName);
+    void onfileNameSelected(QString fileName);
 
 protected:
     void saveSettings() override;
