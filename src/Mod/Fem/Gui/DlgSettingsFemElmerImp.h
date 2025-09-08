@@ -41,7 +41,7 @@ public:
     ~DlgSettingsFemElmerImp() override;
 
 protected Q_SLOTS:
-    void onfileNameSelected(QString FileName);
+    void onfileNameSelected(const QString& fileName);
 
 protected:
     void saveSettings() override;

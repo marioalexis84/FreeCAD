@@ -99,7 +99,7 @@ void DlgSettingsFemZ88Imp::changeEvent(QEvent* e)
     }
 }
 
-void DlgSettingsFemZ88Imp::onfileNameSelected(QString fileName)
+void DlgSettingsFemZ88Imp::onfileNameSelected(const QString& fileName)
 {
     if (!fileName.isEmpty() && QStandardPaths::findExecutable(fileName).isEmpty()) {
         QMessageBox::critical(this, tr("Z88"), tr("Executable '%1' not found").arg(fileName));

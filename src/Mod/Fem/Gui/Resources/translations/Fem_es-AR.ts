@@ -1520,14 +1520,11 @@ añadir un contenedor de análisis</translation>
     </message>
     <message>
       <location filename="../../DlgSettingsFemGmshImp.cpp" line="92"/>
-      <source>The specified executable
+      <source>The specified file \n'%1'\n does not exist or is not executable\nSpecify another file.</source>
+      <translation>el especificado
 '%1'
- does not exist!
-Specify another file.</source>
-      <translation type="unfinished">The specified executable
-'%1'
- does not exist!
-Specify another file.</translation>
+ no existe eseet!
+Specify otro.</translation>
     </message>
   </context>
   <context>

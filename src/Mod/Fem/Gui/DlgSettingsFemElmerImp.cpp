@@ -89,7 +89,7 @@ void DlgSettingsFemElmerImp::changeEvent(QEvent* e)
     }
 }
 
-void DlgSettingsFemElmerImp::onfileNameSelected(QString fileName)
+void DlgSettingsFemElmerImp::onfileNameSelected(const QString& fileName)
 {
     if (!fileName.isEmpty() && QStandardPaths::findExecutable(fileName).isEmpty()) {
         QMessageBox::critical(this, tr("Elmer"), tr("Executable '%1' not found").arg(fileName));

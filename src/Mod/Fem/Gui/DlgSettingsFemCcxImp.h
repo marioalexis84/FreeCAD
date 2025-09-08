@@ -42,7 +42,7 @@ public:
     ~DlgSettingsFemCcxImp() override;
 
 protected Q_SLOTS:
-    void onfileNameSelected(QString fileName);
+    void onfileNameSelected(const QString& fileName);
 
 protected:
     void saveSettings() override;

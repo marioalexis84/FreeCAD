@@ -73,7 +73,7 @@ void DlgSettingsFemMystranImp::changeEvent(QEvent* e)
     }
 }
 
-void DlgSettingsFemMystranImp::onfileNameSelected(QString fileName)
+void DlgSettingsFemMystranImp::onfileNameSelected(const QString& fileName)
 {
     if (!fileName.isEmpty() && QStandardPaths::findExecutable(fileName).isEmpty()) {
         QMessageBox::critical(this, tr("Mystran"), tr("Executable '%1' not found").arg(fileName));

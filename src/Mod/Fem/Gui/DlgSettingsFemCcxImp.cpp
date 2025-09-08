@@ -147,7 +147,7 @@ void DlgSettingsFemCcxImp::changeEvent(QEvent* e)
     }
 }
 
-void DlgSettingsFemCcxImp::onfileNameSelected(QString fileName)
+void DlgSettingsFemCcxImp::onfileNameSelected(const QString& fileName)
 {
     if (!fileName.isEmpty() && QStandardPaths::findExecutable(fileName).isEmpty()) {
         QMessageBox::critical(this, tr("CalculiX"), tr("Executable '%1' not found").arg(fileName));

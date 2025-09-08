@@ -156,10 +156,7 @@
            <set>Qt::AlignLeft|Qt::AlignTrailing|Qt::AlignVCenter</set>
           </property>
           <property name="toolTip">
-           <string>Number of parallel tasks. Set to `1` if Elmer does not use MPI.
-It is recommended to use an even number of cores to benefit from mesh symmetries
-(Using 8 cores can be faster than 9 cores).
-In extreme cases ElmerSolver might not converge if the core number is too high.</string>
+           <string>Number of parallel tasks. Set to `1` if Elmer does not use MPI.&lt;br&gt;It is recommended to use an even number of cores to benefit from mesh symmetries&lt;br&gt;(Using 8 cores can be faster than 9 cores).&lt;br&gt;In extreme cases ElmerSolver might not converge if the core number is too high.</string>
           </property>
           <property name="minimum">
            <number>1</number>
@@ -175,8 +172,7 @@ In extreme cases ElmerSolver might not converge if the core number is too high.<
         <item row="2" column="0">
          <widget class="Gui::PrefCheckBox" name="cb_filtering">
           <property name="toolTip">
-           <string>The mesh volume regions processed by each CPU core
-will   be merged to make the volume boundaries invisible.</string>
+           <string>The mesh volume regions processed by each CPU core&lt;br&gt;will be merged to make the volume boundaries invisible.</string>
           </property>
           <property name="text">
            <string>Filter results</string>
