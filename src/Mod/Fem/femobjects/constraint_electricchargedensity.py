@@ -79,6 +79,15 @@ class ConstraintElectricChargeDensity(base_fempythonobject.BaseFemPythonObject):
         )
         prop.append(
             _PropHelper(
+                type="App::PropertyBool",
+                name="Concentrated",
+                group="Electric Charge Density",
+                doc="Use concentrated charges at the nodes",
+                value=False,
+            )
+        )
+        prop.append(
+            _PropHelper(
                 type="App::PropertyEnumeration",
                 name="Mode",
                 group="Electric Charge Density",
@@ -88,6 +97,23 @@ class ConstraintElectricChargeDensity(base_fempythonobject.BaseFemPythonObject):
         )
 
         return prop
+
+    def onDocumentRestored(self, obj):
+        print("restored", obj.Name)
+        # update old project with new properties
+        for prop in self._get_properties():
+            try:
+                obj.getPropertyByName(prop.name)
+            except Base.PropertyError:
+                prop.add_to_object(obj)
+
+    def onChanged(self, obj, prop):
+        print("change", prop)
+        if prop == "Mode":
+            if obj.Mode == "Total Source":
+                obj.setPropertyStatus("Concentrated", "-ReadOnly")
+            else:
+                obj.setPropertyStatus("Concentrated", "ReadOnly")
 
     def get_total_source_density(self, obj):
         """
