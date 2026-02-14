@@ -148,7 +148,7 @@ def setup(doc=None, solvertype="elmer"):
 
     # constraint initial temperature
     con_inittemp = ObjectsFem.makeConstraintInitialTemperature(doc, "ConstraintInitialTemperature")
-    con_inittemp.initialTemperature = 300.0
+    con_inittemp.InitialTemperature = 300.0
     analysis.addObject(con_inittemp)
 
     # mesh
