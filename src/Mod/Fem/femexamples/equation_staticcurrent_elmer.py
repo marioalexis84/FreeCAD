@@ -45,7 +45,7 @@ def get_information():
         "name": "Joule heating",
         "meshtype": "solid",
         "meshelement": "Tet10",
-        "constraints": ["electrostatic potential", "current density"],
+        "constraints": ["electromagnetic", "current density"],
         "solvers": ["elmer"],
         "material": "solid",
         "equations": ["static current"],
@@ -134,7 +134,7 @@ def setup(doc=None, solvertype="elmer"):
     analysis.addObject(material_obj)
 
     # voltage on one end
-    Voltage = ObjectsFem.makeConstraintElectrostaticPotential(doc, "Voltage")
+    Voltage = ObjectsFem.makeConstraintElectromagnetic(doc, "Voltage")
     Voltage.References = [(Wire, "Face2")]
     Voltage.Potential = "0 V"
     analysis.addObject(Voltage)

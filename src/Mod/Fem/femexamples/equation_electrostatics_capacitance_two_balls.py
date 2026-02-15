@@ -40,7 +40,7 @@ def get_information():
         "name": "Electrostatics Capacitance Two Balls",
         "meshtype": "solid",
         "meshelement": "Tet4",
-        "constraints": ["electrostatic potential"],
+        "constraints": ["electromagnetic"],
         "solvers": ["elmer"],
         "material": "fluid",
         "equations": ["electrostatic"],
@@ -139,7 +139,7 @@ def setup(doc=None, solvertype="elmer"):
 
     # constraint potential 1st
     name_pot1 = "ElectrostaticPotential1"
-    con_elect_pot1 = ObjectsFem.makeConstraintElectrostaticPotential(doc, name_pot1)
+    con_elect_pot1 = ObjectsFem.makeConstraintElectromagnetic(doc, name_pot1)
     con_elect_pot1.References = [(geom_obj, "Face1")]
     con_elect_pot1.FarField = True
     con_elect_pot1.PotentialEnabled = False
@@ -147,7 +147,7 @@ def setup(doc=None, solvertype="elmer"):
 
     # constraint potential 2nd
     name_pot2 = "ElectrostaticPotential2"
-    con_elect_pot2 = ObjectsFem.makeConstraintElectrostaticPotential(doc, name_pot2)
+    con_elect_pot2 = ObjectsFem.makeConstraintElectromagnetic(doc, name_pot2)
     con_elect_pot2.References = [(geom_obj, "Face2")]
     con_elect_pot2.CapacitanceBody = 1
     con_elect_pot2.CapacitanceBodyEnabled = True
@@ -156,7 +156,7 @@ def setup(doc=None, solvertype="elmer"):
 
     # constraint potential 3rd
     name_pot3 = "ElectrostaticPotential3"
-    con_elect_pot3 = ObjectsFem.makeConstraintElectrostaticPotential(doc, name_pot3)
+    con_elect_pot3 = ObjectsFem.makeConstraintElectromagnetic(doc, name_pot3)
     con_elect_pot3.References = [(geom_obj, "Face3")]
     con_elect_pot3.CapacitanceBody = 2
     con_elect_pot3.CapacitanceBodyEnabled = True
