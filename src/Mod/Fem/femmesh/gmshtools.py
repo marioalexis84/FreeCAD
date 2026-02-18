@@ -51,22 +51,11 @@ class GmshTools:
 
     name = "Gmsh"
 
-    def __init__(self, gmsh_mesh_obj, analysis=None):
+    def __init__(self, gmsh_mesh_obj):
 
-        # mesh obj
         self.mesh_obj = gmsh_mesh_obj
-
         self.process = QProcess()
-        # analysis
-        self.analysis = None
-        if analysis:
-            self.analysis = analysis
-        else:
-            for i in self.mesh_obj.InList:
-                if i.isDerivedFrom("Fem::FemAnalysis"):
-                    self.analysis = i
-                    break
-
+        self.analysis = gmsh_mesh_obj.getParentGroup()
         self.load_properties()
         self.error = False
 

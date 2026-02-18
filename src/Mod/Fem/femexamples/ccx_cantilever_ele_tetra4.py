@@ -89,5 +89,16 @@ def setup(doc=None, solvertype="ccxtools"):
     femmesh_obj.CharacteristicLengthMax = "150.0 mm"
     femmesh_obj.CharacteristicLengthMin = "150.0 mm"
 
+    # generate the mesh
+    from femmesh import gmshtools
+
+    gmsh_mesh = gmshtools.GmshTools(femmesh_obj, doc.getObject("Analysis"))
+    error = None
+    try:
+        gmsh_mesh.create_mesh()
+    except Exception:
+        error = sys.exc_info()[1]
+        FreeCAD.Console.PrintError(f"Unexpected error when creating mesh: {error}\n")
+
     doc.recompute()
     return doc
