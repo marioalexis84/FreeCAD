@@ -312,4 +312,17 @@ def create_elements(femmesh):
     femmesh.addVolume([51, 44, 45, 34, 217, 95, 228, 218, 144, 136], 225)
     femmesh.addVolume([9, 29, 39, 30, 147, 127, 215, 148, 78, 126], 226)
     femmesh.addVolume([40, 9, 19, 39, 214, 105, 168, 90, 215, 169], 227)
+
+    # Face1
+    f = femmesh.addFaceList([8,6,50, 52,195,192,6,5,50,101,194,195,5,7,50,76,193,194,7,8,50,103,192,193], [6,6,6,6])
+    idx = femmesh.addGroup("Face1", "Face")
+    femmesh.addGroupElements(idx, f)
+    # Face2
+    f = femmesh.addFaceList([1, 2, 49, 100, 190, 191, 2, 4, 49, 64, 189, 190, 4, 3, 49, 102, 188, 189, 3, 1, 49, 88, 191, 188], [6, 6, 6, 6])
+    idx = femmesh.addGroup("Face2", "Face")
+    femmesh.addGroupElements(idx, f)
+    # Solid1
+    idx = femmesh.addGroup("Solid1", "Volume")
+    femmesh.addGroupElements(idx, list(range(149, 228)))
+
     return True

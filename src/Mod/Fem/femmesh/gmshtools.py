@@ -234,7 +234,7 @@ class GmshTools:
     def create_mesh(self):
         self.prepare()
         p = self.compute()
-        p.waitForFinished()
+        p.waitForFinished(-1)
         self.update_properties()
 
     def start_logs(self):

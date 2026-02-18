@@ -125,21 +125,34 @@ def setup(doc=None, solvertype="elmer"):
     analysis.addObject(con_fixed)
 
     # mesh
-    from .meshes.mesh_eigenvalue_of_elastic_beam_tetra10 import create_nodes
-    from .meshes.mesh_eigenvalue_of_elastic_beam_tetra10 import create_elements
-
-    fem_mesh = Fem.FemMesh()
-    control = create_nodes(fem_mesh)
-    if not control:
-        FreeCAD.Console.PrintError("Error on creating nodes.\n")
-    control = create_elements(fem_mesh)
-    if not control:
-        FreeCAD.Console.PrintError("Error on creating elements.\n")
     femmesh_obj = analysis.addObject(ObjectsFem.makeMeshGmsh(doc, get_meshname()))[0]
-    femmesh_obj.FemMesh = fem_mesh
     femmesh_obj.Shape = geom_obj
     femmesh_obj.SecondOrderLinear = False
     femmesh_obj.CharacteristicLengthMax = "40.80 mm"
+
+    # generate the mesh
+    from femmesh import gmshtools
+
+    gmsh_mesh = gmshtools.GmshTools(femmesh_obj, analysis)
+    error = None
+    try:
+        gmsh_mesh.create_mesh()
+    except Exception:
+        error = sys.exc_info()[1]
+        FreeCAD.Console.PrintError(f"Unexpected error when creating mesh: {error}\n")
+    if error:
+        # try to create from existing mesh
+
+        from .meshes.mesh_eigenvalue_of_elastic_beam_tetra10 import create_nodes, create_elements
+
+        fem_mesh = Fem.FemMesh()
+        control = create_nodes(fem_mesh)
+        if not control:
+            FreeCAD.Console.PrintError("Error on creating nodes.\n")
+        control = create_elements(fem_mesh)
+        if not control:
+            FreeCAD.Console.PrintError("Error on creating elements.\n")
+        femmesh_obj.FemMesh = fem_mesh
 
     doc.recompute()
     return doc

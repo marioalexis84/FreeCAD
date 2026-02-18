@@ -82,6 +82,10 @@ def setup(doc=None, solvertype="ccxtools"):
     elif solvertype == "elmer":
         solver_obj = ObjectsFem.makeSolverElmer(doc, "SolverElmer")
         ObjectsFem.makeEquationElasticity(doc, solver_obj)
+        # remesh to generate groups
+        from femmesh import gmshtools
+        gmsh_mesh = gmshtools.GmshTools(doc.Mesh, analysis)
+        gmsh_mesh.create_mesh()
     else:
         FreeCAD.Console.PrintWarning(
             "Unknown or unsupported solver type: {}. "

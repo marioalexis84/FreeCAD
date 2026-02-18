@@ -238,6 +238,12 @@ class CalculiXTools:
             case "electromagnetic":
                 return "Potential"
 
+    def run_solver(self):
+        self.prepare()
+        p = self.compute()
+        p.waitForFinished(-1)
+        self.update_properties()
+
     def version(self):
         p = QProcess()
         ccx_bin = settings.get_binary("Calculix")

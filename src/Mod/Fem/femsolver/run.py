@@ -37,6 +37,7 @@ __author__ = "Markus Hovorka, Bernd Hahnebach"
 __url__ = "https://www.freecad.org"
 
 import os
+import sys
 import os.path
 import shutil
 import tempfile
@@ -48,6 +49,8 @@ import FreeCAD as App
 from . import settings
 from . import signal
 from . import task
+from femsolver.elmer import elmertools
+from femsolver.calculix import calculixtools
 from femtools import femutils
 from femtools import membertools
 from femtools.errors import DirectoryDoesNotExistError
@@ -121,6 +124,19 @@ def run_fem_solver(solver, working_dir=None):
             else:
                 App.Console.PrintError(f"Houston, we have a problem...!\n{message}\n")
         App.Console.PrintMessage("Run of CalxuliX ccx tools solver finished.\n")
+    elif solver.Proxy.Type in ["Fem::SolverElmer", "Fem::SolverCalculiX"]:
+        tool = None
+        match solver.Proxy.Type:
+            case "Fem::SolverElmer":
+                tool = elmertools.ElmerTools(solver)
+            case "Fem::SolverCalculiX":
+                tool = calculixtools.CalculiXTools(solver)
+        try:
+            tool.run_solver()
+        except Exception:
+            error = sys.exc_info()[1]
+            FreeCAD.Console.PrintError(f"Unexpected error when running solver: {error}\n")
+
     else:
         # App.Console.PrintMessage("Frame work solver!\n")
         try:

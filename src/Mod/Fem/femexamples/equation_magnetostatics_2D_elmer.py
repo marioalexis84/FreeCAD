@@ -25,7 +25,6 @@ import sys
 import FreeCAD
 from FreeCAD import Vector
 
-import Draft
 import ObjectsFem
 import Part
 
@@ -79,9 +78,8 @@ def setup(doc=None, solvertype="elmer"):
     p2 = Vector(200.0, -200.0, 0.0)
     p3 = Vector(200.0, -100.0, 0.0)
     p4 = Vector(0.0, -100.0, 0.0)
-    Horseshoe_lower = Draft.make_wire([p1, p2, p3, p4], closed=True)
-    Horseshoe_lower.MakeFace = True
-    Horseshoe_lower.Label = "Lower_End"
+    Horseshoe_lower = doc.addObject("Part::Feature", "Lower_End")
+    Horseshoe_lower.Shape = Part.makeFace(Part.makePolygon([p1, p2, p3, p4, p1]))
     Horseshoe_lower.ViewObject.Visibility = False
 
     # wire defining the upper horse shoe end
@@ -89,9 +87,8 @@ def setup(doc=None, solvertype="elmer"):
     p2 = Vector(200.0, 100.0, 0.0)
     p3 = Vector(200.0, 200.0, 0.0)
     p4 = Vector(0.0, 200.0, 0.0)
-    Horseshoe_upper = Draft.make_wire([p1, p2, p3, p4], closed=True)
-    Horseshoe_upper.MakeFace = True
-    Horseshoe_upper.Label = "Upper_End"
+    Horseshoe_upper = doc.addObject("Part::Feature", "Upper_End")
+    Horseshoe_upper.Shape = Part.makeFace(Part.makePolygon([p1, p2, p3, p4, p1]))
     Horseshoe_upper.ViewObject.Visibility = False
 
     # the U-part of the horse shoe

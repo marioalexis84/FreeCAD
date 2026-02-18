@@ -128,6 +128,12 @@ class NetgenTools:
 
         return self.process
 
+    def create_mesh(self):
+        self.prepare()
+        p = self.compute()
+        p.waitForFinished(-1)
+        self.update_properties()
+
     code = """
 # report Python executable and meshing script
 import sys
