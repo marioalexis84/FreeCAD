@@ -34,7 +34,6 @@ import FreeCAD
 from FreeCAD import Units
 
 from . import femutils
-from femsolver.calculix.solver import ANALYSIS_TYPES
 
 
 def check_member_for_solver_calculix(analysis, solver, mesh, member):
@@ -42,15 +41,6 @@ def check_member_for_solver_calculix(analysis, solver, mesh, member):
     message = ""
 
     # solver
-    if solver.AnalysisType not in ANALYSIS_TYPES:
-        message += f"Unknown analysis type: {solver.AnalysisType}\n"
-    if solver.AnalysisType == "frequency":
-        if not hasattr(solver, "EigenmodeHighLimit"):
-            message += "Frequency analysis: Solver has no EigenmodeHighLimit.\n"
-        elif not hasattr(solver, "EigenmodeLowLimit"):
-            message += "Frequency analysis: Solver has no EigenmodeLowLimit.\n"
-        elif not hasattr(solver, "EigenmodesCount"):
-            message += "Frequency analysis: Solver has no EigenmodesCount.\n"
     if hasattr(solver, "MaterialNonlinearity") and solver.MaterialNonlinearity == "nonlinear":
         if not member.mats_nonlinear:
             message += (
