@@ -127,8 +127,8 @@ class _TaskPanel(base_femlogtaskpanel._BaseLogTaskPanel):
         self.form.cb_simulation_type.setCurrentIndex(index)
 
         self.form.fc_working_directory.setProperty("fileName", self.obj.WorkingDirectory)
-        self.form.ckb_working_directory.setChecked(True)
-        self.form.gpb_working_directory.setVisible(True)
+        self.form.ckb_working_directory.setChecked(False)
+        self.form.gpb_working_directory.setVisible(False)
 
     def simulation_type_changed(self, index):
         self.simulation_type = self.simulation_type_enum[index]
@@ -144,9 +144,9 @@ class _TaskPanel(base_femlogtaskpanel._BaseLogTaskPanel):
 
     def edit_input_clicked(self):
         gen_param = self.tool.fem_param.GetGroup("General")
-        internal = gen_param.GetBool("UseInternalEditor", True)
+        # internal = gen_param.GetBool("UseInternalEditor", True)
         ext_editor_path = gen_param.GetString("ExternalEditorPath", "")
-        if internal or not ext_editor_path:
+        if not ext_editor_path:
             FemGui.open(self.tool.model_file)
         else:
             ext_editor_process = QtCore.QProcess()

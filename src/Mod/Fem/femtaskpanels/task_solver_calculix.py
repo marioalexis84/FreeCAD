@@ -143,10 +143,9 @@ class _TaskPanel(base_femlogtaskpanel._BaseLogTaskPanel):
         self.run_process()
 
     def edit_input_clicked(self):
-        ccx_param = self.tool.fem_param.GetGroup("Ccx")
-        internal = ccx_param.GetBool("UseInternalEditor", True)
-        ext_editor_path = ccx_param.GetString("ExternalEditorPath", "")
-        if internal or not ext_editor_path:
+        gen_param = self.tool.fem_param.GetGroup("General")
+        ext_editor_path = gen_param.GetString("ExternalEditorPath", "")
+        if not ext_editor_path:
             FemGui.open(self.tool.model_file)
         else:
             ext_editor_process = QtCore.QProcess()

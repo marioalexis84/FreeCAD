@@ -54,12 +54,19 @@ class _TaskPanel(base_femlogtaskpanel._BaseLogTaskPanel):
 
         self.text_log = self.form.te_output
         self.text_time = self.form.l_time
+        self.prepared = False
+        self.run_complete = False
 
         self.setup_connections()
 
     def setup_connections(self):
         super().setup_connections()
 
+        QtCore.QObject.connect(
+            self.form.ckb_working_directory,
+            QtCore.SIGNAL("toggled(bool)"),
+            self.working_directory_toggled,
+        )
         QtCore.QObject.connect(
             self.form.qsb_max_size,
             QtCore.SIGNAL("valueChanged(Base::Quantity)"),
@@ -94,11 +101,43 @@ class _TaskPanel(base_femlogtaskpanel._BaseLogTaskPanel):
             self.fineness_changed,
         )
         QtCore.QObject.connect(
+            self.form.pb_write_input, QtCore.SIGNAL("clicked()"), self.write_input_clicked
+        )
+        QtCore.QObject.connect(
+            self.form.pb_edit_input, QtCore.SIGNAL("clicked()"), self.edit_input_clicked
+        )
+        QtCore.QObject.connect(
+            self.form.fc_working_directory,
+            QtCore.SIGNAL("fileNameSelected(QString)"),
+            self.working_directory_selected,
+        )
+        QtCore.QObject.connect(
             self.form.pb_get_netgen_version, QtCore.SIGNAL("clicked()"), self.get_version
         )
 
         self.get_object_params()
         self.set_widgets()
+
+    def preparation_finished(self):
+        # override base class method to not auto compute
+        self.prepared = True
+        if not self.run_complete:
+            self.timer.stop()
+            self.form.pb_edit_input.setEnabled(True)
+        else:
+            super().preparation_finished()
+
+    def apply(self):
+        self.text_log.clear()
+        self.elapsed.restart()
+        if self.prepared:
+            self.timer.start(100)
+            self.tool.compute()
+        else:
+            # run complete process if 'Apply' is pressed without
+            # previously write the input files
+            self.run_complete = True
+            super().apply()
 
     def get_object_params(self):
         self.min_size = self.obj.MinSize
@@ -144,6 +183,10 @@ class _TaskPanel(base_femlogtaskpanel._BaseLogTaskPanel):
         self.form.cb_fineness.setCurrentIndex(index)
 
         self.form.ckb_second_order.setChecked(self.second_order)
+
+        self.form.fc_working_directory.setProperty("fileName", self.obj.WorkingDirectory)
+        self.form.ckb_working_directory.setChecked(False)
+        self.form.gpb_working_directory.setVisible(False)
 
     def max_size_changed(self, base_quantity_value):
         self.max_size = base_quantity_value
@@ -200,3 +243,25 @@ class _TaskPanel(base_femlogtaskpanel._BaseLogTaskPanel):
             p["closeedgefac"] = obj.CloseEdgeFactor
 
         return p
+
+    def working_directory_selected(self):
+        self.obj.WorkingDirectory = self.form.fc_working_directory.property("fileName")
+
+    def write_input_clicked(self):
+        self.prepared = False
+        self.run_complete = False
+        self.run_process()
+
+    def edit_input_clicked(self):
+        gen_param = self.tool.fem_param.GetGroup("General")
+        # internal = gen_param.GetBool("UseInternalEditor", True)
+        ext_editor_path = gen_param.GetString("ExternalEditorPath", "")
+        if not ext_editor_path:
+            FemGui.open(self.tool.model_file)
+        else:
+            ext_editor_process = QtCore.QProcess()
+            ext_editor_process.start(ext_editor_path, [self.tool.model_file])
+            ext_editor_process.waitForFinished()
+
+    def working_directory_toggled(self, bool_value):
+        self.form.gpb_working_directory.setVisible(bool_value)

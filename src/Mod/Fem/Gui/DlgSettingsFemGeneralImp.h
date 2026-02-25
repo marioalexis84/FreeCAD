@@ -39,6 +39,9 @@ public:
     explicit DlgSettingsFemGeneralImp(QWidget* parent = nullptr);
     ~DlgSettingsFemGeneralImp() override;
 
+protected Q_SLOTS:
+    void onfileNameSelected(const QString& fileName);
+
 protected:
     void saveSettings() override;
     void loadSettings() override;

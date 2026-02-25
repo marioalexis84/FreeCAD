@@ -22,6 +22,8 @@
  *                                                                         *
  ***************************************************************************/
 
+#include <QMessageBox>
+#include <QStandardPaths>
 
 #include <App/Application.h>
 #include <Mod/Fem/App/FemTools.h>
@@ -74,6 +76,13 @@ DlgSettingsFemGeneralImp::DlgSettingsFemGeneralImp(QWidget* parent)
     if (!DefaultSolver && ui->cmb_def_solver->count() == 2) {
         ui->cmb_def_solver->setCurrentIndex(1);
     }
+
+    connect(
+        ui->fc_ext_editor,
+        &Gui::PrefFileChooser::fileNameSelected,
+        this,
+        &DlgSettingsFemGeneralImp::onfileNameSelected
+    );
 }
 
 DlgSettingsFemGeneralImp::~DlgSettingsFemGeneralImp() = default;
@@ -89,9 +98,10 @@ void DlgSettingsFemGeneralImp::saveSettings()
     ui->cb_wd_temp->onSave();
     ui->cb_wd_beside->onSave();
     ui->cb_wd_custom->onSave();
-    ui->le_wd_custom->onSave();
-    ui->cb_overwrite_solver_working_directory->onSave();
+    ui->fc_wd_custom->onSave();
     ui->cmb_def_solver->onSave();
+
+    ui->fc_ext_editor->onSave();
 }
 
 void DlgSettingsFemGeneralImp::loadSettings()
@@ -105,9 +115,10 @@ void DlgSettingsFemGeneralImp::loadSettings()
     ui->cb_wd_temp->onRestore();
     ui->cb_wd_beside->onRestore();
     ui->cb_wd_custom->onRestore();
-    ui->le_wd_custom->onRestore();
-    ui->cb_overwrite_solver_working_directory->onRestore();
+    ui->fc_wd_custom->onRestore();
     ui->cmb_def_solver->onRestore();
+
+    ui->fc_ext_editor->onRestore();
 }
 
 /**
@@ -120,6 +131,13 @@ void DlgSettingsFemGeneralImp::changeEvent(QEvent* e)
     }
     else {
         QWidget::changeEvent(e);
+    }
+}
+
+void DlgSettingsFemGeneralImp::onfileNameSelected(const QString& fileName)
+{
+    if (!fileName.isEmpty() && QStandardPaths::findExecutable(fileName).isEmpty()) {
+        QMessageBox::critical(this, tr("General"), tr("Executable '%1' not found").arg(fileName));
     }
 }
 
