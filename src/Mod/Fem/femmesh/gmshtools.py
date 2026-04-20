@@ -438,7 +438,21 @@ class GmshTools(ObjectTools):
                     else:
                         Console.PrintError("  A group with this name exists already.\n")
 
-        # group meshing for analysis
+        # check if we should create the node groups
+        if self.group_nodes_export:
+            for group_idx in fem_mesh.Groups[:]:
+                name = fem_mesh.getGroupName(group_idx)
+                node_set = set()
+                for element in fem_mesh.getGroupElements(group_idx):
+                    nodes = fem_mesh.getElementNodes(element)
+                    node_set.update(nodes)
+
+                if node_set:
+                    new_grp = fem_mesh.addGroup(name, "Node")
+                    fem_mesh.addGroupElements(new_grp, list(node_set))
+
+
+        # group meshing for analysis: Create element and node groups
         analysis_group_meshing = FreeCAD.ParamGet(
             "User parameter:BaseApp/Preferences/Mod/Fem/General"
         ).GetBool("AnalysisGroupMeshing", False)
@@ -460,20 +474,19 @@ class GmshTools(ObjectTools):
                                 if fem_mesh.getGroupName(grp_idx) == element:
                                     fem_mesh.addGroupElements(new_group, list(fem_mesh.getGroupElements(grp_idx)))
                                     break
+
+                        # and the cooresbonding node group
+                        node_set = set()
+                        for element in fem_mesh.getGroupElements(new_group):
+                            nodes = fem_mesh.getElementNodes(element)
+                            node_set.update(nodes)
+
+                        if node_set:
+                            new_node_grp = fem_mesh.addGroup(ge, "Node")
+                            fem_mesh.addGroupElements(new_node_grp, list(node_set))
+
                     else:
                         Console.PrintError("  A group with this name exists already.\n")
-
-        # For now: create node groups from all element groups, as required by elmer
-        for group_idx in fem_mesh.Groups[:]:
-            name = fem_mesh.getGroupName(group_idx)
-            node_set = set()
-            for element in fem_mesh.getGroupElements(group_idx):
-                nodes = fem_mesh.getElementNodes(element)
-                node_set.update(nodes)
-
-            if node_set:
-                new_grp = fem_mesh.addGroup(name, "Node")
-                fem_mesh.addGroupElements(new_grp, list(node_set))
 
         # else:
         #    Console.PrintMessage("  No Group meshing for analysis.\n")
