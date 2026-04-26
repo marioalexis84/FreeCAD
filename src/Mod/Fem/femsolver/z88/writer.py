@@ -58,26 +58,36 @@ class FemInputWriterZ88(writerbase.FemInputWriter):
     # ********************************************************************************************
     # write solver input
     def write_solver_input(self):
-        timestart = time.process_time()
+        timestart = time.time()
 
         FreeCAD.Console.PrintMessage("\nZ88 solver input writing...\n")
         FreeCAD.Console.PrintMessage(
             f"Write z88 input files to: {self.solver_obj.WorkingDirectory}\n"
         )
-
+        inicial = time.time()
         self.write_z88_mesh()
+        print("mesh", time.time() - inicial)
+        inicial = time.time()
         # write first materials and elements. They may be used by constraints and loads.
         self.write_z88_materials()
+        print("material", time.time() - inicial)
+        inicial = time.time()
         self.write_z88_elements_properties()
+        print("elements", time.time() - inicial)
+        inicial = time.time()
         self.write_z88_constraints()
+        print("constraints", time.time() - inicial)
+        inicial = time.time()
         self.write_z88_face_loads()
+        print("faceloads", time.time() - inicial)
+        inicial = time.time()
         self.write_z88_section_prints()
         self.write_z88_integration_properties()
         self.write_z88_memory_parameter()
         self.write_z88_solver_parameter()
 
         writing_time_string = "Writing time input file: {} seconds".format(
-            round((time.process_time() - timestart), 2)
+            round((time.time() - timestart), 2)
         )
         FreeCAD.Console.PrintMessage(f"{writing_time_string}\n\n")
 
@@ -286,12 +296,19 @@ class FemInputWriterZ88(writerbase.FemInputWriter):
             mesh_elem = mesh.Edges
             max_elem_nodes = 3
 
+        inicial = time.time()
         # get nodes from used elements
         nodes_in_use = set()
-        for e in mesh_elem:
-            nodes_in_use.update(mesh.getElementNodes(e))
-        nodes_in_use = sorted(nodes_in_use)
+        nodes_in_use = list(mesh_nodes.keys())
+        #        for e in mesh_elem:
+        #            nodes_in_use.update(mesh.getElementNodes(e))
+        #        nodes_in_use = sorted(nodes_in_use)
+        #        for e in mesh_elem:
+        #        map(lambda e: nodes_in_use.update(mesh.getElementNodes(e)), mesh_elem)
+        #        nodes_in_use = sorted(nodes_in_use)
 
+        print("nodos en uso", time.time() - inicial)
+        inicial = time.time()
         # save map node key -> array order
         # use masked array for nodes.
         # start it from 0 for easy indexing from smesh node numbering
@@ -304,12 +321,16 @@ class FemInputWriterZ88(writerbase.FemInputWriter):
         self.node_mask[nodes_in_use] = np.arange(len(nodes_in_use))
         # For consistency in z88 node/element files, force nodes id start from 1
         self.nodes["index"] = np.arange(1, len(nodes_in_use) + 1)
+        print("remap0", time.time() - inicial)
 
         nodecoords = []
-        for n in nodes_in_use:
-            nodecoords.append(mesh_nodes[n])
-
+        #        for n in nodes_in_use:
+        #            nodecoords.append(mesh_nodes[n])
+        inicial = time.time()
+        nodecoords = list(mesh_nodes.values())
         self.nodes["coords"] = nodecoords
+        print("remap", time.time() - inicial)
+        inicial = time.time()
 
         smesh_to_z88_type = z88utils.smesh_to_z88_type(self.solver_obj)
         dt_elements = np.dtype(
@@ -322,7 +343,7 @@ class FemInputWriterZ88(writerbase.FemInputWriter):
         self.elements["index"] = mesh_elem
 
         for elem in self.elements:
-            nodes = list(mesh.getElementNodes(elem["index"]))
+            nodes = self.node_mask[list(mesh.getElementNodes(elem["index"]))]
             n_len = len(nodes)
             smesh_type = smesh_type_from_nodes[n_len]
             try:
@@ -332,13 +353,15 @@ class FemInputWriterZ88(writerbase.FemInputWriter):
                     f"Mesh element {elem['index']}: {z88utils.smesh_type_names[smesh_type]} type not supported by Z88"
                 )
             elem["type"] = z88_type
-            elem["nodes"][:n_len] = self.nodes["index"][self.node_mask[nodes]][
+            elem["nodes"][:n_len] = self.nodes["index"][nodes][
                 z88utils.smesh_to_z88_order[smesh_type]
             ]
             elem["size"] = n_len
             # set dof for each node
-            self.nodes["dof"][self.node_mask[nodes]] = z88utils.z88_dof[elem["type"]]
+            self.nodes["dof"][nodes] = z88utils.z88_dof[z88_type]
 
+        print("elementos", time.time() - inicial)
+        inicial = time.time()
         self.element_id_map = dict(zip(self.elements["index"], range(e_count)))
 
         self.z88i1 = open(os.path.join(self.solver_obj.WorkingDirectory, "z88i1.txt"), "w")
@@ -350,16 +373,39 @@ class FemInputWriterZ88(writerbase.FemInputWriter):
             )
         )
 
+        print("escribir encabezado", time.time() - inicial)
+        inicial = time.time()
         # Z88 elements ascending order and starting from 1
-        for node in self.nodes:
-            self.z88i1.writelines(
-                "{0} {1} {2:E} {3:E} {4:E}\n".format(node["index"], node["dof"], *node["coords"])
+        #        for node in self.nodes:
+        #            self.z88i1.writelines(
+        #                "{0} {1} {2:E} {3:E} {4:E}\n".format(node["index"], node["dof"], *node["coords"])
+        #            )
+        self.z88i1.writelines(
+            map(
+                lambda node: "{0} {1} {2:E} {3:E} {4:E}\n".format(
+                    node["index"], node["dof"], *node["coords"]
+                ),
+                self.nodes,
+            )
+        )
+
+        print("escribir nodos", time.time() - inicial)
+        inicial = time.time()
+
+        #        for i, elem in enumerate(self.elements, start=1):
+        #            self.z88i1.writelines("{} {}\n".format(i, elem["type"]))
+        #            self.z88i1.writelines(" ".join(map(str, elem["nodes"][: elem["size"]])) + "\n")
+        #        for i, elem in enumerate(self.elements, start=1):
+        def write_elem(item):
+            i, elem = item
+            return "{} {}\n{}\n".format(
+                i, elem["type"], " ".join(map(str, elem["nodes"][: elem["size"]]))
             )
 
-        for i, elem in enumerate(self.elements, start=1):
-            self.z88i1.writelines("{} {}\n".format(i, elem["type"]))
-            self.z88i1.writelines(" ".join(map(str, elem["nodes"][: elem["size"]])) + "\n")
+        self.z88i1.writelines(map(write_elem, enumerate(self.elements, start=1)))
 
+        print("escribir elementos", time.time() - inicial)
+        inicial = time.time()
         self.z88i1.close()
 
     def node_id_map(self, idx):
