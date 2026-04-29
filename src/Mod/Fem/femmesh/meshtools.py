@@ -1509,7 +1509,7 @@ def pair_obj_reference(obj_ref):
     return pairs
 
 
-def get_elements(sets_getter, ref_pair, face_masks, edge_masks):
+def get_elements(sets_getter, ref_pair, face_masks, edge_masks, use_groups):
     ref_obj, sub_ref = ref_pair
     geom_type = ref_obj.getSubObject(sub_ref).ShapeType
     elem = []
@@ -1526,7 +1526,7 @@ def get_elements(sets_getter, ref_pair, face_masks, edge_masks):
         case 3:
             match geom_type:
                 case "Solid":
-                    elem = get_elements_by_references(sets_getter, ref_pair)
+                    elem = get_elements_by_references(sets_getter, ref_pair, use_groups)
                     is_sub_element = False
                 case "Face" | "Edge" | "Vertex":
                     elem = get_subelements_by_references(
@@ -1536,7 +1536,7 @@ def get_elements(sets_getter, ref_pair, face_masks, edge_masks):
         case 2:
             match geom_type:
                 case "Face":
-                    elem = get_elements_by_references(sets_getter, ref_pair)
+                    elem = get_elements_by_references(sets_getter, ref_pair, use_groups)
                     is_sub_element = False
                 case "Edge" | "Vertex":
                     elem = get_subelements_by_references(
@@ -1547,7 +1547,7 @@ def get_elements(sets_getter, ref_pair, face_masks, edge_masks):
             match geom_type:
                 case "Edge":
                     is_sub_element = False
-                    elem = get_elements_by_references(sets_getter, ref_pair)
+                    elem = get_elements_by_references(sets_getter, ref_pair, use_groups)
                 case "Vertex":
                     elem = get_subelements_by_references(
                         sets_getter, ref_pair, face_masks, edge_masks
@@ -1556,15 +1556,24 @@ def get_elements(sets_getter, ref_pair, face_masks, edge_masks):
         case 0:
             match geom_type:
                 case "Vertex":
-                    elem = get_elements_by_references(sets_getter, ref_pair)
+                    elem = get_elements_by_references(sets_getter, ref_pair, use_groups)
                     is_sub_element = False
 
     return (*elem, is_sub_element)
 
 
-def get_elements_by_references(sets_getter, femobj_ref):
-    node_set = []
-    result = []
+def get_elements_by_references(sets_getter, femobj_ref, use_groups):
+    #   result = []
+    feat, sub_ref = femobj_ref
+    sub = (feat, (sub_ref,))
+    mesh = sets_getter.mesh_object
+    # check if referenced shape is the mesh Part shape groups is in use
+    if use_groups and mesh.isDerivedFrom("Fem::FemMeshShapeBaseObject") and mesh.Shape == feat:
+        fem_mesh = mesh.FemMesh
+        for i in range(fem_mesh.GroupCount):
+            if fem_mesh.getGroupName(i) == sub_ref:
+                return (sub, fem_mesh.getGroupElements(i))
+
     # TODO get elements from mesh groups
     # if femmesh.GroupCount:
     #     node_set = get_femmesh_groupdata_sets_by_name(femmesh, femobj, "Node")
@@ -1574,31 +1583,30 @@ def get_elements_by_references(sets_getter, femobj_ref):
     #             "    Finite element mesh nodes where retrieved "
     #             "from existent finite element mesh group data.\n"
     #         )
-    if not node_set:
-        elem = []
-        FreeCAD.Console.PrintLog(
-            "    Finite element mesh nodes will be retrieved "
-            "by searching the appropriate nodes in the finite element mesh.\n"
-        )
-        feat, sub_ref = femobj_ref
-        sub = (feat, (sub_ref,))
-        node_set = get_femnodes_by_references(sets_getter.femmesh, [sub])
-        charged_volume_node_set = sorted(set(node_set))
+    # fallback to binary search
+    elem = []
+    FreeCAD.Console.PrintLog(
+        "    Finite element mesh nodes will be retrieved "
+        "by searching the appropriate nodes in the finite element mesh.\n"
+    )
+    node_set = get_femnodes_by_references(sets_getter.femmesh, [sub])
+    sort_node_list = sorted(set(node_set))
 
-        bit_pattern_dict = get_bit_pattern_dict(
-            sets_getter.femelement_table, sets_getter.femnodes_ele_table, charged_volume_node_set
-        )
-        sh = feat.getSubObject(sub_ref)
-        if sh.ShapeType == "Solid":
-            elem = get_element_volumes_elements_from_binary_search(bit_pattern_dict)
-        elif sh.ShapeType == "Face":
-            elem = get_element_faces_elements_from_binary_search(bit_pattern_dict)
-        elif sh.ShapeType == "Edge":
-            elem = get_element_edges_elements_from_binary_search(bit_pattern_dict)
+    bit_pattern_dict = get_bit_pattern_dict(
+        sets_getter.femelement_table, sets_getter.femnodes_ele_table, sort_node_list
+    )
+    sh = feat.getSubObject(sub_ref)
+    if sh.ShapeType == "Solid":
+        elem = get_element_volumes_elements_from_binary_search(bit_pattern_dict)
+    elif sh.ShapeType == "Face":
+        elem = get_element_faces_elements_from_binary_search(bit_pattern_dict)
+    elif sh.ShapeType == "Edge":
+        elem = get_element_edges_elements_from_binary_search(bit_pattern_dict)
 
-        result = (sub, elem)
+    return (sub, elem)
 
-    return result
+
+#    return result
 
 
 def get_subelements_by_references(sets_getter, femobj_ref, face_masks, edge_masks):

@@ -37,12 +37,13 @@ from femtools.femutils import type_of_obj
 
 
 class MeshSetsGetter:
-    def __init__(self, analysis_obj, solver_obj, mesh_obj, member):
+    def __init__(self, analysis_obj, solver_obj, mesh_obj, member, use_groups=True):
         # class attributes from parameter values
         self.analysis = analysis_obj
         self.solver_obj = solver_obj  # TODO without _obj
         self.mesh_object = mesh_obj  # TODO without _object
         self.member = member
+        self.use_groups = use_groups
 
         # more attributes
         self.analysis_type = self.solver_obj.AnalysisType
@@ -93,7 +94,10 @@ class MeshSetsGetter:
         self.femelement_faces_table = {}
         self.femelement_edges_table = {}
         self.femelement_count_test = True
-        self.mat_geo_sets = []
+        self.mat_geo_sets = {}
+
+        # maps to search elements by shape
+        self.shape_elements_map = {}
 
         # subelements masks
         self.edge_masks = {
@@ -226,10 +230,10 @@ class MeshSetsGetter:
             "node sets (groups), surface sets (groups) and element sets (groups)\n"
         )
 
-        time_start = time.process_time()
+        time_start = time.time()
 
         # materials and element geometry element sets getter
-        self.get_element_sets_material_and_femelement_geometry()
+        #        self.get_element_sets_material_and_femelement_geometry()
         self.get_materials_elements()
         self.get_shell_elements()
         self.get_beam_elements()
@@ -262,7 +266,9 @@ class MeshSetsGetter:
         self.get_constraints_electrostatic_faces()
         self.get_constraints_electricchargedensity_faces()
 
-        setstime = round((time.process_time() - time_start), 3)
+        print("MAPS", self.shape_elements_map)
+
+        setstime = round((time.time() - time_start), 3)
         FreeCAD.Console.PrintMessage(f"Getting mesh data time: {setstime} seconds.\n")
 
     # ********************************************************************************************
@@ -463,7 +469,14 @@ class MeshSetsGetter:
         result = []
         ref_data = meshtools.pair_obj_reference(obj.References)
         for ref_pair in ref_data:
-            result.append(meshtools.get_elements(self, ref_pair, self.face_masks, self.edge_masks))
+            if not ref_pair in self.shape_elements_map:
+                self.shape_elements_map[ref_pair] = meshtools.get_elements(
+                    self, ref_pair, self.face_masks, self.edge_masks, self.use_groups
+                )
+            self.mat_geo_set[ref_pair] = self.shape_elements_map[ref_pair][1:]
+            result.append(self.shape_elements_map[ref_pair])
+
+        #            result.append(meshtools.get_elements(self, ref_pair, self.face_masks, self.edge_masks))
 
         return result
 
