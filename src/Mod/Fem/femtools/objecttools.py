@@ -26,7 +26,7 @@ __author__ = "Mario Passaglia"
 __url__ = "https://www.freecad.org"
 
 
-from PySide.QtCore import QProcess
+from PySide.QtCore import QProcess, QObject, Signal
 from abc import ABC, abstractmethod
 import os
 import tempfile
@@ -34,18 +34,25 @@ import tempfile
 import FreeCAD
 
 
-class ObjectTools(ABC):
+class _Meta(type(ABC), type(QObject)):
+    pass
+
+
+class ObjectTools(ABC, QObject, metaclass=_Meta):
     """Abstract base class for the work with solvers and meshers"""
 
+    sign = Signal(str)
+
     def __init__(self, obj):
+        super().__init__()
         obj.Tool = self
         self.obj = obj
         self.model_file = ""
         self.process = QProcess()
         self.analysis = obj.getParentGroup()
         self.fem_param = FreeCAD.ParamGet("User parameter:BaseApp/Preferences/Mod/Fem")
+        self.sign.connect(lambda x: print("WORKING DIR:", x))
         self._create_working_directory()
-
         self.process.finished.connect(self._process_finished)
 
     def _create_working_directory(self):
@@ -72,6 +79,7 @@ class ObjectTools(ABC):
                     base_dir = FreeCAD.ConfigGet("UserHomePath")
                 self.obj.WorkingDirectory = os.path.join(base_dir, sub_dir)
                 os.makedirs(self.obj.WorkingDirectory, exist_ok=True)
+        self.sign.emit(str(self.obj.WorkingDirectory))
 
     @abstractmethod
     def prepare(self):
