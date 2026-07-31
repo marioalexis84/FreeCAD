@@ -39,7 +39,7 @@ def get_information():
         "meshtype": "solid",
         "meshelement": "Hexa8",
         "constraints": ["fixed", "force"],
-        "solvers": ["ccxtools"],
+        "solvers": ["ccxtools", "elmer"],
         "material": "solid",
         "equations": ["buckling"],
     }
@@ -92,6 +92,15 @@ def setup(doc=None, solvertype="ccxtools"):
     if solvertype == "ccxtools":
         solver_obj = ObjectsFem.makeSolverCalculiXCcxTools(doc, "CalculiXCcxTools")
         solver_obj.WorkingDir = ""
+    elif solvertype == "elmer":
+        solver_obj = ObjectsFem.makeSolverElmer(doc, "SolverElmer")
+        eq_obj = ObjectsFem.makeEquationElasticity(doc, solver_obj)
+        eq_obj.EigenAnalysis = True
+        eq_obj.StabilityAnalysis = True
+        eq_obj.CalculateStresses = False
+        eq_obj.CalculatePrincipal = False
+        eq_obj.DisplaceMesh = False
+        eq_obj.EigenSystemValues = 10
     else:
         FreeCAD.Console.PrintWarning(
             "Unknown or unsupported solver type: {}. "
@@ -113,6 +122,7 @@ def setup(doc=None, solvertype="ccxtools"):
     mat["Name"] = "CalculiX-Steel"
     mat["YoungsModulus"] = "210000 MPa"
     mat["PoissonRatio"] = "0.30"
+    mat["Density"] = "7900 kg/m^3"
     material_obj.Material = mat
     analysis.addObject(material_obj)
 
