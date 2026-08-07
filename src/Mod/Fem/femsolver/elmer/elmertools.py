@@ -47,11 +47,12 @@ class ElmerTools(ObjectTools):
         super().__init__(obj)
         self.model_file = ""
         self._result_format = ""
+        self.multiframe_info = [None, None]
 
     def prepare(self):
         w = writer.Writer(self.obj, self.obj.WorkingDirectory)
         w.write_solver_input()
-
+        self.multiframe_info = w.getMultiframeInfo()
         mesh = w.getMesh()
         mesh_file = os.path.join(self.obj.WorkingDirectory, "mesh.unv")
         mesh.FemMesh.write(mesh_file)
@@ -138,11 +139,12 @@ class ElmerTools(ObjectTools):
             self.obj.Results = tmp
             create = True
 
-        files = os.listdir(self.obj.WorkingDirectory)
+        res_dir = os.path.join(self.obj.WorkingDirectory, writer.RESULT_DIRECTORY)
+        files = os.listdir(res_dir)
         for f in files:
             base, ext = os.path.splitext(f)
             if ext == self._result_format:
-                res = os.path.join(self.obj.WorkingDirectory, f)
+                res = os.path.join(res_dir, f)
                 pipeline.read(res)
                 break
 
@@ -173,16 +175,17 @@ class ElmerTools(ObjectTools):
             tmp.append(dat)
             self.obj.Results = tmp
 
-        files = os.listdir(self.obj.WorkingDirectory)
+        dat_dir = os.path.join(self.obj.WorkingDirectory, writer.SCALARS_DIRECTORY)
+        files = os.listdir(dat_dir)
         dat_text = ""
         for f in files:
             if f.endswith(".dat"):
                 f_names = f + ".names"
                 if f_names in files:
-                    names_file = os.path.join(self.obj.WorkingDirectory, f_names)
+                    names_file = os.path.join(dat_dir, f_names)
                     with open(names_file, "r") as file:
                         dat_text += file.read() + "\n"
-                dat_file = os.path.join(self.obj.WorkingDirectory, f)
+                dat_file = os.path.join(dat_dir, f)
                 with open(dat_file, "r") as file:
                     dat_text += file.read() + "\n\n"
         dat.Text = dat_text

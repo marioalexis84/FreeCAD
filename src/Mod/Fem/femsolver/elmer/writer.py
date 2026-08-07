@@ -68,6 +68,9 @@ _COORDS_NON_MAGNETO_2D = [
     "Cylindric",
     "Cylindric Symmetric",
 ]
+RESULT_FILENAME = "FreeCAD"
+RESULT_DIRECTORY = "Result"
+SCALARS_DIRECTORY = "Scalars"
 
 
 def _getAllSubObjects(obj):
@@ -84,6 +87,7 @@ class Writer:
         self.analysis = solver.getParentGroup()
         self.solver = solver
         self.directory = directory
+        self.eigen_analysis = False
         Console.PrintMessage(f"Write elmer input files to: {self.directory}\n")
         self.testmode = testmode
         self._usedVarNames = set()
@@ -294,6 +298,9 @@ class Writer:
                     raise WriteError(
                         "The Elasticity equation requires at least one body with a solid material!"
                     )
+                if equation.EigenAnalysis:
+                    self.eigen_analysis = "buckling" if equation.StabilityAnalysis else "frequency"
+
                 if equation.References:
                     activeIn = equation.References[0][1]
                 else:
@@ -688,24 +695,21 @@ class Writer:
         # To get it back in the original size we let Elmer scale it back
         s["Coordinate Scaling Revert"] = True
         s["Equation"] = "ResultOutput"
-        if self.solver.SimulationType == "Scanning" or self.solver.SimulationType == "Transient":
+        if self.solver.SimulationType in ["Transient", "Scanning"]:
             # we must execute the post solver every time we output a result
             # therefore we must use the same as self.solver.OutputIntervals
             s["Exec Intervals"] = self.solver.OutputIntervals
         else:
             s["Exec Solver"] = "After simulation"
         s["Procedure"] = sifio.FileAttr("ResultOutputSolve/ResultOutputSolver")
-        s["Output File Name"] = sifio.FileAttr("FreeCAD")
+        s["Output File Name"] = sifio.FileAttr(RESULT_FILENAME)
+        s["Output Directory"] = sifio.FileAttr(RESULT_DIRECTORY)
+        s["Eigen Analysis"] = True if self.eigen_analysis else False
         s["Vtu Format"] = True
         s["Binary Output"] = self.solver.BinaryOutput
         s["Save Geometry Ids"] = self.solver.SaveGeometryIndex
         s["Vtu Time Collection"] = True
-        if self.unit_schema == Units.Scheme.MKS:
-            s["Coordinate Scaling Revert"] = True
-            Console.PrintMessage(
-                "'Coordinate Scaling Revert = Logical True' was "
-                "inserted into the solver input file.\n"
-            )
+
         for name in self.getAllBodies():
             self._addSolver(name, s)
 
@@ -750,6 +754,17 @@ class Writer:
 
     def getSingleMember(self, t):
         return membertools.get_single_member(self.analysis, t)
+
+    def getMultiframeInfo(self):
+        info = [None, None]
+        match self.eigen_analysis:
+            case "frequency":
+                info = ["Frequency", "Hz"]
+            case "buckling":
+                info = ["Buckling factor", ""]
+        if self.solver.SimulationType in ["Transient", "Scanning"]:
+            info = ["Timestep", "s"]
+        return info
 
 
 class WriteError(Exception):

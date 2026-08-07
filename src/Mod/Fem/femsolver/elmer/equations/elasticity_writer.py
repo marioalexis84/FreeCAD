@@ -105,6 +105,8 @@ class ElasticityWriter:
         s = sifio.createSection(sifio.SOLVER)
         s["Procedure"] = sifio.FileAttr("SaveData/SaveScalars")
         s["Exec Solver"] = "After all"
+        s["Output Directory"] = sifio.FileAttr(general_writer.SCALARS_DIRECTORY)
+        s["Parallel Reduce"] = True
         if equation.StabilityAnalysis:
             s["Filename"] = sifio.FileAttr("buckling.dat")
             s["Save Eigenvalues"] = True
