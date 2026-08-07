@@ -109,17 +109,29 @@ class ElmerTools(ObjectTools):
         self._load_dat_results()
 
     def _clear_results(self):
-        dir_content = os.listdir(self.obj.WorkingDirectory)
-        for f in dir_content:
-            path = os.path.join(self.obj.WorkingDirectory, f)
-            base, ext = os.path.splitext(path)
-            if ext in [".vtu", ".vtp", ".pvtu", ".pvd", ".dat"]:
-                os.remove(path)
-                # for .dat try to remove names file
-                if ext == ".dat":
-                    f_names = f + ".names"
-                    if f_names in dir_content:
-                        os.remove(path + ".names")
+        import shutil
+
+        dat_dir = os.path.join(self.obj.WorkingDirectory, writer.SCALARS_DIRECTORY)
+        shutil.rmtree(dat_dir, ignore_errors=True)
+        res_dir = os.path.join(self.obj.WorkingDirectory, writer.RESULT_DIRECTORY)
+        shutil.rmtree(res_dir, ignore_errors=True)
+
+    #        dir_content = []
+    #        try:
+    #            dir_content = os.listdir(dat_dir)
+    #        except FileNotFoundError:
+    #            return None
+    #
+    #        for f in dir_content:
+    #            path = os.path.join(dat_dir, f)
+    #            base, ext = os.path.splitext(path)
+    #            if ext in [".vtu", ".vtp", ".pvtu", ".pvd", ".dat"]:
+    #                os.remove(path)
+    #                # for .dat try to remove names file
+    #                if ext == ".dat":
+    #                    f_names = f + ".names"
+    #                    if f_names in dir_content:
+    #                        os.remove(path + ".names")
 
     def _load_vtk_results(self):
         # search current pipeline
@@ -139,8 +151,14 @@ class ElmerTools(ObjectTools):
             self.obj.Results = tmp
             create = True
 
+        files = []
         res_dir = os.path.join(self.obj.WorkingDirectory, writer.RESULT_DIRECTORY)
-        files = os.listdir(res_dir)
+        try:
+            files = os.listdir(res_dir)
+        except FileNotFoundError:
+            pipeline.Data = None
+            return None
+
         for f in files:
             base, ext = os.path.splitext(f)
             if ext == self._result_format:
@@ -176,10 +194,17 @@ class ElmerTools(ObjectTools):
             self.obj.Results = tmp
 
         dat_dir = os.path.join(self.obj.WorkingDirectory, writer.SCALARS_DIRECTORY)
-        files = os.listdir(dat_dir)
+        files = []
+        try:
+            files = os.listdir(dat_dir)
+        except FileNotFoundError:
+            dat.Text = ""
+            return None
+
         dat_text = ""
         for f in files:
             if f.endswith(".dat"):
+                # search for .names files
                 f_names = f + ".names"
                 if f_names in files:
                     names_file = os.path.join(dat_dir, f_names)
