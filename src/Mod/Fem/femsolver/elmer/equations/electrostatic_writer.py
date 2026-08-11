@@ -147,22 +147,30 @@ class ESwriter:
                 self.write.handled(obj)
 
         for obj in self.write.getMember("Fem::ConstraintElectricChargeDensity"):
+            key = "Surface Charge Density"
+            value = None
             match obj.Mode:
                 case "Interface":
-                    density = obj.InterfaceChargeDensity
+                    value = obj.InterfaceChargeDensity.getValueAs("C/m^2")
                 case "Total Interface":
-                    density = obj.Proxy.get_total_interface_density(obj)
+                    value = obj.Proxy.get_total_interface_density(obj).getValueAs("C/m^2")
+                case "Total Source":
+                    if obj.Concentrated:
+                        value = obj.TotalCharge.getValueAs("C")
+                        permittivity = Units.Quantity(
+                            self.write.constsdef["PermittivityOfVacuum"]
+                        ).getValueAs("F/m")
+                        value /= permittivity
+                        key = "Potential Load"
+                    else:
+                        continue
                 case _:
                     continue
 
             for feat, sub_elem in obj.References:
                 for name in sub_elem:
                     self.write.boundary(name, "! FreeCAD Name", obj.Label)
-                    self.write.boundary(
-                        name,
-                        "Surface Charge Density",
-                        density.getValueAs("C/m^2"),
-                    )
+                    self.write.boundary(name, key, value)
                     self.write.handled(obj)
 
     def handleElectrostaticBodyForces(self):
@@ -172,6 +180,9 @@ class ESwriter:
                     density = obj.SourceChargeDensity
                 case "Total Source":
                     density = obj.Proxy.get_total_source_density(obj)
+                    if obj.Concentrated:
+                        # concentrated source is added as boundary condition
+                        continue
                 case _:
                     continue
 
