@@ -104,6 +104,7 @@ SET(Mod_SRCS
     AppFemPy.cpp
     FemTools.cpp
     FemTools.h
+    FemUnitSystemTools.h
     PreCompiled.h
 )
 SOURCE_GROUP("Module" FILES ${Mod_SRCS})

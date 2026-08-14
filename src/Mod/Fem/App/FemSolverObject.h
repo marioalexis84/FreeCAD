@@ -43,6 +43,7 @@ public:
     ~FemSolverObject() override;
 
     App::PropertyLinkList Results;
+    App::PropertyEnumeration UnitSystem;
     // Attributes are implemented in the FemSolverObjectPython
 
     /// returns the type name of the ViewProvider
@@ -58,6 +59,7 @@ public:
     PyObject* getPyObject() override;
 
 private:
+    static const char* unitEnums[];
     WorkerExtension worker;
 };
 

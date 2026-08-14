@@ -26,10 +26,13 @@
 #include <App/FeaturePythonPyImp.h>
 
 #include "FemSolverObject.h"
+#include "FemUnitSystemTools.h"
 
 
 using namespace Fem;
 using namespace App;
+
+const char* FemSolverObject::unitEnums[] = {"FEM", "Internal", "MKS", nullptr};
 
 PROPERTY_SOURCE(Fem::FemSolverObject, App::DocumentObject)
 
@@ -43,7 +46,9 @@ FemSolverObject::FemSolverObject()
         App::PropertyType(App::Prop_ReadOnly | App::Prop_Output),
         "Solver results list"
     );
+    ADD_PROPERTY_TYPE(UnitSystem, (long(0)), "Base", App::PropertyType(App::Prop_None), "Solver unit system");
 
+    UnitSystem.setEnums(unitEnums);
     worker.initExtension(this);
 }
 

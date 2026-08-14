@@ -30,6 +30,7 @@
 #include <App/DocumentObjectPy.h>
 #include <Base/Interpreter.h>
 #include <Base/PlacementPy.h>
+#include <Base/QuantityPy.h>
 #include <Mod/Part/App/OCCError.h>
 
 #include "FemMesh.h"
@@ -37,6 +38,7 @@
 #include "FemMeshPy.h"
 #ifdef FC_USE_VTK
 # include "FemPostPipeline.h"
+# include "FemUnitSystemTools.h"
 # include "FemVTKTools.h"
 # include <LibraryVersions.h>
 # include <vtkVersionMacros.h>
@@ -115,6 +117,16 @@ public:
             &Module::show,
             "show(shape,[string]) -- Add the mesh to the active document or create "
             "one if no document exists."
+        );
+        add_varargs_method(
+            "getCoherentValue",
+            &Module::getCoherentValue,
+            "getCoherentValue(quantity, string)"
+        );
+        add_varargs_method(
+            "getCoherentLengthScale",
+            &Module::getCoherentLengthScale,
+            "getCoherentLengthScale(string)"
         );
         initialize("This module is the Fem module.");  // register with Python
     }
@@ -422,6 +434,28 @@ private:
         pcDoc->recompute();
 
         return Py::None();
+    }
+
+    Py::Object getCoherentValue(const Py::Tuple& args)
+    {
+        PyObject* qtyPy = nullptr;
+        const char* system = nullptr;
+        if (!PyArg_ParseTuple(args.ptr(), "O!s", &(Base::QuantityPy::Type), &qtyPy, &system)) {
+            throw Py::Exception();
+        }
+
+        Base::Quantity* quantity = static_cast<Base::QuantityPy*>(qtyPy)->getQuantityPtr();
+        return Py::Float(Units::getCoherentValue(*quantity, system));
+    }
+
+    Py::Object getCoherentLengthScale(const Py::Tuple& args)
+    {
+        const char* system = nullptr;
+        if (!PyArg_ParseTuple(args.ptr(), "s", &system)) {
+            throw Py::Exception();
+        }
+
+        return Py::Float(Units::getCoherentLengthScale(system));
     }
 };
 
