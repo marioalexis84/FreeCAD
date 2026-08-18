@@ -1053,6 +1053,7 @@ def makeSolverCalculiXCcxTools(doc, name="SolverCcxTools"):
     from femobjects import solver_ccxtools
 
     solver_ccxtools.SolverCcxTools(obj)
+    obj.UnitSystem = "FEM"
     if FreeCAD.GuiUp:
         from femviewprovider import view_solver_ccxtools
 
