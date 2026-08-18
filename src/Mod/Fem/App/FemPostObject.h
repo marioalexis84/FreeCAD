@@ -29,6 +29,7 @@
 
 #include <vtkBoundingBox.h>
 #include <vtkTransformFilter.h>
+#include <vtkTransform.h>
 #include <vtkSmartPointer.h>
 
 class vtkDataSet;
@@ -65,6 +66,7 @@ protected:
     // how this filter should be used to create data. This is to be implemented
     // by the derived classes.
     vtkSmartPointer<vtkTransformFilter> m_transform_filter;
+    vtkSmartPointer<vtkTransform> m_transform;
 
     void onChanged(const App::Property* prop) override;
 };

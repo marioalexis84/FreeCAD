@@ -52,6 +52,7 @@ public:
 
     App::PropertyEnumeration Frame;
     App::PropertyBool MergeDuplicate;
+    App::PropertyFloat Scale;
 
     virtual vtkDataSet* getDataSet() override;
     Fem::FemPostFunctionProvider* getFunctionProvider();
@@ -73,7 +74,6 @@ public:
         Base::Unit unit,
         std::string& frame_type
     );
-    void scale(double s);
     void renameArrays(const std::map<std::string, std::string>& names);
     void addArrayFromFunction(const std::map<std::string, std::string>& functions);
 
