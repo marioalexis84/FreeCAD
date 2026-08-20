@@ -524,6 +524,8 @@ void ViewProviderFemPostObject::update3D()
     vtkIdTypePtr indx = nullptr;
 
     points = pd->GetPoints();
+    double bounds[6];
+    points->GetBounds(bounds);
     pntData = pd->GetPointData();
     normals = pntData->GetNormals();
     tcoords = pntData->GetTCoords();

@@ -86,6 +86,8 @@ if(BUILD_FEM_VTK)
     SET(FemVTK_SRCS
         VTKExtensions/vtkFemFrameSourceAlgorithm.h
         VTKExtensions/vtkFemFrameSourceAlgorithm.cpp
+        VTKExtensions/vtkFemTransformFilter.h
+        VTKExtensions/vtkFemTransformFilter.cpp
     )
     SET(VTK_SRCS_0903
         VTKExtensions/vtkCleanUnstructuredGrid.h

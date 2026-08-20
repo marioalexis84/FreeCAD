@@ -41,7 +41,7 @@ FemPostObject::FemPostObject()
 {
     ADD_PROPERTY(Data, (nullptr));
 
-    m_transform_filter = vtkSmartPointer<vtkTransformFilter>::New();
+    m_transform_filter = vtkSmartPointer<vtkFemTransformFilter>::New();
     m_transform = vtkTransform::New();
 
     // define default transform
